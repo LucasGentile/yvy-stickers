@@ -83,9 +83,7 @@ export default function RegistrationForm() {
         />
       </div>
 
-      {state && !state.success && (
-        <p className="text-red-600 text-sm">{state.error}</p>
-      )}
+      {state && !state.success && <p className="text-red-600 text-sm">{state.error}</p>}
 
       <button
         type="submit"

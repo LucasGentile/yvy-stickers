@@ -120,7 +120,12 @@ describe('getMatches', () => {
         neq: vi.fn().mockResolvedValue({
           data: [
             { id: 'b', display_key: 'b-0101-1', phone: '1', user_stickers: [{ sticker_id: 1 }] },
-            { id: 'c', display_key: 'c-0202-2', phone: '2', user_stickers: [{ sticker_id: 1 }, { sticker_id: 2 }] },
+            {
+              id: 'c',
+              display_key: 'c-0202-2',
+              phone: '2',
+              user_stickers: [{ sticker_id: 1 }, { sticker_id: 2 }],
+            },
           ],
           error: null,
         }),

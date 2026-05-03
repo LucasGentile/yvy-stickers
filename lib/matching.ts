@@ -28,10 +28,10 @@ export async function getMatches(currentUserId: string): Promise<MatchResult[]> 
   }
 
   // Fetch all other users and their stickers
-  const { data: others } = await supabase
+  const { data: others } = (await supabase
     .from('users')
     .select('id, display_key, phone, user_stickers(sticker_id)')
-    .neq('id', currentUserId) as { data: OtherUser[] | null; error: unknown }
+    .neq('id', currentUserId)) as { data: OtherUser[] | null; error: unknown }
 
   if (!others) return []
 

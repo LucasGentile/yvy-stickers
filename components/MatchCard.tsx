@@ -7,12 +7,12 @@ export default function MatchCard({ match }: { match: MatchResult }) {
       <p className="font-semibold text-gray-900 text-sm break-all">{match.displayKey}</p>
       <div className="flex gap-4 text-sm text-gray-600">
         <span>
-          <strong className="text-green-700 text-base">{match.matchScore}</strong>{' '}
-          figurinha{match.matchScore !== 1 ? 's' : ''} que eu preciso
+          <strong className="text-green-700 text-base">{match.matchScore}</strong> figurinha
+          {match.matchScore !== 1 ? 's' : ''} que eu preciso
         </span>
         <span>
-          <strong className="text-blue-700 text-base">{match.reciprocalScore}</strong>{' '}
-          que tenho para dar
+          <strong className="text-blue-700 text-base">{match.reciprocalScore}</strong> que tenho
+          para dar
         </span>
       </div>
       <WhatsAppButton phone={match.phone} />

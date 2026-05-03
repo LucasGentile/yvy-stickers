@@ -42,7 +42,9 @@ export default function StickersScreen() {
       }
       setParseErrors([])
       setSelected(new Set(result.stickers))
-      setSaveMsg(`${result.stickers.length} figurinhas carregadas. Clique em Salvar para confirmar.`)
+      setSaveMsg(
+        `${result.stickers.length} figurinhas carregadas. Clique em Salvar para confirmar.`
+      )
     }
     reader.readAsText(file)
   }
@@ -65,7 +67,9 @@ export default function StickersScreen() {
     return (
       <div className="p-6 text-center text-gray-500">
         <p>Você precisa se identificar primeiro.</p>
-        <a href="/" className="text-green-600 underline mt-2 inline-block">Ir para o cadastro</a>
+        <a href="/" className="text-green-600 underline mt-2 inline-block">
+          Ir para o cadastro
+        </a>
       </div>
     )
   }
@@ -74,22 +78,34 @@ export default function StickersScreen() {
     return (
       <div className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
-          <h2 className="text-xl font-bold text-gray-900 text-center mb-2">Como você quer informar suas figurinhas?</h2>
-          <p className="text-sm text-gray-500 text-center mb-6">Escolha um modo. Ele não pode ser alterado depois sem apagar tudo.</p>
+          <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+            Como você quer informar suas figurinhas?
+          </h2>
+          <p className="text-sm text-gray-500 text-center mb-6">
+            Escolha um modo. Ele não pode ser alterado depois sem apagar tudo.
+          </p>
           <div className="space-y-3">
             <button
               onClick={() => handleModeSelect('have')}
               className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-4 rounded-xl text-left transition-colors"
             >
-              <div className="text-base">Vou informar as figurinhas que <strong>TENHO</strong></div>
-              <div className="text-xs font-normal opacity-80 mt-1">O sistema calcula as que faltam automaticamente</div>
+              <div className="text-base">
+                Vou informar as figurinhas que <strong>TENHO</strong>
+              </div>
+              <div className="text-xs font-normal opacity-80 mt-1">
+                O sistema calcula as que faltam automaticamente
+              </div>
             </button>
             <button
               onClick={() => handleModeSelect('need')}
               className="w-full bg-white hover:bg-gray-50 border-2 border-green-600 text-green-700 font-semibold py-4 px-4 rounded-xl text-left transition-colors"
             >
-              <div className="text-base">Vou informar as figurinhas que <strong>PRECISO</strong></div>
-              <div className="text-xs font-normal opacity-60 mt-1">O sistema assume que você tem todas as outras</div>
+              <div className="text-base">
+                Vou informar as figurinhas que <strong>PRECISO</strong>
+              </div>
+              <div className="text-xs font-normal opacity-60 mt-1">
+                O sistema assume que você tem todas as outras
+              </div>
             </button>
           </div>
         </div>
@@ -119,7 +135,9 @@ export default function StickersScreen() {
       {/* File upload */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
         <p className="text-sm font-medium text-gray-700 mb-2">Carregar por arquivo (.txt)</p>
-        <p className="text-xs text-gray-400 mb-3">Formato: números separados por ponto-e-vírgula. Ex: <code>1;5;23;105</code></p>
+        <p className="text-xs text-gray-400 mb-3">
+          Formato: números separados por ponto-e-vírgula. Ex: <code>1;5;23;105</code>
+        </p>
         <input
           type="file"
           accept=".txt"
@@ -128,7 +146,9 @@ export default function StickersScreen() {
         />
         {parseErrors.length > 0 && (
           <div className="mt-2 text-xs text-red-600 space-y-0.5">
-            {parseErrors.map((e, i) => <p key={i}>{e}</p>)}
+            {parseErrors.map((e, i) => (
+              <p key={i}>{e}</p>
+            ))}
           </div>
         )}
       </div>
@@ -162,11 +182,11 @@ export default function StickersScreen() {
           disabled={saving}
           className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold py-3.5 rounded-xl text-base transition-colors shadow-lg"
         >
-          {saving ? 'Salvando...' : `Salvar ${selected.size} figurinha${selected.size !== 1 ? 's' : ''}`}
+          {saving
+            ? 'Salvando...'
+            : `Salvar ${selected.size} figurinha${selected.size !== 1 ? 's' : ''}`}
         </button>
-        {saveMsg && (
-          <p className="text-center text-sm mt-2 text-gray-600">{saveMsg}</p>
-        )}
+        {saveMsg && <p className="text-center text-sm mt-2 text-gray-600">{saveMsg}</p>}
         {selected.size > 0 && (
           <div className="text-center mt-3">
             <a href="/matches" className="text-green-600 text-sm underline">

@@ -1,13 +1,14 @@
-export type ParseResult =
-  | { valid: true; stickers: number[] }
-  | { valid: false; errors: string[] }
+export type ParseResult = { valid: true; stickers: number[] } | { valid: false; errors: string[] }
 
 export function parseStickerFile(content: string): ParseResult {
   if (!content.trim()) {
     return { valid: false, errors: ['O arquivo está vazio.'] }
   }
 
-  const parts = content.split(';').map((p) => p.trim()).filter((p) => p !== '')
+  const parts = content
+    .split(';')
+    .map((p) => p.trim())
+    .filter((p) => p !== '')
   const errors: string[] = []
   const seen = new Set<number>()
   const stickers: number[] = []

@@ -33,9 +33,7 @@ function StickerGrid({ selected, onChange }: Props) {
             type="button"
             onClick={() => toggle(n)}
             className={`aspect-square flex items-center justify-center rounded text-xs font-medium transition-colors ${
-              on
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              on ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             {n}

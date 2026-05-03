@@ -15,10 +15,7 @@ export async function saveStickers(
   }
 
   // Delete existing stickers for this user (idempotent replace)
-  const { error: deleteError } = await supabase
-    .from('user_stickers')
-    .delete()
-    .eq('user_id', userId)
+  const { error: deleteError } = await supabase.from('user_stickers').delete().eq('user_id', userId)
 
   if (deleteError) {
     return { success: false, error: 'Erro ao atualizar figurinhas. Tente novamente.' }

@@ -34,7 +34,9 @@ export default function MatchesScreen() {
     return (
       <div className="p-6 text-center text-gray-500">
         <p>{error}</p>
-        <a href="/" className="text-green-600 underline mt-2 inline-block">Ir para o cadastro</a>
+        <a href="/" className="text-green-600 underline mt-2 inline-block">
+          Ir para o cadastro
+        </a>
       </div>
     )
   }
