@@ -63,18 +63,32 @@
 - [ ] 8.2 Build persistent header with app name and condominium group button (`NEXT_PUBLIC_WHATSAPP_GROUP_URL`)
 - [ ] 8.3 Add header to root layout so it appears on all screens
 
-## 9. Polish & QA
+## 9. Testing
 
-- [ ] 9.1 Verify all user-facing strings are in pt-BR
-- [ ] 9.2 Test full flow on a real mobile device (registration → sticker input → matches → WhatsApp tap)
-- [ ] 9.3 Test file upload with valid, out-of-range, and malformed inputs
-- [ ] 9.4 Test mode conflict: attempt to switch mode after stickers are saved
-- [ ] 9.5 Test duplicate phone registration loads existing profile
-- [ ] 9.6 Verify PWA installability (manifest + HTTPS)
+- [ ] 9.1 Install and configure Vitest with `@vitejs/plugin-react` and `@testing-library/react` for unit/integration tests
+- [ ] 9.2 Install and configure Playwright for E2E tests (`npx playwright install`)
+- [ ] 9.3 Unit test `lib/parser.ts`: valid input, semicolon-separated, spaces stripped, deduplication, out-of-range rejection, empty input
+- [ ] 9.4 Unit test `lib/normalize.ts`: lowercase, trim, display key format (`name-apartment-tower`)
+- [ ] 9.5 Unit test `lib/matching.ts`: correct matchScore, correct reciprocalScore, sort order (primary + tiebreaker), empty result when no overlap
+- [ ] 9.6 Integration test `actions/registerUser.ts`: new user created, duplicate phone returns existing user, missing fields rejected (mock Supabase client)
+- [ ] 9.7 Integration test `actions/saveStickers.ts`: stickers inserted, re-submission replaces previous data idempotently (mock Supabase client)
+- [ ] 9.8 E2E test — Registration flow: fill form with valid data → redirected to `/stickers`
+- [ ] 9.9 E2E test — Sticker input via file upload: upload valid `.txt` → success confirmation shown
+- [ ] 9.10 E2E test — Full happy path: register → select mode → upload file → view matches → WhatsApp button has correct `href`
+- [ ] 9.11 Configure Vitest coverage reporter; verify overall coverage is ≥ 80%
 
-## 10. Deployment
+## 10. Polish & QA
 
-- [ ] 10.1 Create Vercel project linked to the GitHub repository
-- [ ] 10.2 Set environment variables on Vercel (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `WHATSAPP_GROUP_URL`)
-- [ ] 10.3 Deploy and verify production URL works end-to-end
-- [ ] 10.4 Share production URL with YVY Lindóia residents
+- [ ] 10.1 Verify all user-facing strings are in pt-BR
+- [ ] 10.2 Test full flow on a real mobile device (registration → sticker input → matches → WhatsApp tap)
+- [ ] 10.3 Test file upload with valid, out-of-range, and malformed inputs
+- [ ] 10.4 Test mode conflict: attempt to switch mode after stickers are saved
+- [ ] 10.5 Test duplicate phone registration loads existing profile
+- [ ] 10.6 Verify PWA installability (manifest + HTTPS)
+
+## 11. Deployment
+
+- [ ] 11.1 Create Vercel project linked to the GitHub repository
+- [ ] 11.2 Set environment variables on Vercel (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `WHATSAPP_GROUP_URL`)
+- [ ] 11.3 Deploy and verify production URL works end-to-end
+- [ ] 11.4 Share production URL with YVY Lindóia residents
