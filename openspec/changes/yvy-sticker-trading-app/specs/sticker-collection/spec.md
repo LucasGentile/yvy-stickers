@@ -16,15 +16,15 @@ The system SHALL require the user to choose an input mode before entering sticke
 - **THEN** the system does not allow switching mode without clearing existing data
 
 ### Requirement: Owned sticker tracking
-The system SHALL store which stickers (1–980) a user owns and in what quantity (minimum 1).
+The system SHALL store which stickers (1–980) a user owns. Ownership is boolean — no quantity or duplicate tracking in V1.
 
 #### Scenario: Mark sticker as owned
-- **WHEN** a user marks sticker #42 as owned with quantity 2
-- **THEN** the system stores `sticker_id=42, quantity=2` for that user
+- **WHEN** a user marks sticker #42 as owned
+- **THEN** the system stores a `user_stickers` row for that user and sticker_id
 
-#### Scenario: Update duplicate quantity
-- **WHEN** a user changes the quantity of sticker #42 from 2 to 3
-- **THEN** the system updates the record idempotently
+#### Scenario: Idempotent upsert
+- **WHEN** the same sticker is submitted more than once (e.g. duplicate in file)
+- **THEN** only one row exists for that user/sticker pair
 
 ### Requirement: Missing sticker inference
 The system SHALL automatically compute missing stickers as all sticker IDs (1–980) not present in the user's owned collection.

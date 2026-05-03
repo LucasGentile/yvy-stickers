@@ -67,11 +67,10 @@ phone       TEXT NOT NULL UNIQUE   -- WhatsApp number, unique identifier
 input_mode  TEXT NOT NULL          -- 'have' | 'need'
 created_at  TIMESTAMPTZ DEFAULT now()
 
--- user_stickers
+-- user_stickers  (boolean ownership — no quantity tracking in V1)
 id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
 user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
 sticker_id  INTEGER NOT NULL CHECK (sticker_id BETWEEN 1 AND 980)
-quantity    INTEGER NOT NULL DEFAULT 1 CHECK (quantity >= 1)
 UNIQUE (user_id, sticker_id)
 
 -- Indexes
@@ -119,8 +118,11 @@ The missing sticker sets are derived from the complement of each user's `user_st
 - **Grid UX on very small screens** → 980 checkboxes may require scrolling. Mitigation: add a number-range filter or alphabet grouping if usability testing reveals issues.
 - **txt file parsing errors** → Malformed files could confuse users. Mitigation: show clear per-line error messages in pt-BR.
 
+## Resolved Decisions
+
+- **WhatsApp group link:** `https://chat.whatsapp.com/GzQ9pTekgf7E02lTu8nYy2?mode=gi_t` — hardcoded in `NEXT_PUBLIC_WHATSAPP_GROUP_URL`.
+- **Duplicate tracking:** Removed from V1. `user_stickers.quantity` column dropped — sticker ownership is boolean (owned or not). Duplicates are out of scope.
+
 ## Open Questions
 
-- What is the WhatsApp group invite link for YVY Lindóia? (needed before launch — hardcode in env var `NEXT_PUBLIC_WHATSAPP_GROUP_URL`)
-- Should duplicate sticker quantity be editable per sticker, or is a simple "mark as duplicate" toggle sufficient for V1?
 - Is Vercel deployment managed by the developer or handed off to a condominium admin?
