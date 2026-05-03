@@ -9,7 +9,7 @@
 
 ## 2. Database
 
-- [ ] 2.1 Create Supabase project and note connection credentials
+- [x] 2.1 Create Supabase project and note connection credentials
 - [x] 2.2 Run migration: create `users` table (`id`, `name`, `apartment`, `tower`, `phone` UNIQUE, `input_mode`, `created_at`)
 - [x] 2.3 Run migration: create `user_stickers` table (`id`, `user_id` FK, `sticker_id` 1–980, UNIQUE(`user_id`, `sticker_id`))
 - [x] 2.4 Create indexes on `user_stickers(user_id)` and `user_stickers(sticker_id)`
@@ -88,7 +88,7 @@
 
 ## 11. Deployment
 
-- [ ] 11.1 Create Vercel project linked to the GitHub repository
-- [ ] 11.2 Set environment variables on Vercel (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `WHATSAPP_GROUP_URL`)
-- [ ] 11.3 Deploy and verify production URL works end-to-end
+- [x] 11.1 Create Vercel project linked to the GitHub repository
+- [x] 11.2 Set environment variables on Vercel (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `WHATSAPP_GROUP_URL`)
+- [x] 11.3 Deploy and verify production URL works end-to-end
 - [ ] 11.4 Share production URL with YVY Lindóia residents
