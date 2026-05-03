@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { setInputMode } from '@/actions/setInputMode'
 import { saveStickers } from '@/actions/saveStickers'
+import { getUserData } from '@/actions/getUserData'
 import { parseStickerFile } from '@/lib/parser'
 import StickerGrid from './StickerGrid'
 
@@ -17,9 +18,25 @@ export default function StickersScreen() {
   const [parseErrors, setParseErrors] = useState<string[]>([])
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setUserId(localStorage.getItem('userId'))
+    const id = localStorage.getItem('userId')
+    setUserId(id)
+    if (!id) {
+      setLoading(false)
+      return
+    }
+    getUserData(id).then((data) => {
+      if (data) {
+        setMode(data.inputMode)
+        setSelected(new Set(data.stickerIds))
+        if (data.stickerIds.length > 0 || data.inputMode) {
+          setStep('input')
+        }
+      }
+      setLoading(false)
+    })
   }, [])
 
   async function handleModeSelect(m: Mode) {
@@ -62,6 +79,14 @@ export default function StickersScreen() {
       setSaveMsg(`Erro: ${result.error}`)
     }
   }, [userId, selected])
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 items-center justify-center text-gray-400">
+        <p>Carregando...</p>
+      </div>
+    )
+  }
 
   if (!userId) {
     return (

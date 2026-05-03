@@ -14,6 +14,13 @@ export default function RegistrationForm() {
     initialState
   )
 
+  // Returning user: already identified — skip straight to stickers
+  useEffect(() => {
+    if (localStorage.getItem('userId')) {
+      window.location.href = '/stickers'
+    }
+  }, [])
+
   useEffect(() => {
     if (state?.success) {
       localStorage.setItem('userId', state.userId)
