@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
+export const dynamic = 'force-dynamic'
+
 const GROUP_URL = process.env.WHATSAPP_GROUP_URL!
 
 export async function GET(req: NextRequest) {
