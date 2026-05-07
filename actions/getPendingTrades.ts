@@ -20,6 +20,7 @@ export async function getPendingTrades(
   const empty = { received: [], sent: [] }
   if (!userId) return empty
 
+  try {
   const { data: trades, error } = await supabaseAdmin
     .from('pending_trades')
     .select('id, initiator_id, receiver_id, giving_ids, receiving_ids, status, created_at')
@@ -69,4 +70,7 @@ export async function getPendingTrades(
   }
 
   return { received, sent }
+  } catch {
+    return empty
+  }
 }

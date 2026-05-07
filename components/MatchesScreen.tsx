@@ -26,16 +26,14 @@ export default function MatchesScreen() {
       return
     }
     setUserId(uid)
-    Promise.all([
-      getMatches(uid),
-      getPendingTrades(uid),
-    ])
-      .then(([matchResults, pendingResult]) => {
-        setMatches(matchResults)
-        setPending(pendingResult)
-      })
+    getMatches(uid)
+      .then(setMatches)
       .catch(() => setError('Erro ao buscar trocas. Tente novamente.'))
       .finally(() => setLoading(false))
+
+    getPendingTrades(uid)
+      .then(setPending)
+      .catch(() => {/* pending trades failing silently — matches still show */})
   }, [])
 
   if (loading) {
