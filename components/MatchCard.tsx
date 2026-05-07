@@ -24,6 +24,7 @@ function StickerChip({ id, selected, onToggle }: { id: string; selected: boolean
 function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => void }) {
   const [receiving, setReceiving] = useState<Set<string>>(new Set())
   const [giving, setGiving] = useState<Set<string>>(new Set())
+  const [confirming, setConfirming] = useState(false)
   const [trading, setTrading] = useState(false)
   const [tradeMsg, setTradeMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -36,19 +37,25 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
     if (!currentUserId) return
     setTrading(true)
     setTradeMsg(null)
-    const result = await effectuateTrade(
-      currentUserId,
-      match.userId,
-      [...giving],
-      [...receiving],
-    )
-    setTrading(false)
-    if (result.success) {
-      setTradeMsg({ ok: true, text: 'Troca registrada! Atualize a página para ver os novos dados.' })
-      setReceiving(new Set())
-      setGiving(new Set())
-    } else {
-      setTradeMsg({ ok: false, text: result.error })
+    try {
+      const result = await effectuateTrade(
+        currentUserId,
+        match.userId,
+        [...giving],
+        [...receiving],
+      )
+      if (result.success) {
+        setTradeMsg({ ok: true, text: 'Troca registrada! Atualize a página para ver os novos dados.' })
+        setReceiving(new Set())
+        setGiving(new Set())
+        setConfirming(false)
+      } else {
+        setTradeMsg({ ok: false, text: result.error })
+      }
+    } catch {
+      setTradeMsg({ ok: false, text: 'Erro inesperado. Tente novamente.' })
+    } finally {
+      setTrading(false)
     }
   }
 
@@ -68,56 +75,115 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
           <button onClick={onClose} className="text-yvy-muted text-lg leading-none">✕</button>
         </div>
 
-        {match.matchStickers.length > 0 && (
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1.5">
-              Ele/ela tem para mim — toque para selecionar ({receiving.size}/{match.matchStickers.length})
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {match.matchStickers.map((id) => (
-                <StickerChip key={id} id={id} selected={receiving.has(id)} onToggle={() => toggleSet(setReceiving, id)} />
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Confirmation screen */}
+        {confirming ? (
+          <div className="space-y-4">
+            <p className="text-sm font-semibold text-yvy-dark">Confirmar a troca abaixo?</p>
 
-        {match.reciprocalStickers.length > 0 && (
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1.5">
-              Eu tenho para ele/ela — toque para selecionar ({giving.size}/{match.reciprocalStickers.length})
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {match.reciprocalStickers.map((id) => (
-                <StickerChip key={id} id={id} selected={giving.has(id)} onToggle={() => toggleSet(setGiving, id)} />
-              ))}
-            </div>
-          </div>
-        )}
+            {receiving.size > 0 && (
+              <div className="bg-yvy-bg rounded-lg p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1.5">
+                  Você vai receber de {match.name.split(' ')[0]}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {[...receiving].map((id) => (
+                    <span key={id} className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white">{id}</span>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {match.matchStickers.length === 0 && match.reciprocalStickers.length === 0 && (
-          <p className="text-sm text-yvy-muted">Sem figurinhas para trocar no momento.</p>
-        )}
+            {giving.size > 0 && (
+              <div className="bg-yvy-bg rounded-lg p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1.5">
+                  Você vai dar para {match.name.split(' ')[0]}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {[...giving].map((id) => (
+                    <span key={id} className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text">{id}</span>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {canTrade && (
-          <div className="border-t border-yvy-border pt-3 space-y-2">
             <p className="text-xs text-yvy-muted">
-              Selecionar e confirmar a troca atualiza o álbum de ambos automaticamente.
+              Os álbuns de ambos serão atualizados automaticamente. Esta ação não pode ser desfeita.
             </p>
-            <button
-              onClick={handleTrade}
-              disabled={trading}
-              className="w-full bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
-            >
-              {trading ? 'Registrando...' : `Confirmar troca (${receiving.size + giving.size} figurinha${receiving.size + giving.size !== 1 ? 's' : ''})`}
-            </button>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirming(false)}
+                disabled={trading}
+                className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2.5 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={handleTrade}
+                disabled={trading}
+                className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+              >
+                {trading ? 'Registrando...' : 'Sim, confirmar'}
+              </button>
+            </div>
+
+            {tradeMsg && (
+              <p className={`text-sm ${tradeMsg.ok ? 'text-yvy-dark' : 'text-red-600'}`}>{tradeMsg.text}</p>
+            )}
           </div>
-        )}
+        ) : (
+          <>
+            {match.matchStickers.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1.5">
+                  Ele/ela tem para mim — toque para selecionar ({receiving.size}/{match.matchStickers.length})
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {match.matchStickers.map((id) => (
+                    <StickerChip key={id} id={id} selected={receiving.has(id)} onToggle={() => toggleSet(setReceiving, id)} />
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {tradeMsg && (
-          <p className={`text-sm ${tradeMsg.ok ? 'text-yvy-dark' : 'text-red-600'}`}>{tradeMsg.text}</p>
-        )}
+            {match.reciprocalStickers.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1.5">
+                  Eu tenho para ele/ela — toque para selecionar ({giving.size}/{match.reciprocalStickers.length})
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {match.reciprocalStickers.map((id) => (
+                    <StickerChip key={id} id={id} selected={giving.has(id)} onToggle={() => toggleSet(setGiving, id)} />
+                  ))}
+                </div>
+              </div>
+            )}
 
-        <WhatsAppButton phone={match.phone} />
+            {match.matchStickers.length === 0 && match.reciprocalStickers.length === 0 && (
+              <p className="text-sm text-yvy-muted">Sem figurinhas para trocar no momento.</p>
+            )}
+
+            {canTrade && (
+              <div className="border-t border-yvy-border pt-3 space-y-2">
+                <p className="text-xs text-yvy-muted">
+                  Selecione as figurinhas e toque em confirmar para revisar antes de executar.
+                </p>
+                <button
+                  onClick={() => setConfirming(true)}
+                  className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  {`Confirmar troca (${receiving.size + giving.size} figurinha${receiving.size + giving.size !== 1 ? 's' : ''})`}
+                </button>
+              </div>
+            )}
+
+            {tradeMsg && (
+              <p className={`text-sm ${tradeMsg.ok ? 'text-yvy-dark' : 'text-red-600'}`}>{tradeMsg.text}</p>
+            )}
+
+            <WhatsAppButton phone={match.phone} />
+          </>
+        )}
       </div>
     </div>
   )
@@ -130,7 +196,7 @@ export default function MatchCard({ match, rank }: { match: MatchResult; rank: n
   return (
     <>
     <div
-      className={`bg-yvy-surface rounded-xl border shadow-sm flex flex-col gap-3 overflow-hidden ${
+      className={`bg-yvy-surface rounded-xl border shadow-md flex flex-col gap-3 overflow-hidden ${
         rank === 1
           ? 'border-yvy-gold border-2'
           : isMutual ? 'border-yvy-accent p-4' : 'border-yvy-border p-4'

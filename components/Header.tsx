@@ -39,7 +39,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-10 bg-yvy-dark text-white shadow-md">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-yvy-dark text-white shadow-md">
       <div className="max-w-lg mx-auto px-4 py-3 relative flex items-center justify-center">
         {/* Centered title */}
         <Link

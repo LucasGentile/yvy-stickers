@@ -71,7 +71,7 @@ export default function MissingScreen() {
         <a href="/stickers" className="text-xs text-yvy-muted underline">← Figurinhas</a>
       </div>
 
-      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-sm p-4 space-y-5">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-5">
         {ALL_STICKER_SECTIONS.map((section) => {
           if (section.type === 'group') {
             const teamsWithMissing = (section as StickerGroup).teams.filter((t) =>

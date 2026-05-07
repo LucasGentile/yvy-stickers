@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${geist.variable} ${josefinSans.variable} ${bebasNeue.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-yvy-bg text-yvy-text">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pt-14">{children}</main>
       </body>
     </html>
   )

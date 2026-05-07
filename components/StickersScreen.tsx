@@ -196,12 +196,12 @@ export default function StickersScreen() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-28 space-y-6">
-      <div className="bg-yvy-surface/80 backdrop-blur rounded-xl px-4 py-2.5">
+      <div className="bg-yvy-surface/90 backdrop-blur rounded-xl border border-yvy-border px-4 py-2.5 shadow-md">
         <h2 className="text-lg font-bold text-yvy-dark">Minhas Figurinhas</h2>
       </div>
 
       {/* Grid */}
-      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-sm p-4">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4">
         <div className="mb-3">
           <CountrySearch />
         </div>
@@ -239,7 +239,7 @@ export default function StickersScreen() {
       </div>
 
       {/* File upload — collapsible */}
-      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-sm overflow-hidden">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md overflow-hidden">
         <button
           type="button"
           onClick={() => setFileOpen((v) => !v)}

@@ -118,7 +118,7 @@ export default function DuplicatesScreen() {
       </div>
 
       {/* Add / update form */}
-      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-sm p-4 space-y-3">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
         <p className="text-sm font-medium text-yvy-text">Adicionar ou atualizar</p>
         <p className="text-xs text-yvy-muted">
           Busque pelo país e selecione a figurinha, ou digite o código diretamente.
@@ -167,7 +167,7 @@ export default function DuplicatesScreen() {
       </div>
 
       {/* Duplicates list */}
-      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-sm p-4">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4">
         <p className="text-sm font-medium text-yvy-text mb-3">
           {duplicates.length === 0
             ? 'Nenhuma repetida cadastrada ainda.'
