@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
-
-const GROUP_URL = process.env.WHATSAPP_GROUP_URL!
 
 export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get('uid')
@@ -12,7 +10,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  const { data } = await supabaseAdmin
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!,
+  )
+
+  const { data } = await admin
     .from('users')
     .select('approved')
     .eq('id', userId)
@@ -22,5 +25,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  return NextResponse.redirect(GROUP_URL)
+  return NextResponse.redirect(process.env.WHATSAPP_GROUP_URL!)
 }
