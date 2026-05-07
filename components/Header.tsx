@@ -50,20 +50,19 @@ export default function Header() {
           YVY Figurinhas
         </Link>
 
-        {/* Right side: font toggle + WhatsApp */}
-        <div className="absolute right-4 flex items-center gap-2.5">
-          {/* Font size — discreet, expands down */}
+        {/* Left side: font toggle */}
+        <div className="absolute left-4">
           <div ref={ref} className="relative">
             <button
               onClick={() => setOpen((v) => !v)}
-              className="text-white/50 hover:text-white transition-colors font-bold leading-none"
-              style={{ fontSize: '11px' }}
+              className="text-white/60 hover:text-white transition-colors font-bold px-2 py-1.5"
+              style={{ fontSize: '12px' }}
               aria-label="Tamanho de fonte"
             >
               Aa
             </button>
             {open && (
-              <div className="absolute right-0 top-full mt-2 bg-yvy-surface border border-yvy-border rounded-xl shadow-lg overflow-hidden z-50" style={{ fontSize: '12px', minWidth: '80px' }}>
+              <div className="absolute left-0 top-full mt-2 bg-yvy-surface border border-yvy-border rounded-xl shadow-lg overflow-hidden z-50" style={{ fontSize: '12px', minWidth: '80px' }}>
                 {SIZES.map((s, i) => (
                   <button
                     key={s.label}
@@ -81,7 +80,10 @@ export default function Header() {
             )}
           </div>
 
-          {/* WhatsApp group */}
+        </div>
+
+        {/* Right side: WhatsApp */}
+        <div className="absolute right-4">
           <a
             href={GROUP_URL}
             target="_blank"
