@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Troca de figurinhas da Copa do Mundo 2026 – Condomínio YVY Lindóia',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#16a34a',
+    background_color: '#f9fbf9',
+    theme_color: '#1a433b',
     icons: [
       { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
       { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },

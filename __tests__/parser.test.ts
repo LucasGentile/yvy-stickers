@@ -2,43 +2,32 @@ import { describe, it, expect } from 'vitest'
 import { parseStickerFile } from '@/lib/parser'
 
 describe('parseStickerFile', () => {
-  it('parses valid semicolon-separated input', () => {
-    const result = parseStickerFile('1;5;23;105;300')
-    expect(result).toEqual({ valid: true, stickers: [1, 5, 23, 105, 300] })
+  it('parses valid semicolon-separated sticker codes', () => {
+    const result = parseStickerFile('MEX1;MEX2;BRA5;FWC00;CC14')
+    expect(result).toEqual({ valid: true, stickers: ['MEX1', 'MEX2', 'BRA5', 'FWC00', 'CC14'] })
   })
 
-  it('strips spaces around numbers', () => {
-    const result = parseStickerFile(' 1 ; 5 ; 23 ')
-    expect(result).toEqual({ valid: true, stickers: [1, 5, 23] })
+  it('uppercases and strips spaces', () => {
+    const result = parseStickerFile(' mex1 ; bra5 ; fwc00 ')
+    expect(result).toEqual({ valid: true, stickers: ['MEX1', 'BRA5', 'FWC00'] })
   })
 
-  it('deduplicates repeated numbers', () => {
-    const result = parseStickerFile('5;5;10;10')
-    expect(result).toEqual({ valid: true, stickers: [5, 10] })
+  it('deduplicates repeated codes', () => {
+    const result = parseStickerFile('MEX1;MEX1;BRA5;BRA5')
+    expect(result).toEqual({ valid: true, stickers: ['MEX1', 'BRA5'] })
   })
 
-  it('rejects numbers below 1', () => {
-    const result = parseStickerFile('0;5')
+  it('rejects unknown codes', () => {
+    const result = parseStickerFile('XYZ99;MEX1')
     expect(result.valid).toBe(false)
     if (!result.valid) {
-      expect(result.errors.some((e) => e.includes('0'))).toBe(true)
+      expect(result.errors.some((e) => e.includes('XYZ99'))).toBe(true)
     }
   })
 
-  it('rejects numbers above 980', () => {
-    const result = parseStickerFile('981;5')
+  it('rejects plain numbers', () => {
+    const result = parseStickerFile('1;5;23')
     expect(result.valid).toBe(false)
-    if (!result.valid) {
-      expect(result.errors.some((e) => e.includes('981'))).toBe(true)
-    }
-  })
-
-  it('rejects non-numeric values', () => {
-    const result = parseStickerFile('abc;5')
-    expect(result.valid).toBe(false)
-    if (!result.valid) {
-      expect(result.errors.some((e) => e.includes('abc'))).toBe(true)
-    }
   })
 
   it('returns error for empty input', () => {
@@ -46,8 +35,16 @@ describe('parseStickerFile', () => {
     expect(result.valid).toBe(false)
   })
 
-  it('accepts boundary values 1 and 980', () => {
-    const result = parseStickerFile('1;980')
-    expect(result).toEqual({ valid: true, stickers: [1, 980] })
+  it('accepts boundary sticker codes', () => {
+    const result = parseStickerFile('FWC00;FWC19;CC1;CC14;MEX1;MEX20;PAN20')
+    expect(result.valid).toBe(true)
+    if (result.valid) {
+      expect(result.stickers).toHaveLength(7)
+    }
+  })
+
+  it('accepts all FWC codes', () => {
+    const result = parseStickerFile('FWC9;FWC10;FWC11;FWC19')
+    expect(result.valid).toBe(true)
   })
 })

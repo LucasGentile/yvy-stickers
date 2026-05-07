@@ -8,7 +8,7 @@ export type SaveStickersResult =
 
 export async function saveStickers(
   userId: string,
-  stickerIds: number[]
+  stickerIds: string[]
 ): Promise<SaveStickersResult> {
   if (!userId) {
     return { success: false, error: 'Usuário não identificado.' }

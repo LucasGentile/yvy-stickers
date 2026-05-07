@@ -1,4 +1,6 @@
-export type ParseResult = { valid: true; stickers: number[] } | { valid: false; errors: string[] }
+import { STICKER_SET } from '@/lib/stickers'
+
+export type ParseResult = { valid: true; stickers: string[] } | { valid: false; errors: string[] }
 
 export function parseStickerFile(content: string): ParseResult {
   if (!content.trim()) {
@@ -7,25 +9,21 @@ export function parseStickerFile(content: string): ParseResult {
 
   const parts = content
     .split(';')
-    .map((p) => p.trim())
+    .map((p) => p.trim().toUpperCase())
     .filter((p) => p !== '')
+
   const errors: string[] = []
-  const seen = new Set<number>()
-  const stickers: number[] = []
+  const seen = new Set<string>()
+  const stickers: string[] = []
 
   for (const part of parts) {
-    const n = Number(part)
-    if (!Number.isInteger(n) || isNaN(n)) {
-      errors.push(`Valor inválido: "${part}"`)
+    if (!STICKER_SET.has(part)) {
+      errors.push(`Código inválido: "${part}"`)
       continue
     }
-    if (n < 1 || n > 980) {
-      errors.push(`Número fora do intervalo (1–980): ${n}`)
-      continue
-    }
-    if (!seen.has(n)) {
-      seen.add(n)
-      stickers.push(n)
+    if (!seen.has(part)) {
+      seen.add(part)
+      stickers.push(part)
     }
   }
 

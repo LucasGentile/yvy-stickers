@@ -24,7 +24,7 @@ export default function MatchesScreen() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-gray-400">
+      <div className="flex flex-1 items-center justify-center text-yvy-muted">
         <p>Buscando trocas...</p>
       </div>
     )
@@ -32,9 +32,9 @@ export default function MatchesScreen() {
 
   if (error) {
     return (
-      <div className="p-6 text-center text-gray-500">
+      <div className="p-6 text-center text-yvy-muted">
         <p>{error}</p>
-        <a href="/" className="text-green-600 underline mt-2 inline-block">
+        <a href="/" className="text-yvy-accent underline mt-2 inline-block">
           Ir para o cadastro
         </a>
       </div>
@@ -44,23 +44,31 @@ export default function MatchesScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900">Melhores trocas</h2>
-        <a href="/stickers" className="text-sm text-green-600 underline">
-          Atualizar minhas figurinhas
+        <h2 className="text-lg font-bold text-yvy-dark">Melhores Trocas</h2>
+        <a href="/stickers" className="text-sm text-yvy-accent underline">
+          Atualizar figurinhas
         </a>
       </div>
 
       {matches.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p className="text-base">Nenhuma troca disponível no momento.</p>
-          <p className="text-sm mt-1">Tente novamente quando mais moradores se cadastrarem.</p>
+        <div className="text-center py-16 text-yvy-muted">
+          <p className="text-base">Nenhum participante ainda.</p>
+          <p className="text-sm mt-1">Aguarde mais moradores se cadastrarem.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {matches.map((m) => (
-            <MatchCard key={m.userId} match={m} />
-          ))}
-        </div>
+        <>
+          <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-3 text-xs text-yvy-muted leading-relaxed">
+            Ranking de compatibilidade — quem aparece primeiro é quem mais tem figurinhas para
+            trocar <strong className="text-yvy-dark">com você</strong>, e você com ele/ela ao mesmo
+            tempo. Contate diretamente pelo WhatsApp.
+          </div>
+
+          <div className="space-y-3">
+            {matches.map((m, i) => (
+              <MatchCard key={m.userId} match={m} rank={i + 1} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

@@ -4,13 +4,14 @@ import { supabase } from '@/lib/supabase'
 
 export type UserData = {
   inputMode: 'have' | 'need'
-  stickerIds: number[]
+  stickerIds: string[]
+  approved: boolean
 }
 
 export async function getUserData(userId: string): Promise<UserData | null> {
   const { data: user } = await supabase
     .from('users')
-    .select('input_mode')
+    .select('input_mode, approved')
     .eq('id', userId)
     .maybeSingle()
 
@@ -24,5 +25,6 @@ export async function getUserData(userId: string): Promise<UserData | null> {
   return {
     inputMode: user.input_mode as 'have' | 'need',
     stickerIds: (stickers ?? []).map((r) => r.sticker_id),
+    approved: user.approved as boolean,
   }
 }

@@ -17,6 +17,10 @@ export async function registerUser(formData: FormData): Promise<RegisterUserResu
     return { success: false, error: 'Todos os campos são obrigatórios.' }
   }
 
+  if (name.trim().split(/\s+/).length < 2) {
+    return { success: false, error: 'Informe nome e sobrenome.' }
+  }
+
   if (!/^\d{4}$/.test(apartment.trim())) {
     return { success: false, error: 'O apartamento deve ter exatamente 4 dígitos.' }
   }
@@ -31,7 +35,7 @@ export async function registerUser(formData: FormData): Promise<RegisterUserResu
   const normalizedTower = normalizeText(tower)
   const displayKey = buildDisplayKey(normalizedName, normalizedApartment, normalizedTower)
 
-  // Check if phone already exists
+  // Check if phone already exists → returning user
   const { data: existing } = await supabase
     .from('users')
     .select('id, display_key')
@@ -40,6 +44,17 @@ export async function registerUser(formData: FormData): Promise<RegisterUserResu
 
   if (existing) {
     return { success: true, userId: existing.id, displayKey: existing.display_key }
+  }
+
+  // Check if name is already taken
+  const { data: nameTaken } = await supabase
+    .from('users')
+    .select('id')
+    .eq('name', normalizedName)
+    .maybeSingle()
+
+  if (nameTaken) {
+    return { success: false, error: 'Esse nome já está cadastrado. Use um apelido ou nome diferente.' }
   }
 
   const { data, error } = await supabase

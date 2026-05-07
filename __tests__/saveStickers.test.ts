@@ -13,7 +13,7 @@ describe('saveStickers', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('returns error when userId is empty', async () => {
-    const result = await saveStickers('', [1, 2, 3])
+    const result = await saveStickers('', ['MEX1', 'MEX2', 'MEX3'])
     expect(result.success).toBe(false)
   })
 
@@ -25,7 +25,7 @@ describe('saveStickers', () => {
       insert: insertMock,
     })
 
-    const result = await saveStickers('user-a', [1, 2, 3])
+    const result = await saveStickers('user-a', ['MEX1', 'MEX2', 'MEX3'])
     expect(result.success).toBe(true)
     if (result.success) expect(result.count).toBe(3)
   })
@@ -47,7 +47,7 @@ describe('saveStickers', () => {
       eq: vi.fn().mockResolvedValue({ error: { message: 'db error' } }),
     })
 
-    const result = await saveStickers('user-a', [1, 2])
+    const result = await saveStickers('user-a', ['MEX1', 'MEX2'])
     expect(result.success).toBe(false)
   })
 })

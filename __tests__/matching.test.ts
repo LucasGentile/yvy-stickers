@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock supabase before importing matching
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: vi.fn(),
@@ -12,13 +11,57 @@ import { supabase } from '@/lib/supabase'
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 
-function makeSelectChain(data: unknown) {
-  const chain = {
+// Chain for: from('users').select(...).eq(...).maybeSingle()
+function makeMyUserChain(inputMode: string) {
+  return {
     select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnValue({
+      maybeSingle: vi.fn().mockResolvedValue({ data: { input_mode: inputMode }, error: null }),
+    }),
+  }
+}
+
+// Chain for: from('user_stickers' | 'user_duplicates').select(...).eq(...)  → resolves directly
+function makeEqChain(data: unknown) {
+  return {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockResolvedValue({ data, error: null }),
+  }
+}
+
+// Chain for: from('users').select(...).neq(...)  → resolves directly (others list)
+function makeOthersChain(data: unknown) {
+  return {
+    select: vi.fn().mockReturnThis(),
     neq: vi.fn().mockResolvedValue({ data, error: null }),
   }
-  return chain
+}
+
+type SetupOptions = {
+  myMode?: string
+  myStickers?: { sticker_id: string }[]
+  myDupes?: { sticker_id: string; count: number }[]
+  others?: {
+    id: string
+    display_key: string
+    phone: string
+    input_mode: string
+    user_stickers: { sticker_id: string }[]
+    user_duplicates: { sticker_id: string; count: number }[]
+  }[]
+}
+
+function setupMocks({ myMode = 'have', myStickers = [], myDupes = [], others = [] }: SetupOptions) {
+  let usersCallCount = 0
+  mockFrom.mockImplementation((table: string) => {
+    if (table === 'users') {
+      usersCallCount++
+      return usersCallCount === 1 ? makeMyUserChain(myMode) : makeOthersChain(others)
+    }
+    if (table === 'user_stickers') return makeEqChain(myStickers)
+    if (table === 'user_duplicates') return makeEqChain(myDupes)
+    return makeEqChain([])
+  })
 }
 
 describe('getMatches', () => {
@@ -26,149 +69,114 @@ describe('getMatches', () => {
     vi.clearAllMocks()
   })
 
-  it('returns empty array when no other users', async () => {
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'user_stickers') {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }
-      }
-      return makeSelectChain([])
-    })
-
+  it('returns empty array when there are no other users', async () => {
+    setupMocks({})
     const results = await getMatches('user-a')
     expect(results).toEqual([])
   })
 
-  it('computes correct matchScore', async () => {
-    // user-a owns stickers 1, 2 → missing 3..980
-    // user-b owns stickers 3, 4 → user-a needs both → matchScore = 2
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'user_stickers') {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({
-            data: [{ sticker_id: 1 }, { sticker_id: 2 }],
-            error: null,
-          }),
-        }
-      }
-      return {
-        select: vi.fn().mockReturnThis(),
-        neq: vi.fn().mockResolvedValue({
-          data: [
-            {
-              id: 'user-b',
-              display_key: 'b-0101-1',
-              phone: '11111111111',
-              user_stickers: [{ sticker_id: 3 }, { sticker_id: 4 }],
-            },
+  it('matchScore = count of other user dupes that I need', async () => {
+    // user-a owns MEX1,MEX2 → needs everything else including BRA1,BRA2
+    // user-b owns BRA1,BRA2 and has dupes of both → matchScore = 2
+    setupMocks({
+      myStickers: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }],
+      others: [
+        {
+          id: 'user-b',
+          display_key: 'b-0101-1',
+          phone: '11111111111',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'BRA1' }, { sticker_id: 'BRA2' }],
+          user_duplicates: [
+            { sticker_id: 'BRA1', count: 2 },
+            { sticker_id: 'BRA2', count: 1 },
           ],
-          error: null,
-        }),
-      }
+        },
+      ],
     })
 
     const results = await getMatches('user-a')
+    expect(results).toHaveLength(1)
     expect(results[0].matchScore).toBe(2)
+    expect(results[0].matchStickers).toEqual(['BRA1', 'BRA2'])
   })
 
-  it('computes correct reciprocalScore', async () => {
-    // user-a owns 1,2 — user-b missing 1 → reciprocalScore = 1
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'user_stickers') {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({
-            data: [{ sticker_id: 1 }, { sticker_id: 2 }],
-            error: null,
-          }),
-        }
-      }
-      return {
-        select: vi.fn().mockReturnThis(),
-        neq: vi.fn().mockResolvedValue({
-          data: [
-            {
-              id: 'user-b',
-              display_key: 'b-0101-1',
-              phone: '11111111111',
-              // user-b owns everything except sticker 1
-              user_stickers: Array.from({ length: 979 }, (_, i) => ({ sticker_id: i + 2 })),
-            },
-          ],
-          error: null,
-        }),
-      }
+  it('reciprocalScore = count of my dupes that the other user needs', async () => {
+    // user-a owns BRA1, has dupe of BRA1; needs MEX1,MEX2,...
+    // user-b owns MEX1,MEX2, has dupe of MEX1 → matchScore = 1
+    // user-b needs BRA1,... → user-a has dupe of BRA1 → reciprocalScore = 1
+    setupMocks({
+      myStickers: [{ sticker_id: 'BRA1' }],
+      myDupes: [{ sticker_id: 'BRA1', count: 2 }],
+      others: [
+        {
+          id: 'user-b',
+          display_key: 'b-0101-1',
+          phone: '11111111111',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }],
+          user_duplicates: [{ sticker_id: 'MEX1', count: 1 }],
+        },
+      ],
     })
 
     const results = await getMatches('user-a')
+    expect(results).toHaveLength(1)
+    expect(results[0].matchScore).toBe(1)
     expect(results[0].reciprocalScore).toBe(1)
   })
 
   it('sorts by matchScore DESC then reciprocalScore DESC', async () => {
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'user_stickers') {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({ data: [], error: null }),
-        }
-      }
-      return {
-        select: vi.fn().mockReturnThis(),
-        neq: vi.fn().mockResolvedValue({
-          data: [
-            { id: 'b', display_key: 'b-0101-1', phone: '1', user_stickers: [{ sticker_id: 1 }] },
-            {
-              id: 'c',
-              display_key: 'c-0202-2',
-              phone: '2',
-              user_stickers: [{ sticker_id: 1 }, { sticker_id: 2 }],
-            },
+    // user-a owns nothing, needs everything
+    // user-b has 1 dupe → matchScore 1
+    // user-c has 2 dupes → matchScore 2 → should appear first
+    setupMocks({
+      others: [
+        {
+          id: 'user-b',
+          display_key: 'b-0101-1',
+          phone: '1',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'MEX1' }],
+          user_duplicates: [{ sticker_id: 'MEX1', count: 1 }],
+        },
+        {
+          id: 'user-c',
+          display_key: 'c-0202-2',
+          phone: '2',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }],
+          user_duplicates: [
+            { sticker_id: 'MEX1', count: 1 },
+            { sticker_id: 'MEX2', count: 3 },
           ],
-          error: null,
-        }),
-      }
+        },
+      ],
     })
 
-    // Both b and c own stickers that user-a (owns nothing) needs
-    // c has 2 stickers user-a needs, b has 1 → c should be first
     const results = await getMatches('user-a')
-    expect(results[0].userId).toBe('c')
-    expect(results[1].userId).toBe('b')
+    expect(results[0].userId).toBe('user-c')
+    expect(results[1].userId).toBe('user-b')
   })
 
-  it('filters out users with zero match and zero reciprocal', async () => {
-    mockFrom.mockImplementation((table: string) => {
-      if (table === 'user_stickers') {
-        return {
-          select: vi.fn().mockReturnThis(),
-          // user-a owns all 980 stickers → missing none
-          eq: vi.fn().mockResolvedValue({
-            data: Array.from({ length: 980 }, (_, i) => ({ sticker_id: i + 1 })),
-            error: null,
-          }),
-        }
-      }
-      return {
-        select: vi.fn().mockReturnThis(),
-        neq: vi.fn().mockResolvedValue({
-          data: [
-            {
-              id: 'user-b',
-              display_key: 'b-0101-1',
-              phone: '1',
-              // user-b also owns all 980
-              user_stickers: Array.from({ length: 980 }, (_, i) => ({ sticker_id: i + 1 })),
-            },
-          ],
-          error: null,
-        }),
-      }
+  it('still shows users who have no tradeable duplicates', async () => {
+    // user-b owns stickers user-a needs but has NO duplicates → matchScore 0, but still shown
+    setupMocks({
+      myStickers: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }],
+      others: [
+        {
+          id: 'user-b',
+          display_key: 'b-0101-1',
+          phone: '1',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'BRA1' }, { sticker_id: 'BRA2' }],
+          user_duplicates: [],
+        },
+      ],
     })
 
     const results = await getMatches('user-a')
-    expect(results).toHaveLength(0)
+    expect(results).toHaveLength(1)
+    expect(results[0].matchScore).toBe(0)
   })
 })

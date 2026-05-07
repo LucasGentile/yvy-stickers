@@ -39,20 +39,49 @@ export type Database = {
   }
   public: {
     Tables: {
+      user_duplicates: {
+        Row: {
+          count: number
+          id: string
+          sticker_id: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          id?: string
+          sticker_id: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          id?: string
+          sticker_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_duplicates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_stickers: {
         Row: {
           id: string
-          sticker_id: number
+          sticker_id: string
           user_id: string
         }
         Insert: {
           id?: string
-          sticker_id: number
+          sticker_id: string
           user_id: string
         }
         Update: {
           id?: string
-          sticker_id?: number
+          sticker_id?: string
           user_id?: string
         }
         Relationships: [
@@ -68,6 +97,7 @@ export type Database = {
       users: {
         Row: {
           apartment: string
+          approved: boolean
           created_at: string
           display_key: string
           id: string
@@ -78,6 +108,7 @@ export type Database = {
         }
         Insert: {
           apartment: string
+          approved?: boolean
           created_at?: string
           display_key: string
           id?: string
@@ -88,6 +119,7 @@ export type Database = {
         }
         Update: {
           apartment?: string
+          approved?: boolean
           created_at?: string
           display_key?: string
           id?: string
