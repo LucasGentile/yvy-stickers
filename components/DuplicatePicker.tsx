@@ -1,7 +1,34 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ALL_TEAMS, Team } from '@/lib/stickers'
+import { ALL_TEAMS, ALL_STICKER_SECTIONS, StickerSpecial } from '@/lib/stickers'
+
+// Unified shape for both country teams and special sections
+type PickerSection = {
+  key: string
+  label: string
+  flagCode?: string
+  icon?: string
+  stickers: string[]
+  isSpecial: boolean
+}
+
+const ALL_SECTIONS: PickerSection[] = [
+  ...ALL_TEAMS.map((t) => ({
+    key: t.code,
+    label: t.name,
+    flagCode: t.flagCode,
+    stickers: t.stickers,
+    isSpecial: false,
+  })),
+  ...(ALL_STICKER_SECTIONS.filter((s): s is StickerSpecial => s.type === 'special').map((s) => ({
+    key: s.label,
+    label: s.label,
+    icon: s.icon,
+    stickers: s.stickers,
+    isSpecial: true,
+  }))),
+]
 
 interface Props {
   ownedSet: Set<string>
@@ -11,33 +38,33 @@ interface Props {
 export default function DuplicatePicker({ ownedSet, onSelect }: Props) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
+  const [selected, setSelected] = useState<PickerSection | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   const filtered = query.trim()
-    ? ALL_TEAMS.filter(
-        (t) =>
-          t.name.toLowerCase().includes(query.toLowerCase()) ||
-          t.code.toLowerCase().includes(query.toLowerCase())
+    ? ALL_SECTIONS.filter((s) =>
+        s.label.toLowerCase().includes(query.toLowerCase()) ||
+        s.key.toLowerCase().includes(query.toLowerCase()) ||
+        (s.isSpecial && s.stickers[0]?.replace(/\d+$/, '').toLowerCase().includes(query.toLowerCase()))
       )
-    : ALL_TEAMS
+    : ALL_SECTIONS
 
-  function selectTeam(team: Team) {
-    setSelectedTeam(team)
-    setQuery(team.name)
+  function selectSection(section: PickerSection) {
+    setSelected(section)
+    setQuery(section.label)
     setOpen(false)
     onSelect('')
   }
 
   function selectSticker(id: string) {
     onSelect(id)
-    setSelectedTeam(null)
+    setSelected(null)
     setQuery('')
   }
 
   function clear() {
     setQuery('')
-    setSelectedTeam(null)
+    setSelected(null)
     setOpen(false)
     onSelect('')
   }
@@ -63,12 +90,12 @@ export default function DuplicatePicker({ ownedSet, onSelect }: Props) {
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)
-            setSelectedTeam(null)
+            setSelected(null)
             setOpen(true)
             onSelect('')
           }}
           onFocus={() => setOpen(true)}
-          placeholder="Buscar país..."
+          placeholder="Buscar país ou coleção..."
           className="w-full rounded-lg border border-yvy-border pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg"
         />
         {query && (
@@ -81,27 +108,33 @@ export default function DuplicatePicker({ ownedSet, onSelect }: Props) {
           </button>
         )}
 
-        {open && !selectedTeam && (
-          <div className="absolute z-40 mt-1 w-full bg-yvy-surface border border-yvy-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+        {open && !selected && (
+          <div className="absolute z-40 mt-1 w-full bg-yvy-surface border border-yvy-border rounded-lg shadow-lg max-h-56 overflow-y-auto">
             {filtered.length === 0 ? (
-              <p className="px-3 py-2 text-sm text-yvy-muted">Nenhum país encontrado</p>
+              <p className="px-3 py-2 text-sm text-yvy-muted">Nenhum resultado encontrado</p>
             ) : (
-              filtered.map((team) => (
+              filtered.map((section) => (
                 <button
-                  key={team.code}
+                  key={section.key}
                   type="button"
-                  onClick={() => selectTeam(team)}
+                  onClick={() => selectSection(section)}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-yvy-bg transition-colors"
                 >
-                  <img
-                    src={`https://flagcdn.com/w20/${team.flagCode}.png`}
-                    width={20}
-                    height={15}
-                    alt={team.name}
-                    className="rounded-sm shrink-0"
-                  />
-                  <span className="text-yvy-text">{team.name}</span>
-                  <span className="text-yvy-muted font-mono text-xs ml-auto">{team.code}</span>
+                  {section.isSpecial ? (
+                    <span className="w-5 text-center shrink-0">{section.icon}</span>
+                  ) : (
+                    <img
+                      src={`https://flagcdn.com/w20/${section.flagCode}.png`}
+                      width={20}
+                      height={15}
+                      alt={section.label}
+                      className="rounded-sm shrink-0"
+                    />
+                  )}
+                  <span className="text-yvy-text">{section.label}</span>
+                  {!section.isSpecial && (
+                    <span className="text-yvy-muted font-mono text-xs ml-auto">{section.key}</span>
+                  )}
                 </button>
               ))
             )}
@@ -109,13 +142,13 @@ export default function DuplicatePicker({ ownedSet, onSelect }: Props) {
         )}
       </div>
 
-      {selectedTeam && (
+      {selected && (
         <div className="p-2 bg-yvy-bg rounded-lg border border-yvy-border">
           <p className="text-[10px] text-yvy-muted mb-1.5 font-medium uppercase tracking-wide">
             Figurinhas que você tem — clique para selecionar
           </p>
           <div className="flex flex-wrap gap-1">
-            {selectedTeam.stickers.map((id, idx) => {
+            {selected.stickers.map((id, idx) => {
               const owned = ownedSet.has(id)
               return (
                 <button
@@ -123,13 +156,15 @@ export default function DuplicatePicker({ ownedSet, onSelect }: Props) {
                   type="button"
                   disabled={!owned}
                   onClick={() => selectSticker(id)}
-                  className={`w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${
+                  className={`rounded-lg text-xs font-semibold transition-colors ${
+                    selected.isSpecial ? 'px-2 h-8' : 'w-10 h-10'
+                  } ${
                     owned
                       ? 'bg-yvy-dark text-white hover:bg-yvy-dark-hover'
                       : 'bg-yvy-border text-yvy-muted opacity-40 cursor-not-allowed'
                   }`}
                 >
-                  {idx + 1}
+                  {selected.isSpecial ? id : idx + 1}
                 </button>
               )
             })}
