@@ -3,8 +3,6 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
-const GROUP_URL = process.env.NEXT_PUBLIC_WHATSAPP_GROUP_URL!
-
 const SIZES = [
   { label: 'A', px: 15 },
   { label: 'A+', px: 18 },
@@ -14,12 +12,16 @@ const SIZES = [
 export default function Header() {
   const [active, setActive] = useState(0)
   const [open, setOpen] = useState(false)
+  const [groupHref, setGroupHref] = useState('/group')
 
   useEffect(() => {
     const saved = localStorage.getItem('fontSize')
     const idx = saved ? parseInt(saved, 10) : 0
     setActive(idx)
     document.documentElement.style.fontSize = `${SIZES[idx].px}px`
+
+    const uid = localStorage.getItem('userId')
+    if (uid) setGroupHref(`/group?uid=${uid}`)
   }, [])
 
   function pick(idx: number) {
@@ -71,7 +73,7 @@ export default function Header() {
         {/* Right side: WhatsApp */}
         <div className="absolute right-4">
           <a
-            href={GROUP_URL}
+            href={groupHref}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 bg-white text-yvy-dark font-semibold text-sm px-3 py-1.5 rounded-full hover:bg-yvy-bg transition-colors shrink-0"
