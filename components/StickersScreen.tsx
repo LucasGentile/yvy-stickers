@@ -310,37 +310,39 @@ export default function StickersScreen() {
         }
 
         return (
-          <div className="sticky bottom-4 space-y-2">
-            {selected.size > 0 && (
-              <div className="flex gap-1.5">
-                <button
-                  onClick={() => router.push('/matches')}
-                  className="flex-1 bg-yvy-surface border border-yvy-dark text-yvy-dark font-semibold py-2 rounded-xl text-xs transition-colors hover:bg-yvy-dark hover:text-white shadow-md"
-                >
-                  Trocas
-                </button>
-                <button
-                  onClick={() => router.push('/duplicates')}
-                  className="flex-1 bg-yvy-surface border border-yvy-border text-yvy-muted font-medium py-2 rounded-xl text-xs transition-colors hover:bg-yvy-border shadow-md"
-                >
-                  Repetidas
-                </button>
-                <button
-                  onClick={() => router.push('/missing')}
-                  className="flex-1 bg-yvy-surface border border-yvy-border text-yvy-muted font-medium py-2 rounded-xl text-xs transition-colors hover:bg-yvy-border shadow-md"
-                >
-                  Faltam
-                </button>
-              </div>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={saving || !hasChanges}
-              className="w-full bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-40 text-white font-semibold py-3.5 rounded-xl text-base transition-colors shadow-lg"
-            >
-              {label}
-            </button>
-            {saveMsg && <p className="text-center text-sm mt-2 text-yvy-muted">{saveMsg}</p>}
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-yvy-bg/95 backdrop-blur border-t border-yvy-border px-4 pt-2 pb-4 space-y-2">
+            <div className="max-w-lg mx-auto space-y-2">
+              {selected.size > 0 && (
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => router.push('/matches')}
+                    className="flex-1 bg-yvy-surface border border-yvy-dark text-yvy-dark font-semibold py-2 rounded-xl text-xs transition-colors hover:bg-yvy-dark hover:text-white shadow-md"
+                  >
+                    Trocas
+                  </button>
+                  <button
+                    onClick={() => router.push('/duplicates')}
+                    className="flex-1 bg-yvy-surface border border-yvy-border text-yvy-muted font-medium py-2 rounded-xl text-xs transition-colors hover:bg-yvy-border shadow-md"
+                  >
+                    Repetidas
+                  </button>
+                  <button
+                    onClick={() => router.push('/missing')}
+                    className="flex-1 bg-yvy-surface border border-yvy-border text-yvy-muted font-medium py-2 rounded-xl text-xs transition-colors hover:bg-yvy-border shadow-md"
+                  >
+                    Faltam
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={handleSave}
+                disabled={saving || !hasChanges}
+                className="w-full bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-40 text-white font-semibold py-3.5 rounded-xl text-base transition-colors shadow-lg"
+              >
+                {label}
+              </button>
+              {saveMsg && <p className="text-center text-sm mt-2 text-yvy-muted">{saveMsg}</p>}
+            </div>
           </div>
         )
       })()}
