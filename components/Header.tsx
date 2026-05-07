@@ -14,7 +14,9 @@ const SIZES = [
 export default function Header() {
   const [active, setActive] = useState(0)
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const dropRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('fontSize')
@@ -25,11 +27,24 @@ export default function Header() {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (
+        btnRef.current && !btnRef.current.contains(e.target as Node) &&
+        dropRef.current && !dropRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false)
+      }
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  function handleOpen() {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      setDropPos({ top: rect.bottom + 6, left: rect.left })
+    }
+    setOpen((v) => !v)
+  }
 
   function pick(idx: number) {
     setActive(idx)
@@ -52,34 +67,15 @@ export default function Header() {
 
         {/* Left side: font toggle */}
         <div className="absolute left-4">
-          <div ref={ref} className="relative">
-            <button
-              onClick={() => setOpen((v) => !v)}
-              className="text-white/60 hover:text-white transition-colors font-bold px-2 py-1.5"
-              style={{ fontSize: '12px' }}
-              aria-label="Tamanho de fonte"
-            >
-              Aa
-            </button>
-            {open && (
-              <div className="fixed top-14 left-4 bg-yvy-surface border border-yvy-border rounded-xl shadow-xl overflow-hidden z-[9999]" style={{ fontSize: '12px', minWidth: '90px' }}>
-                {SIZES.map((s, i) => (
-                  <button
-                    key={s.label}
-                    onClick={() => pick(i)}
-                    className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors ${
-                      active === i
-                        ? 'bg-yvy-dark text-white'
-                        : 'text-yvy-text hover:bg-yvy-bg'
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
+          <button
+            ref={btnRef}
+            onClick={handleOpen}
+            className="text-white/60 hover:text-white transition-colors font-bold px-2 py-1.5"
+            style={{ fontSize: '12px' }}
+            aria-label="Tamanho de fonte"
+          >
+            Aa
+          </button>
         </div>
 
         {/* Right side: WhatsApp */}
@@ -97,6 +93,27 @@ export default function Header() {
           </a>
         </div>
       </div>
+
+      {/* Dropdown rendered outside header stacking context via fixed position */}
+      {open && (
+        <div
+          ref={dropRef}
+          style={{ top: dropPos.top, left: dropPos.left, minWidth: '90px', fontSize: '14px' }}
+          className="fixed bg-yvy-surface border border-yvy-border rounded-xl shadow-xl overflow-hidden z-[9999]"
+        >
+          {SIZES.map((s, i) => (
+            <button
+              key={s.label}
+              onClick={() => pick(i)}
+              className={`w-full px-4 py-3 text-left font-medium transition-colors ${
+                active === i ? 'bg-yvy-dark text-white' : 'text-yvy-text hover:bg-yvy-bg'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
     </header>
   )
 }
