@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import WhatsAppButton from './WhatsAppButton'
 import type { MatchResult } from '@/lib/matching'
-import { effectuateTrade } from '@/actions/effectuateTrade'
+import { createTradeRequest } from '@/actions/createTradeRequest'
 
 function StickerChip({ id, selected, onToggle }: { id: string; selected: boolean; onToggle: () => void }) {
   return (
@@ -38,14 +38,14 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
     setTrading(true)
     setTradeMsg(null)
     try {
-      const result = await effectuateTrade(
+      const result = await createTradeRequest(
         currentUserId,
         match.userId,
         [...giving],
         [...receiving],
       )
       if (result.success) {
-        setTradeMsg({ ok: true, text: 'Troca registrada! Atualize a página para ver os novos dados.' })
+        setTradeMsg({ ok: true, text: `Pedido enviado para ${match.name.split(' ')[0]}! Ele/ela verá na tela de Trocas.` })
         setReceiving(new Set())
         setGiving(new Set())
         setConfirming(false)
@@ -123,7 +123,7 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
                 disabled={trading}
                 className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
               >
-                {trading ? 'Registrando...' : 'Sim, confirmar'}
+                {trading ? 'Enviando...' : 'Enviar pedido de troca'}
               </button>
             </div>
 

@@ -39,6 +39,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      pending_trades: {
+        Row: {
+          id: string
+          initiator_id: string
+          receiver_id: string
+          giving_ids: string[]
+          receiving_ids: string[]
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          initiator_id: string
+          receiver_id: string
+          giving_ids?: string[]
+          receiving_ids?: string[]
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          initiator_id?: string
+          receiver_id?: string
+          giving_ids?: string[]
+          receiving_ids?: string[]
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_trades_initiator_id_fkey"
+            columns: ["initiator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_trades_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_duplicates: {
         Row: {
           count: number

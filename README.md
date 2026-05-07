@@ -70,9 +70,9 @@ Quem aparece no topo 🏆 é a melhor troca para os *dois lados ao mesmo tempo*.
 
 Toque em *"Ver detalhes"* para ver exatamente quais figurinhas estão em jogo e selecionar as que vai trocar. O processo tem duas etapas para evitar erros:
 1. Selecione as figurinhas e toque em *"Confirmar troca"*
-2. Revise o resumo (o que vai receber e o que vai dar) e toque em *"Sim, confirmar"*
+2. Revise o resumo e toque em *"Enviar pedido de troca"*
 
-Os álbuns dos dois são atualizados automaticamente. Ou chame direto no WhatsApp para combinar antes 😉
+O pedido ficará pendente até que o outro morador aceite na tela de *Trocas > Pedidos pendentes*. Somente após a confirmação dos dois os álbuns são atualizados. Ou chame direto no WhatsApp para combinar antes 😉
 
 📋 *5. Figurinhas que faltam*
 Na aba *Faltam*, você vê tudo que ainda precisa completar. Tem um botão pra copiar a lista e colar direto no WhatsApp.
