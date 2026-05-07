@@ -62,12 +62,12 @@ export default function Header() {
               Aa
             </button>
             {open && (
-              <div className="absolute left-0 top-full mt-2 bg-yvy-surface border border-yvy-border rounded-xl shadow-lg overflow-hidden z-50" style={{ fontSize: '12px', minWidth: '80px' }}>
+              <div className="fixed top-14 left-4 bg-yvy-surface border border-yvy-border rounded-xl shadow-xl overflow-hidden z-[9999]" style={{ fontSize: '12px', minWidth: '90px' }}>
                 {SIZES.map((s, i) => (
                   <button
                     key={s.label}
                     onClick={() => pick(i)}
-                    className={`w-full px-4 py-2 text-left text-sm font-medium transition-colors ${
+                    className={`w-full px-4 py-3 text-left text-sm font-medium transition-colors ${
                       active === i
                         ? 'bg-yvy-dark text-white'
                         : 'text-yvy-text hover:bg-yvy-bg'
