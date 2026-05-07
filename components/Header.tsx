@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const GROUP_URL = process.env.NEXT_PUBLIC_WHATSAPP_GROUP_URL!
 
@@ -14,9 +14,6 @@ const SIZES = [
 export default function Header() {
   const [active, setActive] = useState(0)
   const [open, setOpen] = useState(false)
-  const [dropPos, setDropPos] = useState({ top: 0, left: 0 })
-  const btnRef = useRef<HTMLButtonElement>(null)
-  const dropRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem('fontSize')
@@ -24,27 +21,6 @@ export default function Header() {
     setActive(idx)
     document.documentElement.style.fontSize = `${SIZES[idx].px}px`
   }, [])
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (
-        btnRef.current && !btnRef.current.contains(e.target as Node) &&
-        dropRef.current && !dropRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  function handleOpen() {
-    if (btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect()
-      setDropPos({ top: rect.bottom + 6, left: rect.left })
-    }
-    setOpen((v) => !v)
-  }
 
   function pick(idx: number) {
     setActive(idx)
@@ -56,6 +32,33 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-yvy-dark text-white shadow-md">
       <div className="max-w-lg mx-auto px-4 py-3 relative flex items-center justify-center">
+
+        {/* Left side: Aa toggle + inline options */}
+        <div className="absolute left-3 flex items-center gap-1">
+          <button
+            onClick={() => setOpen((v) => !v)}
+            className="text-white/60 hover:text-white font-bold px-1.5 py-1 rounded transition-colors"
+            style={{ fontSize: '12px' }}
+            aria-label="Tamanho de fonte"
+          >
+            Aa
+          </button>
+
+          {open && SIZES.map((s, i) => (
+            <button
+              key={s.label}
+              onClick={() => pick(i)}
+              className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
+                active === i
+                  ? 'bg-white text-yvy-dark'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
         {/* Centered title */}
         <Link
           href="/"
@@ -64,19 +67,6 @@ export default function Header() {
         >
           YVY Figurinhas
         </Link>
-
-        {/* Left side: font toggle */}
-        <div className="absolute left-4">
-          <button
-            ref={btnRef}
-            onClick={handleOpen}
-            className="text-white/60 hover:text-white transition-colors font-bold px-2 py-1.5"
-            style={{ fontSize: '12px' }}
-            aria-label="Tamanho de fonte"
-          >
-            Aa
-          </button>
-        </div>
 
         {/* Right side: WhatsApp */}
         <div className="absolute right-4">
@@ -93,27 +83,6 @@ export default function Header() {
           </a>
         </div>
       </div>
-
-      {/* Dropdown rendered outside header stacking context via fixed position */}
-      {open && (
-        <div
-          ref={dropRef}
-          style={{ top: dropPos.top, left: dropPos.left, minWidth: '90px', fontSize: '14px' }}
-          className="fixed bg-yvy-surface border border-yvy-border rounded-xl shadow-xl overflow-hidden z-[9999]"
-        >
-          {SIZES.map((s, i) => (
-            <button
-              key={s.label}
-              onClick={() => pick(i)}
-              className={`w-full px-4 py-3 text-left font-medium transition-colors ${
-                active === i ? 'bg-yvy-dark text-white' : 'text-yvy-text hover:bg-yvy-bg'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-      )}
     </header>
   )
 }
