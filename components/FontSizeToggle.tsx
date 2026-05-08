@@ -36,7 +36,7 @@ export default function FontSizeToggle() {
   }
 
   return (
-    <div ref={ref} className="fixed bottom-6 left-4 z-40 flex flex-col items-start gap-1.5">
+    <div ref={ref} className="fixed bottom-32 left-4 z-40 flex flex-col items-start gap-1.5">
       {/* Options — appear above the button when open */}
       {open && (
         <div className="flex flex-col items-start gap-1">
