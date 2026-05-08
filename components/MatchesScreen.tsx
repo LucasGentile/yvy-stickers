@@ -92,7 +92,7 @@ export default function MatchesScreen() {
           <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-3 text-xs text-yvy-muted leading-relaxed">
             Ranking de compatibilidade — quem aparece primeiro é quem mais tem figurinhas para
             trocar <strong className="text-yvy-dark">com você</strong>, e você com ele/ela ao mesmo
-            tempo. Toque em <strong className="text-yvy-dark">Ver detalhes</strong> para enviar um
+            tempo. Toque em <strong className="text-yvy-dark">Realizar Troca</strong> para enviar um
             pedido de troca.
           </div>
 

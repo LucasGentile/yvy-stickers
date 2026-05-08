@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { setInputMode } from '@/actions/setInputMode'
 import { saveStickers } from '@/actions/saveStickers'
 import { getUserData } from '@/actions/getUserData'
@@ -14,7 +13,6 @@ type Mode = 'have' | 'need'
 type Step = 'mode' | 'input' | 'pending'
 
 export default function StickersScreen() {
-  const router = useRouter()
   const [userId, setUserId] = useState<string | null>(null)
   const [step, setStep] = useState<Step>('mode')
   const [mode, setMode] = useState<Mode>('have')
@@ -195,11 +193,7 @@ export default function StickersScreen() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 pb-28 space-y-6">
-      <div className="bg-yvy-surface/90 backdrop-blur rounded-xl border border-yvy-border px-4 py-2.5 shadow-md">
-        <h2 className="text-lg font-bold text-yvy-dark">Minhas Figurinhas</h2>
-      </div>
-
+    <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-4">
       {/* Grid */}
       <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4">
         <div className="mb-3">
@@ -310,30 +304,8 @@ export default function StickersScreen() {
         }
 
         return (
-          <div className="fixed bottom-0 left-0 right-0 z-40 bg-yvy-bg/95 backdrop-blur border-t border-yvy-border px-4 pt-2 pb-4 space-y-2">
-            <div className="max-w-lg mx-auto space-y-2">
-              {selected.size > 0 && (
-                <div className="flex gap-1.5">
-                  <button
-                    onClick={() => router.push('/matches')}
-                    className="flex-1 bg-yvy-surface border border-yvy-dark text-yvy-dark font-semibold py-2 rounded-xl text-xs transition-colors hover:bg-yvy-dark hover:text-white shadow-md"
-                  >
-                    Trocas
-                  </button>
-                  <button
-                    onClick={() => router.push('/duplicates')}
-                    className="flex-1 bg-yvy-surface border border-yvy-border text-yvy-muted font-medium py-2 rounded-xl text-xs transition-colors hover:bg-yvy-border shadow-md"
-                  >
-                    Repetidas
-                  </button>
-                  <button
-                    onClick={() => router.push('/missing')}
-                    className="flex-1 bg-yvy-surface border border-yvy-border text-yvy-muted font-medium py-2 rounded-xl text-xs transition-colors hover:bg-yvy-border shadow-md"
-                  >
-                    Faltam
-                  </button>
-                </div>
-              )}
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-yvy-bg/95 backdrop-blur border-t border-yvy-border px-4 pt-3 pb-4">
+            <div className="max-w-lg mx-auto">
               <button
                 onClick={handleSave}
                 disabled={saving || !hasChanges}
