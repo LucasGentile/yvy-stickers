@@ -65,16 +65,31 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-[#16a34a]',
     iconBg: 'bg-green-50',
     iconColor: 'text-green-700',
-    label: (m) => `Troca aceita com ${m.partnerName}`,
-    detail: (m) => `${m.givingCount || 0} dando · ${m.receivingCount || 0} recebendo`,
+    label: (m) => `Troca concluída com ${m.partnerName}`,
+    detail: (m) => {
+      const giving = (m.givingIds as string[] | undefined) ?? []
+      const receiving = (m.receivingIds as string[] | undefined) ?? []
+      // backwards compat: old entries only had counts
+      const g = giving.length || (m.givingCount as number) || 0
+      const r = receiving.length || (m.receivingCount as number) || 0
+      return `${g} dando · ${r} recebendo`
+    },
     realLifeHint: (m) => {
-      const ids = m.receivingIds as string[] | undefined
-      const base = `Combine com ${m.partnerName} para trocar as figurinhas físicas`
-      if (!ids || ids.length === 0) return base
+      const giving = (m.givingIds as string[] | undefined) ?? []
+      const receiving = (m.receivingIds as string[] | undefined) ?? []
       const MAX = 12
-      const shown = ids.slice(0, MAX).join(', ')
-      const extra = ids.length > MAX ? ` e mais ${ids.length - MAX}` : ''
-      return `${base}\nReceber: ${shown}${extra}`
+      const lines: string[] = [`Combine com ${m.partnerName} para trocar as figurinhas físicas`]
+      if (giving.length > 0) {
+        const shown = giving.slice(0, MAX).join(', ')
+        const extra = giving.length > MAX ? ` e mais ${giving.length - MAX}` : ''
+        lines.push(`Dar: ${shown}${extra}`)
+      }
+      if (receiving.length > 0) {
+        const shown = receiving.slice(0, MAX).join(', ')
+        const extra = receiving.length > MAX ? ` e mais ${receiving.length - MAX}` : ''
+        lines.push(`Receber: ${shown}${extra}`)
+      }
+      return lines.join('\n')
     },
   },
   trade_rejected: {

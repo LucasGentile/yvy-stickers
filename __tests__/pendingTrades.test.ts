@@ -93,7 +93,7 @@ describe('createTradeRequest', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: [], error: null }) // conflict check — no conflicts
       if (callCount === 2) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
-      return makeSelectChain({ data: { name: 'Parceiro' }, error: null }) // fire-and-forget name lookup
+      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null }) // fire-and-forget name lookup
     })
 
     const result = await createTradeRequest('user-a', 'user-b', ['MEX1'], ['BRA1'])
@@ -119,7 +119,7 @@ describe('createTradeRequest', () => {
       callCount++
       // No givingIds → no conflict check; first call is the insert
       if (callCount === 1) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
-      return makeSelectChain({ data: { name: 'Parceiro' }, error: null })
+      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null })
     })
 
     const result = await createTradeRequest('user-a', 'user-b', [], ['BRA1'])
@@ -296,7 +296,7 @@ describe('respondToTrade', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null }) // read trade
       if (callCount === 2) return makeAtomicUpdateChain({ data: { id: 'trade-1' }, error: null }) // atomic accept
-      return makeSelectChain({ data: { name: 'Parceiro' }, error: null }) // fire-and-forget name lookup
+      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null }) // fire-and-forget name lookup
     })
     mockEffectuate.mockResolvedValue({ success: true })
 
@@ -341,7 +341,7 @@ describe('respondToTrade', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
       if (callCount === 2) return makeAtomicUpdateChain({ data: { id: 'trade-1' }, error: null })
-      return makeSelectChain({ data: { name: 'Parceiro' }, error: null })
+      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null })
     })
 
     const result = await respondToTrade('trade-1', 'user-b', 'reject')
@@ -363,7 +363,7 @@ describe('respondToTrade', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
       if (callCount === 2) return makeAtomicUpdateChain({ data: { id: 'trade-1' }, error: null })
-      return makeSelectChain({ data: { name: 'Parceiro' }, error: null })
+      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null })
     })
 
     const result = await respondToTrade('trade-1', 'user-a', 'cancel')

@@ -73,7 +73,7 @@ describe('AuditScreen', () => {
     ])
 
     render(<AuditScreen />)
-    expect(await screen.findByText(/Troca aceita com Ana Lima/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Troca concluída com Ana Lima/i)).toBeInTheDocument()
     expect(await screen.findByText(/Combine com Ana Lima/i)).toBeInTheDocument()
   })
 

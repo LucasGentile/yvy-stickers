@@ -67,28 +67,32 @@ export async function respondToTrade(
     }
   }
 
-  // Fire-and-forget: look up partner name and log
+  // Fire-and-forget: look up both names and log for all affected parties
   ;(async () => {
-    const partnerId = action === 'cancel' ? trade.receiver_id : trade.initiator_id
-    const { data: partner } = await supabaseAdmin
+    const { data: users } = await supabaseAdmin
       .from('users')
-      .select('name')
-      .eq('id', partnerId)
-      .maybeSingle()
-    const partnerName = partner?.name ?? 'Usuário'
-    const actionKey = `trade_${newStatus}` as const
-    // From receiver's perspective: giving/receiving are swapped vs the trade record
-    const givingCount =
-      userId === trade.receiver_id ? trade.receiving_ids.length : trade.giving_ids.length
-    const receivingCount =
-      userId === trade.receiver_id ? trade.giving_ids.length : trade.receiving_ids.length
-    const receivingIds = userId === trade.receiver_id ? trade.giving_ids : trade.receiving_ids
-    logAction(userId, actionKey, {
-      partnerName,
-      givingCount,
-      receivingCount,
-      ...(action === 'accept' ? { receivingIds } : {}),
-    })
+      .select('id, name')
+      .in('id', [trade.initiator_id, trade.receiver_id])
+    const initiatorName = users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário'
+    const receiverName = users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
+
+    if (action === 'accept') {
+      // Log for both parties so each has a checklist entry in their history
+      logAction(trade.receiver_id, 'trade_accepted', {
+        partnerName: initiatorName,
+        givingIds: trade.receiving_ids, // receiver gives what initiator requested
+        receivingIds: trade.giving_ids, // receiver gets what initiator offered
+      })
+      logAction(trade.initiator_id, 'trade_accepted', {
+        partnerName: receiverName,
+        givingIds: trade.giving_ids,
+        receivingIds: trade.receiving_ids,
+      })
+    } else if (action === 'reject') {
+      logAction(userId, 'trade_rejected', { partnerName: initiatorName })
+    } else {
+      logAction(userId, 'trade_cancelled', { partnerName: receiverName })
+    }
   })()
 
   return { success: true }
