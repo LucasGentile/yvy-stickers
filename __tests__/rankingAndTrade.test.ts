@@ -27,7 +27,7 @@ describe('getRanking', () => {
   //   1. users table (.select().eq()) → approved users
   //   2. get_sticker_counts_by_user RPC → [{ user_id, sticker_count }]
   function mockRanking(
-    users: { id: string; name: string; apartment: string; tower: string; input_mode: string }[],
+    users: { id: string; name: string; apartment: string; tower: string }[],
     counts: { user_id: string; sticker_count: number }[]
   ) {
     let callCount = 0
@@ -51,10 +51,10 @@ describe('getRanking', () => {
     expect(result).toEqual([])
   })
 
-  it('computes completionPct correctly in have mode', async () => {
+  it('computes completionPct as sticker count / total', async () => {
     const total = ALL_STICKER_IDS.length
     mockRanking(
-      [{ id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'have' }],
+      [{ id: 'u1', name: 'Ana', apartment: '101', tower: 'A' }],
       [{ user_id: 'u1', sticker_count: 3 }]
     )
 
@@ -65,23 +65,12 @@ describe('getRanking', () => {
     expect(result[0].completionPct).toBe(Math.round((3 / total) * 100))
   })
 
-  it('computes completionPct correctly in need mode (inverts count)', async () => {
-    const total = ALL_STICKER_IDS.length
-    mockRanking(
-      [{ id: 'u1', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'need' }],
-      [{ user_id: 'u1', sticker_count: 5 }]
-    )
-
-    const result = await getRanking()
-    expect(result[0].ownedCount).toBe(total - 5)
-  })
-
-  it('sorts users by ownedCount descending', async () => {
+  it('sorts users by sticker count descending', async () => {
     const total = ALL_STICKER_IDS.length
     mockRanking(
       [
-        { id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'have' },
-        { id: 'u2', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'have' },
+        { id: 'u1', name: 'Ana', apartment: '101', tower: 'A' },
+        { id: 'u2', name: 'Bob', apartment: '202', tower: 'B' },
       ],
       [
         { user_id: 'u1', sticker_count: 10 },
@@ -96,13 +85,12 @@ describe('getRanking', () => {
     expect(result[0].totalCount).toBe(total)
   })
 
-  it('excludes users with zero sticker rows (need mode would otherwise appear 100%)', async () => {
+  it('excludes users with zero sticker rows', async () => {
     const total = ALL_STICKER_IDS.length
-    // u1 is need mode but has no rows at all → must be excluded
     mockRanking(
       [
-        { id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'need' },
-        { id: 'u2', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'have' },
+        { id: 'u1', name: 'Ana', apartment: '101', tower: 'A' },
+        { id: 'u2', name: 'Bob', apartment: '202', tower: 'B' },
       ],
       [{ user_id: 'u2', sticker_count: 5 }] // u1 absent from RPC result
     )
@@ -114,11 +102,11 @@ describe('getRanking', () => {
     expect(result[0].totalCount).toBe(total)
   })
 
-  it('breaks ties in ownedCount alphabetically by name', async () => {
+  it('breaks ties in sticker count alphabetically by name', async () => {
     mockRanking(
       [
-        { id: 'u1', name: 'Zara', apartment: '101', tower: 'A', input_mode: 'have' },
-        { id: 'u2', name: 'Ana', apartment: '202', tower: 'B', input_mode: 'have' },
+        { id: 'u1', name: 'Zara', apartment: '101', tower: 'A' },
+        { id: 'u2', name: 'Ana', apartment: '202', tower: 'B' },
       ],
       [
         { user_id: 'u1', sticker_count: 10 },

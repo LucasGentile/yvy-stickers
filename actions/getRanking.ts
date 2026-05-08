@@ -18,7 +18,7 @@ export async function getRanking(): Promise<RankedUser[]> {
 
   const { data: users } = await supabaseAdmin
     .from('users')
-    .select('id, name, apartment, tower, input_mode')
+    .select('id, name, apartment, tower')
     .eq('approved', true)
 
   if (!users || users.length === 0) return []
@@ -35,8 +35,7 @@ export async function getRanking(): Promise<RankedUser[]> {
   const ranked: RankedUser[] = users
     .filter((u) => (countByUser[u.id] ?? 0) > 0) // exclude users who haven't submitted any sticker data
     .map((u) => {
-      const count = countByUser[u.id]!
-      const ownedCount = u.input_mode === 'need' ? total - count : count
+      const ownedCount = countByUser[u.id]!
       const completionPct = Math.round((ownedCount / total) * 100)
       return {
         id: u.id,
