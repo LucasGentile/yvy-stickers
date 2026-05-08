@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
   { href: '/stickers', label: 'Minhas Figurinhas' },
+  { href: '/ranking', label: 'Ranking do Álbum' },
   { href: '/matches', label: 'Ranking de Trocas' },
   { href: '/duplicates', label: 'Repetidas' },
   { href: '/missing', label: 'Faltantes' },
