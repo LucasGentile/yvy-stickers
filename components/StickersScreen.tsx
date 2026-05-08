@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { setInputMode } from '@/actions/setInputMode'
 import { saveStickers } from '@/actions/saveStickers'
+import { importStickerFile } from '@/actions/importStickerFile'
 import { getUserData } from '@/actions/getUserData'
 import { parseStickerFile } from '@/lib/parser'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
@@ -20,6 +21,7 @@ export default function StickersScreen() {
   const [parseErrors, setParseErrors] = useState<string[]>([])
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [fileOpen, setFileOpen] = useState(false)
   const [toast, setToast] = useState<{ message: string; prev: Set<string> } | null>(null)
@@ -90,20 +92,35 @@ export default function StickersScreen() {
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !userId) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const content = ev.target?.result as string
-      const result = parseStickerFile(content)
-      if (!result.valid) {
-        setParseErrors(result.errors)
+      const parsed = parseStickerFile(content)
+      if (!parsed.valid) {
+        setParseErrors(parsed.errors)
         return
       }
       setParseErrors([])
-      setSelected(new Set(result.stickers))
-      setSaveMsg(
-        `${result.stickers.length} figurinhas carregadas. Clique em Salvar para confirmar.`
-      )
+      setImporting(true)
+      const result = await importStickerFile(userId, parsed.stickers, parsed.counts)
+      setImporting(false)
+      if (!result.success) {
+        setSaveMsg(`Erro na importação: ${result.error}`)
+        return
+      }
+      const loaded = new Set<string>(parsed.stickers)
+      setSelected(loaded)
+      lastSaved.current = new Set(loaded)
+      setStep('input')
+
+      const parts: string[] = [`${result.totalStickers} figurinhas salvas`]
+      if (result.newDuplicates > 0)
+        parts.push(`${result.newDuplicates} repetidas (${result.totalDuplicateCopies} cópias extras)`)
+      const failures = [...result.failedStickers, ...result.failedDuplicates]
+      if (failures.length > 0)
+        parts.push(`${failures.length} não salvos: ${failures.slice(0, 5).join(', ')}${failures.length > 5 ? ` e mais ${failures.length - 5}` : ''}`)
+      setSaveMsg(failures.length > 0 ? `Importado com erros — ${parts.join(' · ')}` : `✓ ${parts.join(' · ')}`)
     }
     reader.readAsText(file)
   }
@@ -271,7 +288,9 @@ export default function StickersScreen() {
         {fileOpen && (
           <div className="px-4 pb-4 space-y-3 border-t border-yvy-border">
             <p className="text-xs text-yvy-muted pt-3">
-              Formato: códigos separados por ponto-e-vírgula. Ex: <code>MEX1;BRA5;FWC00;CC14</code>
+              Códigos separados por <code>;</code> ou por linha. Repita um código para marcar como
+              repetida (ex: <code>MEX1;MEX1</code> = 1 no álbum + 1 repetida). O álbum e as
+              repetidas serão atualizados automaticamente ao carregar.
             </p>
             <input
               type="file"
@@ -362,6 +381,17 @@ export default function StickersScreen() {
               Desfazer
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Importing overlay */}
+      {importing && (
+        <div className="fixed inset-0 z-[60] bg-yvy-bg/95 backdrop-blur flex flex-col items-center justify-center gap-4 px-8">
+          <div className="w-10 h-10 border-4 border-yvy-dark border-t-transparent rounded-full animate-spin" />
+          <p className="text-lg font-bold text-yvy-dark">Importando álbum...</p>
+          <p className="text-sm text-yvy-muted text-center">
+            Salvando figurinhas e repetidas. Não feche o app.
+          </p>
         </div>
       )}
     </div>

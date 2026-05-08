@@ -109,6 +109,53 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     label: () => 'Repetida removida',
     detail: (m) => `${m.stickerId}`,
   },
+  file_import: {
+    icon: '📥',
+    borderColor: 'border-l-yvy-accent',
+    iconBg: 'bg-yvy-accent/10',
+    iconColor: 'text-yvy-accent',
+    label: () => 'Álbum importado por arquivo',
+    detail: (m) => {
+      const total = m.total as number
+      const dupItems = (m.duplicateItems as number) ?? 0
+      const dupCopies = (m.duplicateCopies as number) ?? 0
+      const failed = ((m.failedStickers as string[]) ?? []).length +
+        ((m.failedDuplicates as string[]) ?? []).length
+      const parts = [`${total} figurinha${total !== 1 ? 's' : ''} no álbum`]
+      if (dupItems > 0)
+        parts.push(`${dupItems} repetida${dupItems !== 1 ? 's' : ''} (${dupCopies} cópia${dupCopies !== 1 ? 's' : ''} extra)`)
+      if (failed > 0) parts.push(`${failed} não salvo${failed !== 1 ? 's' : ''}`)
+      return parts.join(' · ')
+    },
+    realLifeHint: (m) => {
+      const added = (m.added as number) ?? 0
+      const removed = (m.removed as number) ?? 0
+      const failedStickers = (m.failedStickers as string[]) ?? []
+      const failedDuplicates = (m.failedDuplicates as string[]) ?? []
+      const hints: string[] = []
+      if (added > 0)
+        hints.push(
+          `Cole ${added === 1 ? 'a figurinha nova' : `as ${added} figurinhas novas`} no álbum físico`
+        )
+      if (removed > 0)
+        hints.push(
+          `Verifique o álbum físico — ${removed} figurinha${removed !== 1 ? 's' : ''} foram removidas`
+        )
+      if (failedStickers.length > 0) {
+        const MAX = 10
+        const shown = failedStickers.slice(0, MAX).join(', ')
+        const extra = failedStickers.length > MAX ? ` e mais ${failedStickers.length - MAX}` : ''
+        hints.push(`Adicione manualmente ao álbum: ${shown}${extra}`)
+      }
+      if (failedDuplicates.length > 0) {
+        const MAX = 10
+        const shown = failedDuplicates.slice(0, MAX).join(', ')
+        const extra = failedDuplicates.length > MAX ? ` e mais ${failedDuplicates.length - MAX}` : ''
+        hints.push(`Adicione manualmente às repetidas: ${shown}${extra}`)
+      }
+      return hints.join('\n')
+    },
+  },
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
