@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/ranking', label: 'Ranking do Álbum' },
   { href: '/matches', label: 'Ranking de Trocas' },
   { href: '/panelinhas', label: 'Panelinhas do YVYs' },
+  { href: '/mural', label: 'Mural do YVY' },
   { href: '/duplicates', label: 'Repetidas' },
   { href: '/missing', label: 'Faltantes' },
   { href: '/historico', label: 'Histórico' },
