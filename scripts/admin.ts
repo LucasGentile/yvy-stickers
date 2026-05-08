@@ -148,6 +148,89 @@ async function debugUser(nameFragment: string) {
   }
 }
 
+async function backfillTrade(tradeId: string) {
+  const { data: trade, error } = await supabase
+    .from('pending_trades')
+    .select('id, initiator_id, receiver_id, giving_ids, receiving_ids, status, created_at')
+    .eq('id', tradeId)
+    .single()
+
+  if (error || !trade) { console.error('Trade not found:', error?.message); process.exit(1) }
+  if (trade.status !== 'accepted') { console.error(`Trade status is "${trade.status}", not accepted`); process.exit(1) }
+
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, name')
+    .in('id', [trade.initiator_id, trade.receiver_id])
+
+  const initiatorName = users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário'
+  const receiverName = users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
+
+  console.log(`\nTrade: ${trade.id}`)
+  console.log(`  ${initiatorName} → ${receiverName}`)
+  console.log(`  giving:    ${trade.giving_ids?.join(', ') || '(none)'}`)
+  console.log(`  receiving: ${trade.receiving_ids?.join(', ') || '(none)'}`)
+  console.log(`  date:      ${trade.created_at}`)
+
+  // Insert log for receiver
+  await supabase.from('audit_log').insert({
+    user_id: trade.receiver_id,
+    action: 'trade_accepted',
+    metadata: {
+      partnerName: initiatorName,
+      givingIds: trade.receiving_ids ?? [],
+      receivingIds: trade.giving_ids ?? [],
+    },
+    created_at: trade.created_at,
+  })
+
+  // Insert log for initiator
+  await supabase.from('audit_log').insert({
+    user_id: trade.initiator_id,
+    action: 'trade_accepted',
+    metadata: {
+      partnerName: receiverName,
+      givingIds: trade.giving_ids ?? [],
+      receivingIds: trade.receiving_ids ?? [],
+    },
+    created_at: trade.created_at,
+  })
+
+  console.log(`✓ Backfilled audit_log for both ${initiatorName} and ${receiverName}`)
+}
+
+async function findTrades(nameFragment: string) {
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, name')
+    .ilike('name', `%${nameFragment}%`)
+
+  if (!users?.length) { console.log(`No users matching "${nameFragment}"`); return }
+
+  const ids = users.map((u) => u.id)
+  const nameById = Object.fromEntries(users.map((u) => [u.id, u.name]))
+
+  const { data: trades } = await supabase
+    .from('pending_trades')
+    .select('id, initiator_id, receiver_id, giving_ids, receiving_ids, status, created_at')
+    .or(ids.map((id) => `initiator_id.eq.${id},receiver_id.eq.${id}`).join(','))
+    .order('created_at', { ascending: false })
+
+  // Enrich with names for all involved users
+  const allIds = [...new Set((trades ?? []).flatMap((t) => [t.initiator_id, t.receiver_id]))]
+  const { data: allUsers } = await supabase.from('users').select('id, name').in('id', allIds)
+  for (const u of allUsers ?? []) nameById[u.id] = u.name
+
+  for (const t of trades ?? []) {
+    const init = nameById[t.initiator_id] ?? t.initiator_id
+    const recv = nameById[t.receiver_id] ?? t.receiver_id
+    console.log(`\n[${t.status}] ${t.id} (${t.created_at.slice(0, 10)})`)
+    console.log(`  ${init} → ${recv}`)
+    console.log(`  giving:    ${t.giving_ids?.join(', ') || '(none)'}`)
+    console.log(`  receiving: ${t.receiving_ids?.join(', ') || '(none)'}`)
+  }
+}
+
 async function main() {
   const [cmd, arg] = process.argv.slice(2)
 
@@ -157,6 +240,8 @@ async function main() {
   else if (cmd === 'delete' && arg) await deleteUser(arg)
   else if (cmd === 'grant-admin' && arg) await grantAdmin(arg)
   else if (cmd === 'debug-user' && arg) await debugUser(arg)
+  else if (cmd === 'find-trades' && arg) await findTrades(arg)
+  else if (cmd === 'backfill-trade' && arg) await backfillTrade(arg)
   else {
     console.log(
       'Usage:\n' +
