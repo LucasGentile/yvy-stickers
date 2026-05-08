@@ -28,13 +28,13 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-yvy-dark text-white shadow-md" style={{ willChange: 'transform' }}>
+      <header className="fixed top-0 left-0 right-0 z-[70] bg-yvy-dark text-white shadow-md" style={{ willChange: 'transform' }}>
         <div className="max-w-lg mx-auto px-4 py-3 relative flex items-center justify-center">
 
           {/* Left: hamburger */}
           <button
-            onClick={() => setMenuOpen(true)}
-            aria-label="Abrir menu"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
             className="absolute left-4 flex flex-col gap-[5px] justify-center items-center w-8 h-8"
           >
             <span className="block w-5 h-0.5 bg-white rounded-full" />
@@ -58,20 +58,13 @@ export default function Header() {
         <div className="fixed inset-0 z-[60] flex">
           {/* Panel */}
           <div className="w-64 bg-yvy-dark text-white h-full flex flex-col shadow-2xl">
-            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-white/10">
               <span
                 className="tracking-[0.12em] uppercase opacity-80"
                 style={{ fontFamily: 'var(--font-bebas-neue)', fontSize: '1.1rem' }}
               >
                 Menu
               </span>
-              <button
-                onClick={() => setMenuOpen(false)}
-                aria-label="Fechar menu"
-                className="text-white/50 hover:text-white transition-colors text-lg leading-none"
-              >
-                ✕
-              </button>
             </div>
 
             <nav className="flex-1 py-2">
