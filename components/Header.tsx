@@ -6,9 +6,9 @@ import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
   { href: '/stickers', label: 'Minhas Figurinhas' },
-  { href: '/matches', label: 'Melhores Trocas' },
+  { href: '/matches', label: 'Ranking de Trocas' },
   { href: '/duplicates', label: 'Repetidas' },
-  { href: '/missing', label: 'Faltam' },
+  { href: '/missing', label: 'Faltantes' },
 ]
 
 const FONT_SIZES = [
