@@ -11,20 +11,38 @@ const NAV_ITEMS = [
   { href: '/missing', label: 'Faltam' },
 ]
 
+const FONT_SIZES = [
+  { label: 'A', px: 15 },
+  { label: 'A+', px: 18 },
+  { label: 'A++', px: 21 },
+]
+
 export default function Header() {
   const [groupHref, setGroupHref] = useState('/group')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [fontSize, setFontSize] = useState(0)
   const pathname = usePathname()
 
   useEffect(() => {
     const uid = localStorage.getItem('userId')
     if (uid) setGroupHref(`/group?uid=${uid}`)
+
+    const saved = localStorage.getItem('fontSize')
+    const idx = saved ? parseInt(saved, 10) : 0
+    setFontSize(idx)
+    document.documentElement.style.fontSize = `${FONT_SIZES[idx].px}px`
   }, [])
 
   // Close drawer on navigation
   useEffect(() => {
     setMenuOpen(false)
   }, [pathname])
+
+  function pickFontSize(idx: number) {
+    setFontSize(idx)
+    localStorage.setItem('fontSize', String(idx))
+    document.documentElement.style.fontSize = `${FONT_SIZES[idx].px}px`
+  }
 
   return (
     <>
@@ -85,6 +103,27 @@ export default function Header() {
               })}
             </nav>
 
+            {/* Font size */}
+            <div className="px-5 py-4 border-t border-white/10 space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">Tamanho do texto</p>
+              <div className="flex gap-2">
+                {FONT_SIZES.map((s, i) => (
+                  <button
+                    key={s.label}
+                    onClick={() => pickFontSize(i)}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      fontSize === i
+                        ? 'bg-white text-yvy-dark'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* WhatsApp */}
             <div className="px-5 py-4 border-t border-white/10">
               <a
                 href={groupHref}

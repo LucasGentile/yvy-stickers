@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Josefin_Sans, Bebas_Neue } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/Header'
-import FontSizeToggle from '@/components/FontSizeToggle'
 
 const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const josefinSans = Josefin_Sans({
@@ -34,7 +33,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col bg-yvy-bg text-yvy-text">
         <Header />
         <main className="flex-1 pt-14">{children}</main>
-        <FontSizeToggle />
       </body>
     </html>
   )
