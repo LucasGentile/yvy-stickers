@@ -65,7 +65,7 @@ export default function MissingScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-10 space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark">
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5">
           Figurinhas Faltantes: <span className="text-yvy-accent">{missingSet.size}</span>
         </h2>
         <a href="/stickers" className="text-xs text-yvy-muted underline">← Figurinhas</a>

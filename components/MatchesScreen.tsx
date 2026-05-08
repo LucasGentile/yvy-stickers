@@ -61,7 +61,7 @@ export default function MatchesScreen() {
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-yvy-dark">Ranking de Trocas</h2>
+          <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5">Ranking de Trocas</h2>
           {pendingCount > 0 && (
             <span className="bg-yvy-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
               {pendingCount}

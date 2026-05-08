@@ -194,7 +194,7 @@ export default function StickersScreen() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-4">
-      <h2 className="text-lg font-bold text-yvy-dark">Minhas Figurinhas</h2>
+      <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5">Minhas Figurinhas</h2>
 
       {/* Grid */}
       <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4">
