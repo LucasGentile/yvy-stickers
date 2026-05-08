@@ -5,10 +5,13 @@ import type { Json } from '@/lib/database.types'
 export function logAction(
   userId: string,
   action: string,
-  metadata: Record<string, unknown> = {},
+  metadata: Record<string, unknown> = {}
 ): void {
   supabaseAdmin
     .from('audit_log')
     .insert({ user_id: userId, action, metadata: metadata as Json })
-    .then(() => {}, () => {})
+    .then(
+      () => {},
+      () => {}
+    )
 }

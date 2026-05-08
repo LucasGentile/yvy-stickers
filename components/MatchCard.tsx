@@ -4,7 +4,15 @@ import { useState } from 'react'
 import type { MatchResult } from '@/lib/matching'
 import { createTradeRequest } from '@/actions/createTradeRequest'
 
-function StickerChip({ id, selected, onToggle }: { id: string; selected: boolean; onToggle: () => void }) {
+function StickerChip({
+  id,
+  selected,
+  onToggle,
+}: {
+  id: string
+  selected: boolean
+  onToggle: () => void
+}) {
   return (
     <button
       type="button"
@@ -28,7 +36,15 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
   const [tradeMsg, setTradeMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   function toggleSet(setter: React.Dispatch<React.SetStateAction<Set<string>>>, id: string) {
-    setter((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next })
+    setter((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
   }
 
   async function handleTrade() {
@@ -41,10 +57,13 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
         currentUserId,
         match.userId,
         [...giving],
-        [...receiving],
+        [...receiving]
       )
       if (result.success) {
-        setTradeMsg({ ok: true, text: `Pedido enviado para ${match.name.split(' ')[0]}! Ele/ela verá na tela de Trocas.` })
+        setTradeMsg({
+          ok: true,
+          text: `Pedido enviado para ${match.name.split(' ')[0]}! Ele/ela verá na tela de Trocas.`,
+        })
         setReceiving(new Set())
         setGiving(new Set())
         setConfirming(false)
@@ -71,7 +90,9 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
       >
         <div className="flex items-center justify-between">
           <p className="font-semibold text-yvy-dark capitalize">{match.name}</p>
-          <button onClick={onClose} className="text-yvy-muted text-lg leading-none">✕</button>
+          <button onClick={onClose} className="text-yvy-muted text-lg leading-none">
+            ✕
+          </button>
         </div>
 
         {/* Confirmation screen */}
@@ -86,7 +107,12 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {[...receiving].map((id) => (
-                    <span key={id} className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white">{id}</span>
+                    <span
+                      key={id}
+                      className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white"
+                    >
+                      {id}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -99,7 +125,12 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {[...giving].map((id) => (
-                    <span key={id} className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text">{id}</span>
+                    <span
+                      key={id}
+                      className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text"
+                    >
+                      {id}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -127,7 +158,9 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
             </div>
 
             {tradeMsg && (
-              <p className={`text-sm ${tradeMsg.ok ? 'text-yvy-dark' : 'text-red-600'}`}>{tradeMsg.text}</p>
+              <p className={`text-sm ${tradeMsg.ok ? 'text-yvy-dark' : 'text-red-600'}`}>
+                {tradeMsg.text}
+              </p>
             )}
           </div>
         ) : (
@@ -136,7 +169,8 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted">
-                    Ele/ela tem para mim — toque para selecionar ({receiving.size}/{match.matchStickers.length})
+                    Ele/ela tem para mim — toque para selecionar ({receiving.size}/
+                    {match.matchStickers.length})
                   </p>
                   {receiving.size > 0 && (
                     <button
@@ -150,7 +184,12 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {match.matchStickers.map((id) => (
-                    <StickerChip key={id} id={id} selected={receiving.has(id)} onToggle={() => toggleSet(setReceiving, id)} />
+                    <StickerChip
+                      key={id}
+                      id={id}
+                      selected={receiving.has(id)}
+                      onToggle={() => toggleSet(setReceiving, id)}
+                    />
                   ))}
                 </div>
               </div>
@@ -160,7 +199,8 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted">
-                    Eu tenho para ele/ela — toque para selecionar ({giving.size}/{match.reciprocalStickers.length})
+                    Eu tenho para ele/ela — toque para selecionar ({giving.size}/
+                    {match.reciprocalStickers.length})
                   </p>
                   {giving.size > 0 && (
                     <button
@@ -174,7 +214,12 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {match.reciprocalStickers.map((id) => (
-                    <StickerChip key={id} id={id} selected={giving.has(id)} onToggle={() => toggleSet(setGiving, id)} />
+                    <StickerChip
+                      key={id}
+                      id={id}
+                      selected={giving.has(id)}
+                      onToggle={() => toggleSet(setGiving, id)}
+                    />
                   ))}
                 </div>
               </div>
@@ -199,7 +244,9 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
             )}
 
             {tradeMsg && (
-              <p className={`text-sm ${tradeMsg.ok ? 'text-yvy-dark' : 'text-red-600'}`}>{tradeMsg.text}</p>
+              <p className={`text-sm ${tradeMsg.ok ? 'text-yvy-dark' : 'text-red-600'}`}>
+                {tradeMsg.text}
+              </p>
             )}
           </>
         )}
@@ -214,120 +261,129 @@ export default function MatchCard({ match, rank }: { match: MatchResult; rank: n
 
   return (
     <>
-    <div
-      className={`bg-yvy-surface rounded-xl border shadow-md flex flex-col gap-3 overflow-hidden ${
-        rank === 1
-          ? 'border-yvy-gold border-2'
-          : isMutual ? 'border-yvy-accent p-4' : 'border-yvy-border p-4'
-      }`}
-    >
-      {/* #1 trophy banner */}
-      {rank === 1 && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-yvy-gold">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M7 2H17V13C17 15.761 14.761 18 12 18C9.239 18 7 15.761 7 13V2Z" fill="white"/>
-            <path d="M7 5H4C4 5 3 10 7 11V5Z" fill="white"/>
-            <path d="M17 5H20C20 5 21 10 17 11V5Z" fill="white"/>
-            <rect x="9" y="18" width="6" height="2" fill="white"/>
-            <rect x="7" y="20" width="10" height="2" rx="1" fill="white"/>
-          </svg>
-          <span className="text-white text-[11px] font-bold uppercase tracking-widest">Melhor parceiro de troca</span>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className={`flex items-start justify-between gap-2 ${rank === 1 ? 'px-4 pb-1' : ''}`}>
-        <div className="flex items-start gap-2.5">
-          <span
-            className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold mt-0.5 ${
-              rank === 1
-                ? 'bg-yvy-gold text-white'
-                : 'bg-yvy-bg text-yvy-muted border border-yvy-border'
-            }`}
-          >
-            {rank}
-          </span>
-          <div>
-            <p className="font-semibold text-yvy-dark text-sm capitalize">{match.name}</p>
-            <p className="text-xs text-yvy-muted mt-0.5">
-              Apto {match.apartment.toUpperCase()} · Torre {match.tower}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {isMutual && (
-            <span className="text-[10px] font-semibold uppercase tracking-wide bg-yvy-accent/15 text-yvy-dark px-2 py-1 rounded-full">
-              Troca mútua
+      <div
+        className={`bg-yvy-surface rounded-xl border shadow-md flex flex-col gap-3 overflow-hidden ${
+          rank === 1
+            ? 'border-yvy-gold border-2'
+            : isMutual
+              ? 'border-yvy-accent p-4'
+              : 'border-yvy-border p-4'
+        }`}
+      >
+        {/* #1 trophy banner */}
+        {rank === 1 && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-yvy-gold">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M7 2H17V13C17 15.761 14.761 18 12 18C9.239 18 7 15.761 7 13V2Z"
+                fill="white"
+              />
+              <path d="M7 5H4C4 5 3 10 7 11V5Z" fill="white" />
+              <path d="M17 5H20C20 5 21 10 17 11V5Z" fill="white" />
+              <rect x="9" y="18" width="6" height="2" fill="white" />
+              <rect x="7" y="20" width="10" height="2" rx="1" fill="white" />
+            </svg>
+            <span className="text-white text-[11px] font-bold uppercase tracking-widest">
+              Melhor parceiro de troca
             </span>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
 
-      {/* Scores */}
-      <div className={rank === 1 ? 'px-4 pb-4 flex flex-col gap-3' : 'flex flex-col gap-3'}>
-      {match.matchScore > 0 || match.reciprocalScore > 0 ? (
-        <>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-yvy-bg rounded-lg px-3 py-2">
-              <p className="text-[10px] text-yvy-muted uppercase tracking-wide mb-0.5">
-                Ele/ela tem para mim
-              </p>
-              <p className="text-lg font-bold text-yvy-dark leading-none">
-                {match.matchScore}
-                <span className="text-xs font-normal text-yvy-muted ml-1">
-                  {match.matchScore === 1 ? 'figurinha' : 'figurinhas'}
-                </span>
-              </p>
-            </div>
-            <div className="bg-yvy-bg rounded-lg px-3 py-2">
-              <p className="text-[10px] text-yvy-muted uppercase tracking-wide mb-0.5">
-                Eu tenho para ele/ela
-              </p>
-              <p className="text-lg font-bold text-yvy-accent leading-none">
-                {match.reciprocalScore}
-                <span className="text-xs font-normal text-yvy-muted ml-1">
-                  {match.reciprocalScore === 1 ? 'figurinha' : 'figurinhas'}
-                </span>
+        {/* Header */}
+        <div className={`flex items-start justify-between gap-2 ${rank === 1 ? 'px-4 pb-1' : ''}`}>
+          <div className="flex items-start gap-2.5">
+            <span
+              className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold mt-0.5 ${
+                rank === 1
+                  ? 'bg-yvy-gold text-white'
+                  : 'bg-yvy-bg text-yvy-muted border border-yvy-border'
+              }`}
+            >
+              {rank}
+            </span>
+            <div>
+              <p className="font-semibold text-yvy-dark text-sm capitalize">{match.name}</p>
+              <p className="text-xs text-yvy-muted mt-0.5">
+                Apto {match.apartment.toUpperCase()} · Torre {match.tower}
               </p>
             </div>
           </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {isMutual && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide bg-yvy-accent/15 text-yvy-dark px-2 py-1 rounded-full">
+                Troca mútua
+              </span>
+            )}
+          </div>
+        </div>
 
-          {isMutual && (
-            <p className="text-xs text-yvy-dark font-medium">
-              Troca equilibrada de{' '}
-              <strong>{match.mutualScore}</strong>{' '}
-              {match.mutualScore === 1 ? 'figurinha' : 'figurinhas'} para cada lado.
-            </p>
+        {/* Scores */}
+        <div className={rank === 1 ? 'px-4 pb-4 flex flex-col gap-3' : 'flex flex-col gap-3'}>
+          {match.matchScore > 0 || match.reciprocalScore > 0 ? (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-yvy-bg rounded-lg px-3 py-2">
+                  <p className="text-[10px] text-yvy-muted uppercase tracking-wide mb-0.5">
+                    Ele/ela tem para mim
+                  </p>
+                  <p className="text-lg font-bold text-yvy-dark leading-none">
+                    {match.matchScore}
+                    <span className="text-xs font-normal text-yvy-muted ml-1">
+                      {match.matchScore === 1 ? 'figurinha' : 'figurinhas'}
+                    </span>
+                  </p>
+                </div>
+                <div className="bg-yvy-bg rounded-lg px-3 py-2">
+                  <p className="text-[10px] text-yvy-muted uppercase tracking-wide mb-0.5">
+                    Eu tenho para ele/ela
+                  </p>
+                  <p className="text-lg font-bold text-yvy-accent leading-none">
+                    {match.reciprocalScore}
+                    <span className="text-xs font-normal text-yvy-muted ml-1">
+                      {match.reciprocalScore === 1 ? 'figurinha' : 'figurinhas'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              {isMutual && (
+                <p className="text-xs text-yvy-dark font-medium">
+                  Troca equilibrada de <strong>{match.mutualScore}</strong>{' '}
+                  {match.mutualScore === 1 ? 'figurinha' : 'figurinhas'} para cada lado.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-xs text-yvy-muted">Sem figurinhas para trocar no momento.</p>
           )}
 
-        </>
-      ) : (
-        <p className="text-xs text-yvy-muted">Sem figurinhas para trocar no momento.</p>
-      )}
-
-      <div className="flex items-center justify-between gap-2">
-        <a
-          href={`https://wa.me/${match.phone}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-yvy-muted text-xs hover:text-yvy-dark transition-colors"
-        >
-          <svg className="w-3.5 h-3.5 fill-current flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-          </svg>
-          WhatsApp
-        </a>
-        <button
-          onClick={() => setShowDetail(true)}
-          className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
-        >
-          Realizar Troca
-        </button>
+          <div className="flex items-center justify-between gap-2">
+            <a
+              href={`https://wa.me/${match.phone}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-yvy-muted text-xs hover:text-yvy-dark transition-colors"
+            >
+              <svg
+                className="w-3.5 h-3.5 fill-current flex-shrink-0"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+              WhatsApp
+            </a>
+            <button
+              onClick={() => setShowDetail(true)}
+              className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+            >
+              Realizar Troca
+            </button>
+          </div>
+        </div>
       </div>
-      </div>
-    </div>
 
-    {showDetail && <DetailModal match={match} onClose={() => setShowDetail(false)} />}
+      {showDetail && <DetailModal match={match} onClose={() => setShowDetail(false)} />}
     </>
   )
 }

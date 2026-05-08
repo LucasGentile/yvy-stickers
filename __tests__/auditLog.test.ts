@@ -37,9 +37,7 @@ describe('logAction', () => {
 
     logAction('user-1', 'duplicate_removed')
 
-    expect(insertMock).toHaveBeenCalledWith(
-      expect.objectContaining({ metadata: {} })
-    )
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({ metadata: {} }))
   })
 
   it('does not throw when supabase fails', () => {
@@ -70,8 +68,18 @@ describe('getAuditLog', () => {
 
   it('returns entries ordered by created_at desc', async () => {
     const entries = [
-      { id: 'a', action: 'stickers_saved', metadata: { total: 10 }, created_at: '2026-05-08T10:00:00Z' },
-      { id: 'b', action: 'trade_sent', metadata: { partnerName: 'Ana' }, created_at: '2026-05-07T10:00:00Z' },
+      {
+        id: 'a',
+        action: 'stickers_saved',
+        metadata: { total: 10 },
+        created_at: '2026-05-08T10:00:00Z',
+      },
+      {
+        id: 'b',
+        action: 'trade_sent',
+        metadata: { partnerName: 'Ana' },
+        created_at: '2026-05-07T10:00:00Z',
+      },
     ]
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),

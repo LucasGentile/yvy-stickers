@@ -30,8 +30,9 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-yvy-accent',
     iconBg: 'bg-yvy-accent/10',
     iconColor: 'text-yvy-accent',
-    label: (m) => `Pedido de troca enviado`,
-    detail: (m) => `Para ${m.partnerName} · ${m.givingCount || 0} dando, ${m.receivingCount || 0} recebendo`,
+    label: () => `Pedido de troca enviado`,
+    detail: (m) =>
+      `Para ${m.partnerName} · ${m.givingCount || 0} dando, ${m.receivingCount || 0} recebendo`,
   },
   trade_accepted: {
     icon: '🤝',
@@ -129,7 +130,9 @@ function EventCard({ entry }: { entry: AuditEntry }) {
   return (
     <div className={`flex gap-3 border-l-[3px] pl-3 py-1 ${cfg.borderColor}`}>
       {/* Icon */}
-      <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${cfg.iconBg} ${cfg.iconColor}`}>
+      <div
+        className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${cfg.iconBg} ${cfg.iconColor}`}
+      >
         {cfg.icon}
       </div>
 
@@ -137,7 +140,9 @@ function EventCard({ entry }: { entry: AuditEntry }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-semibold text-yvy-dark leading-snug">{label}</p>
-          <span className="text-[10px] text-yvy-muted shrink-0 mt-0.5">{relativeTime(entry.created_at)}</span>
+          <span className="text-[10px] text-yvy-muted shrink-0 mt-0.5">
+            {relativeTime(entry.created_at)}
+          </span>
         </div>
         <p className="text-xs text-yvy-muted mt-0.5">{detail}</p>
 
@@ -163,7 +168,10 @@ export default function AuditScreen() {
 
   useEffect(() => {
     const uid = localStorage.getItem('userId')
-    if (!uid) { setLoading(false); return }
+    if (!uid) {
+      setLoading(false)
+      return
+    }
     setUserId(uid)
     getAuditLog(uid)
       .then(setEntries)
@@ -183,13 +191,19 @@ export default function AuditScreen() {
     return (
       <div className="p-6 text-center text-yvy-muted">
         <p>Você precisa se identificar primeiro.</p>
-        <a href="/" className="text-yvy-accent underline mt-2 inline-block">Ir para o cadastro</a>
+        <a href="/" className="text-yvy-accent underline mt-2 inline-block">
+          Ir para o cadastro
+        </a>
       </div>
     )
   }
 
   if (error) {
-    return <div className="p-6 text-center text-yvy-muted"><p>{error}</p></div>
+    return (
+      <div className="p-6 text-center text-yvy-muted">
+        <p>{error}</p>
+      </div>
+    )
   }
 
   const groups = groupByDay(entries)
@@ -206,8 +220,9 @@ export default function AuditScreen() {
       {/* What this page is for */}
       <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
         <p className="text-xs text-amber-800 leading-relaxed">
-          <span className="font-semibold">Para usar como checklist:</span> revise as ações marcadas com{' '}
-          <span className="text-amber-500 font-bold">⚑</span> para confirmar que você já as realizou no álbum físico.
+          <span className="font-semibold">Para usar como checklist:</span> revise as ações marcadas
+          com <span className="text-amber-500 font-bold">⚑</span> para confirmar que você já as
+          realizou no álbum físico.
         </p>
       </div>
 
@@ -222,7 +237,9 @@ export default function AuditScreen() {
             <div key={day}>
               {/* Day header */}
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted">{day}</span>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted">
+                  {day}
+                </span>
                 <div className="flex-1 h-px bg-yvy-border" />
               </div>
 

@@ -15,7 +15,7 @@ type Step = 'mode' | 'input' | 'pending'
 export default function StickersScreen() {
   const [userId, setUserId] = useState<string | null>(null)
   const [step, setStep] = useState<Step>('mode')
-  const [mode, setMode] = useState<Mode>('have')
+  const [, setMode] = useState<Mode>('have')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [parseErrors, setParseErrors] = useState<string[]>([])
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
@@ -34,7 +34,10 @@ export default function StickersScreen() {
   // Warn before tab close / refresh when unsaved
   useEffect(() => {
     if (!hasChanges) return
-    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [hasChanges])
@@ -208,9 +211,12 @@ export default function StickersScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-4">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">Minhas Figurinhas</h2>
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+          Minhas Figurinhas
+        </h2>
         <span className="text-sm font-semibold text-yvy-accent">
-          {selected.size}<span className="text-yvy-muted font-normal">/{ALL_STICKER_IDS.length}</span>
+          {selected.size}
+          <span className="text-yvy-muted font-normal">/{ALL_STICKER_IDS.length}</span>
         </span>
       </div>
 
@@ -265,8 +271,7 @@ export default function StickersScreen() {
         {fileOpen && (
           <div className="px-4 pb-4 space-y-3 border-t border-yvy-border">
             <p className="text-xs text-yvy-muted pt-3">
-              Formato: códigos separados por ponto-e-vírgula. Ex:{' '}
-              <code>MEX1;BRA5;FWC00;CC14</code>
+              Formato: códigos separados por ponto-e-vírgula. Ex: <code>MEX1;BRA5;FWC00;CC14</code>
             </p>
             <input
               type="file"
@@ -283,12 +288,16 @@ export default function StickersScreen() {
             )}
             <div className="pt-2 border-t border-yvy-border">
               <p className="text-xs text-yvy-muted mb-2">
-                Escolheu o modo errado? Você pode redefinir, mas isso apagará todas as figurinhas salvas.
+                Escolheu o modo errado? Você pode redefinir, mas isso apagará todas as figurinhas
+                salvas.
               </p>
               <button
                 type="button"
                 onClick={() => {
-                  if (!confirm('Isso vai apagar toda a sua seleção e redefinir o modo. Tem certeza?')) return
+                  if (
+                    !confirm('Isso vai apagar toda a sua seleção e redefinir o modo. Tem certeza?')
+                  )
+                    return
                   setSelected(new Set())
                   setSaveMsg(null)
                   setStep('mode')
@@ -308,9 +317,10 @@ export default function StickersScreen() {
         if (saving) {
           label = 'Salvando...'
         } else if (!hasChanges) {
-          label = lastSaved.current.size === 0 && selected.size === 0
-            ? 'Nenhuma figurinha selecionada'
-            : 'Tudo salvo ✓'
+          label =
+            lastSaved.current.size === 0 && selected.size === 0
+              ? 'Nenhuma figurinha selecionada'
+              : 'Tudo salvo ✓'
         } else if (addedCount > 0 && removedCount === 0) {
           label = `Salvar +${addedCount} figurinha${addedCount !== 1 ? 's' : ''}`
         } else if (removedCount > 0 && addedCount === 0) {
@@ -345,7 +355,10 @@ export default function StickersScreen() {
         <div className="fixed bottom-6 left-0 right-0 flex justify-center px-4 z-50">
           <div className="bg-yvy-dark text-white rounded-xl px-4 py-3 flex items-center gap-4 shadow-lg w-full max-w-sm">
             <p className="text-sm flex-1">{toast.message}</p>
-            <button onClick={handleUndo} className="text-yvy-accent font-semibold text-sm whitespace-nowrap">
+            <button
+              onClick={handleUndo}
+              className="text-yvy-accent font-semibold text-sm whitespace-nowrap"
+            >
               Desfazer
             </button>
           </div>

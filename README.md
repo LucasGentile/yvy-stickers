@@ -12,7 +12,7 @@ App de troca de figurinhas da Copa do Mundo 2026 — Condomínio YVY Lindóia.
   Os *asteriscos* viram negrito no WhatsApp automaticamente.
 -->
 
-📱✨ *YVY Lindóia – App de Figurinhas*
+📱✨ _YVY Lindóia – App de Figurinhas_
 
 Oi, pessoal!
 Criei um app pra facilitar a troca de figurinhas do álbum do condomínio 😊
@@ -20,83 +20,89 @@ Segue um guia rápido pra começar:
 
 ➖➖➖➖➖➖➖➖➖
 
-📲 *Como instalar no celular*
+📲 _Como instalar no celular_
 
 Acesse: https://yvy-stickers.vercel.app/
 
-*Android (Chrome)*
+_Android (Chrome)_
+
 1. Toque no menu (⋮ no canto superior direito)
-2. Clique em *"Adicionar à tela inicial"* (ou "Instalar aplicativo")
-3. Confirme em *"Adicionar"*
+2. Clique em _"Adicionar à tela inicial"_ (ou "Instalar aplicativo")
+3. Confirme em _"Adicionar"_
 
-*iPhone (Safari — obrigatório usar o Safari!)*
+_iPhone (Safari — obrigatório usar o Safari!)_
+
 1. Toque no botão de compartilhar (⬆️ na barra inferior)
-2. Role e selecione *"Adicionar à Tela de Início"*
-3. Confirme em *"Adicionar"*
+2. Role e selecione _"Adicionar à Tela de Início"_
+3. Confirme em _"Adicionar"_
 
-✅ Pronto! O ícone do *YVY Figurinhas* vai aparecer na sua tela inicial.
+✅ Pronto! O ícone do _YVY Figurinhas_ vai aparecer na sua tela inicial.
 
 ➖➖➖➖➖➖➖➖➖
 
-📖 *Como usar*
+📖 _Como usar_
 
-👤 *1. Cadastro*
-Na primeira vez, informe seu *nome completo*, *torre*, *apartamento* e *WhatsApp com DDD*. Depois escolha se vai marcar as figurinhas que *tem* ou as que *faltam*.
+👤 _1. Cadastro_
+Na primeira vez, informe seu _nome completo_, _torre_, _apartamento_ e _WhatsApp com DDD_. Depois escolha se vai marcar as figurinhas que _tem_ ou as que _faltam_.
 
-💻 *Já tem cadastro? Acessando pelo PC ou novo celular?*
-Clique em *"Já sou cadastrado"* e informe apenas seu WhatsApp. O app recupera seu perfil automaticamente.
+💻 _Já tem cadastro? Acessando pelo PC ou novo celular?_
+Clique em _"Já sou cadastrado"_ e informe apenas seu WhatsApp. O app recupera seu perfil automaticamente.
 
-🧩 *2. Minhas Figurinhas*
+🧩 _2. Minhas Figurinhas_
 Selecione suas figurinhas na grade — organizadas por grupos e seleções com a bandeirinha de cada país.
+
 - Toque para marcar/desmarcar
-- Use *"Marcar todos"* para selecionar uma seleção inteira de uma vez
-- Use a *barra de busca* para ir direto ao país desejado
-- Ações em massa têm *desfazer* disponível por 5 segundos
+- Use _"Marcar todos"_ para selecionar uma seleção inteira de uma vez
+- Use a _barra de busca_ para ir direto ao país desejado
+- Ações em massa têm _desfazer_ disponível por 5 segundos
 - O contador no rodapé mostra quantas figurinhas você tem no total
 - O app avisa se você tentar sair sem salvar
-💾 Não esqueça de salvar no final!
+  💾 Não esqueça de salvar no final!
 
-🔁 *3. Repetidas*
+🔁 _3. Repetidas_
 Informe quais figurinhas você tem duplicadas e quantas. Essas ficam disponíveis pra troca.
+
 - Busque pelo país na barra de pesquisa e toque na figurinha desejada
 - O painel do país fica aberto para registrar várias figurinhas da mesma seleção em sequência
 - Os números em dourado nos botões mostram quantidades já cadastradas
-- Use *+* e *−* diretamente na lista para ajustar quantidades
+- Use _+_ e _−_ diretamente na lista para ajustar quantidades
 
-🤝 *4. Ranking de Trocas*
+🤝 _4. Ranking de Trocas_
 O app monta um ranking de compatibilidade entre você e os outros moradores.
-- *Ele/ela tem para mim* — duplicatas desse morador que você ainda precisa
-- *Eu tenho para ele/ela* — suas duplicatas que esse morador ainda precisa
-- Quem aparece no topo 🏆 é a melhor troca para os *dois lados ao mesmo tempo*
 
-Toque em *"Realizar Troca"* para ver as figurinhas em jogo e enviar um pedido formal:
-1. Selecione as figurinhas e toque em *"Confirmar troca"*
-2. Revise o resumo e toque em *"Enviar pedido de troca"*
+- _Ele/ela tem para mim_ — duplicatas desse morador que você ainda precisa
+- _Eu tenho para ele/ela_ — suas duplicatas que esse morador ainda precisa
+- Quem aparece no topo 🏆 é a melhor troca para os _dois lados ao mesmo tempo_
+
+Toque em _"Realizar Troca"_ para ver as figurinhas em jogo e enviar um pedido formal:
+
+1. Selecione as figurinhas e toque em _"Confirmar troca"_
+2. Revise o resumo e toque em _"Enviar pedido de troca"_
 
 O pedido fica pendente até que o outro morador aceite. Somente após a confirmação dos dois os álbuns são atualizados. Se houver pedidos aguardando resposta, um ponto vermelho aparece no menu.
 
-🏅 *5. Ranking do Álbum*
+🏅 _5. Ranking do Álbum_
 Veja quem está mais perto de completar o álbum! Todos os moradores ordenados por percentual de conclusão, com medalhas de ouro, prata e bronze para o top 3 e uma barra de progresso para cada um.
 
-📋 *6. Faltantes*
+📋 _6. Faltantes_
 Veja todas as figurinhas que ainda precisa. Use a busca para filtrar por país ou coleção.
 
-📜 *7. Histórico*
+📜 _7. Histórico_
 Revise suas últimas 50 ações no app — salvamentos, trocas enviadas, aceitas, recusadas e alterações de repetidas. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico (ex: colar figurinhas novas, combinar entrega com o parceiro). Use como checklist!
 
 ➖➖➖➖➖➖➖➖➖
 
-☰ *Menu*
+☰ _Menu_
 
 Toque no ícone ≡ no canto superior esquerdo para navegar entre as telas, ajustar o tamanho da fonte e acessar o Grupo do WhatsApp.
 
 ➖➖➖➖➖➖➖➖➖
 
-💡 *Dicas rápidas*
+💡 _Dicas rápidas_
 
 - Atualize suas repetidas sempre que fizer uma troca
 - Não precisa de senha — o acesso fica salvo pelo número de WhatsApp
-- Trocou de aparelho? Entre com *"Já sou cadastrado"* e seu WhatsApp
+- Trocou de aparelho? Entre com _"Já sou cadastrado"_ e seu WhatsApp
 - Ajuste o tamanho da fonte no menu (≡) no canto superior esquerdo
 
 ➖➖➖➖➖➖➖➖➖
@@ -137,16 +143,16 @@ npx tsx scripts/admin.ts delete "5511999998888"
 
 ### Telas e rotas
 
-| Rota | Tela |
-|---|---|
-| `/` | Cadastro / login |
-| `/stickers` | Minhas Figurinhas |
-| `/duplicates` | Repetidas |
-| `/matches` | Ranking de Trocas |
-| `/ranking` | Ranking do Álbum |
-| `/missing` | Faltantes |
-| `/historico` | Histórico de ações |
-| `/group` | Redireciona para o grupo do WhatsApp |
+| Rota          | Tela                                 |
+| ------------- | ------------------------------------ |
+| `/`           | Cadastro / login                     |
+| `/stickers`   | Minhas Figurinhas                    |
+| `/duplicates` | Repetidas                            |
+| `/matches`    | Ranking de Trocas                    |
+| `/ranking`    | Ranking do Álbum                     |
+| `/missing`    | Faltantes                            |
+| `/historico`  | Histórico de ações                   |
+| `/group`      | Redireciona para o grupo do WhatsApp |
 
 ### Testes
 
@@ -174,16 +180,16 @@ Arquivos em `supabase/migrations/` — rodar após cada novo arquivo:
 supabase db push
 ```
 
-| Migração | Descrição |
-|---|---|
-| 001–006 | Schema inicial (usuários, figurinhas, repetidas, trocas) |
-| 007_audit_log | Tabela `audit_log` para o Histórico de ações |
+| Migração      | Descrição                                                |
+| ------------- | -------------------------------------------------------- |
+| 001–006       | Schema inicial (usuários, figurinhas, repetidas, trocas) |
+| 007_audit_log | Tabela `audit_log` para o Histórico de ações             |
 
 ### Variáveis de ambiente
 
-| Variável | Uso |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anon (cliente) |
-| `SUPABASE_SERVICE_KEY` | Chave service role (servidor / admin) |
-| `WHATSAPP_GROUP_URL` | Link do grupo do WhatsApp do condomínio |
+| Variável                        | Uso                                     |
+| ------------------------------- | --------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | URL do projeto Supabase                 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anon (cliente)                    |
+| `SUPABASE_SERVICE_KEY`          | Chave service role (servidor / admin)   |
+| `WHATSAPP_GROUP_URL`            | Link do grupo do WhatsApp do condomínio |
