@@ -107,7 +107,7 @@ export default function RankingScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5">Ranking do Álbum</h2>
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">Ranking do Álbum</h2>
         <p className="text-xs text-yvy-muted">{ranking.length} participantes</p>
       </div>
 
