@@ -36,7 +36,7 @@ _iPhone (Safari — obrigatório usar o Safari!)_
 2. Role e selecione _"Adicionar à Tela de Início"_
 3. Confirme em _"Adicionar"_
 
-✅ Pronto! O ícone do _YVY Figurinhas_ vai aparecer na sua tela inicial.
+✅ Pronto! O ícone do _YVY FIGURINHAS_ vai aparecer na sua tela inicial.
 
 ➖➖➖➖➖➖➖➖➖
 
@@ -49,13 +49,13 @@ Na primeira vez, informe seu _nome completo_, _torre_, _apartamento_ e _WhatsApp
 Clique em _"Já sou cadastrado"_ e informe apenas seu WhatsApp. O app recupera seu perfil automaticamente.
 
 🧩 _2. Minhas Figurinhas_
-Selecione suas figurinhas na grade — organizadas por grupos e seleções com a bandeirinha de cada país.
+Selecione suas figurinhas na grade — organizadas por grupos e seleções com a bandeirinha de cada país. O progresso de conclusão de cada país aparece ao lado do nome da seleção.
 
 - Toque para marcar/desmarcar
 - Use _"Marcar todos"_ para selecionar uma seleção inteira de uma vez
 - Use a _barra de busca_ para ir direto ao país desejado
 - Ações em massa têm _desfazer_ disponível por 5 segundos
-- O contador no rodapé mostra quantas figurinhas você tem no total
+- Você também pode carregar suas figurinhas por arquivo .txt (códigos separados por ; ou por linha)
 - O app avisa se você tentar sair sem salvar
   💾 Não esqueça de salvar no final!
 
@@ -63,32 +63,32 @@ Selecione suas figurinhas na grade — organizadas por grupos e seleções com a
 Informe quais figurinhas você tem duplicadas e quantas. Essas ficam disponíveis pra troca.
 
 - Busque pelo país na barra de pesquisa e toque na figurinha desejada
-- O painel do país fica aberto para registrar várias figurinhas da mesma seleção em sequência
-- Os números em dourado nos botões mostram quantidades já cadastradas
 - Use _+_ e _−_ diretamente na lista para ajustar quantidades
+- Figurinhas reservadas em pedidos pendentes aparecem com badge _"em troca"_
 
 🤝 _4. Ranking de Trocas_
 O app monta um ranking de compatibilidade entre você e os outros moradores.
 
-- _Ele/ela tem para mim_ — duplicatas desse morador que você ainda precisa
-- _Eu tenho para ele/ela_ — suas duplicatas que esse morador ainda precisa
 - Quem aparece no topo 🏆 é a melhor troca para os _dois lados ao mesmo tempo_
-
-Toque em _"Realizar Troca"_ para ver as figurinhas em jogo e enviar um pedido formal:
-
-1. Selecione as figurinhas e toque em _"Confirmar troca"_
-2. Revise o resumo e toque em _"Enviar pedido de troca"_
-
-O pedido fica pendente até que o outro morador aceite. Somente após a confirmação dos dois os álbuns são atualizados. Se houver pedidos aguardando resposta, um ponto vermelho aparece no menu.
+- Toque em _"Realizar Troca"_ para enviar um pedido formal
+- O pedido fica pendente até que o outro morador aceite
+- Após aceite, ambos têm *10 minutos* para desfazer a troca (requer confirmação dos dois)
+- Um ponto vermelho no menu indica pedidos esperando sua resposta
 
 🏅 _5. Ranking do Álbum_
-Veja quem está mais perto de completar o álbum! Todos os moradores ordenados por percentual de conclusão, com medalhas de ouro, prata e bronze para o top 3 e uma barra de progresso para cada um.
+Veja quem está mais perto de completar o álbum — moradores ordenados por número de figurinhas, com medalhas para o top 3.
 
-📋 _6. Faltantes_
+🏆 _6. Panelinhas do YVYs_
+Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais inseparáveis — e mais suspeitos de panelinha!
+
+📋 _7. Faltantes_
 Veja todas as figurinhas que ainda precisa. Use a busca para filtrar por país ou coleção.
 
-📜 _7. Histórico_
-Revise suas últimas 50 ações no app — salvamentos, trocas enviadas, aceitas, recusadas e alterações de repetidas. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico (ex: colar figurinhas novas, combinar entrega com o parceiro). Use como checklist!
+📰 _8. Mural do YVY_
+Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — inclui maior investidor, rei das repetidas, figurinheiro negociante e o investimento coletivo convertido em pizzas. Fins humorísticos. Sem julgamentos (mentira).
+
+📜 _9. Histórico_
+Revise suas últimas 50 ações no app. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico. Use como checklist!
 
 ➖➖➖➖➖➖➖➖➖
 
@@ -132,6 +132,15 @@ npm exec -- tsx scripts/admin.ts delete "5511999998888"
 
 # Conceder papel de admin a um usuário (pelo telefone)
 npm exec -- tsx scripts/admin.ts grant-admin "5511999998888"
+
+# Inspecionar dados de um usuário pelo nome
+npm exec -- tsx scripts/admin.ts debug-user "Nome"
+
+# Buscar trocas envolvendo um usuário
+npm exec -- tsx scripts/admin.ts find-trades "Nome"
+
+# Recriar entradas de histórico para uma troca aceita
+npm exec -- tsx scripts/admin.ts backfill-trade "<trade-uuid>"
 ```
 
 > Requer `SUPABASE_SERVICE_KEY` no arquivo `.env.local`
@@ -146,33 +155,36 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 - **Next.js 16** (App Router, Server Actions)
 - **Supabase** (PostgreSQL)
 - **Tailwind CSS v4**
+- **Vitest v2** + **React Testing Library**
 - **Vercel** (deploy)
 
 ### Telas e rotas
 
-| Rota          | Tela                                          |
-| ------------- | --------------------------------------------- |
-| `/`           | Cadastro / login                              |
-| `/stickers`   | Minhas Figurinhas                             |
-| `/duplicates` | Repetidas                                     |
-| `/matches`    | Ranking de Trocas                             |
-| `/ranking`    | Ranking do Álbum                              |
-| `/missing`    | Faltantes                                     |
-| `/historico`  | Histórico de ações                            |
-| `/admin`      | Aprovações pendentes (visível só para admins) |
-| `/group`      | Redireciona para o grupo do WhatsApp          |
+| Rota           | Tela                                          |
+| -------------- | --------------------------------------------- |
+| `/`            | Cadastro / login                              |
+| `/stickers`    | Minhas Figurinhas                             |
+| `/duplicates`  | Repetidas                                     |
+| `/matches`     | Ranking de Trocas + Pedidos pendentes         |
+| `/ranking`     | Ranking do Álbum                              |
+| `/panelinhas`  | Panelinhas do YVYs                            |
+| `/missing`     | Faltantes                                     |
+| `/mural`       | Mural do YVY (insights humorísticos)          |
+| `/historico`   | Histórico de ações                            |
+| `/admin`       | Aprovações pendentes (visível só para admins) |
+| `/group`       | Redireciona para o grupo do WhatsApp          |
 
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (95 testes, 11 arquivos)
+npm test                  # roda todos os testes (128 testes, 13 arquivos)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```
 
 Framework: **Vitest v2** + **React Testing Library** + **jsdom**
 
-Cobertura: 97% linhas / 90% branches / 96% funções (escopo: `lib/**` e `actions/**`). Cobre todas as server actions e utilitários.
+Escopo de cobertura: `lib/**` e `actions/**` (server actions e utilitários).
 
 ### Deploy
 
@@ -188,11 +200,13 @@ Arquivos em `supabase/migrations/` — rodar após cada novo arquivo:
 supabase db push
 ```
 
-| Migração       | Descrição                                                |
-| -------------- | -------------------------------------------------------- |
-| 001–006        | Schema inicial (usuários, figurinhas, repetidas, trocas) |
-| 007_audit_log  | Tabela `audit_log` para o Histórico de ações             |
-| 008_admin_role | Coluna `is_admin` na tabela `users`                      |
+| Migração                 | Descrição                                                |
+| ------------------------ | -------------------------------------------------------- |
+| 001–006                  | Schema inicial (usuários, figurinhas, repetidas, trocas) |
+| 007\_audit\_log          | Tabela `audit_log` para o Histórico de ações             |
+| 008\_admin\_role         | Coluna `is_admin` na tabela `users`                      |
+| 009\_sticker\_count\_rpc | RPC `get_sticker_counts_by_user` (contorna limite PostgREST) |
+| 010\_trade\_rollback     | Colunas `accepted_at` e `rollback_requested_by` em `pending_trades`; status `rolled_back` |
 
 ### Variáveis de ambiente
 
