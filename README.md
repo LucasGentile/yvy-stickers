@@ -115,24 +115,31 @@ Qualquer dúvida é só chamar! 🚀
 
 ### Gerenciar usuários
 
-O app exige aprovação manual para novos cadastros. Use o script de administração:
+O app exige aprovação manual para novos cadastros. O administrador pode aprovar diretamente pelo app (menu → **Aprovações**) ou via script de linha de comando:
 
 ```bash
 # Listar todos os usuários
-npx tsx scripts/admin.ts list
+npm exec -- tsx scripts/admin.ts list
 
 # Ver apenas pendentes de aprovação
-npx tsx scripts/admin.ts pending
+npm exec -- tsx scripts/admin.ts pending
 
 # Aprovar um usuário
-npx tsx scripts/admin.ts approve "5511999998888"
+npm exec -- tsx scripts/admin.ts approve "5511999998888"
 
 # Remover um usuário
-npx tsx scripts/admin.ts delete "5511999998888"
+npm exec -- tsx scripts/admin.ts delete "5511999998888"
+
+# Conceder papel de admin a um usuário (pelo telefone)
+npm exec -- tsx scripts/admin.ts grant-admin "5511999998888"
 ```
 
 > Requer `SUPABASE_SERVICE_KEY` no arquivo `.env.local`
 > (Supabase dashboard → Project Settings → API → service_role key)
+
+#### Painel de aprovações no app
+
+Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral com badge de contagem. A tela mostra nome, torre, apartamento, telefone e data de cadastro de cada usuário pendente, com botão de aprovação imediata.
 
 ### Stack
 
@@ -143,28 +150,29 @@ npx tsx scripts/admin.ts delete "5511999998888"
 
 ### Telas e rotas
 
-| Rota          | Tela                                 |
-| ------------- | ------------------------------------ |
-| `/`           | Cadastro / login                     |
-| `/stickers`   | Minhas Figurinhas                    |
-| `/duplicates` | Repetidas                            |
-| `/matches`    | Ranking de Trocas                    |
-| `/ranking`    | Ranking do Álbum                     |
-| `/missing`    | Faltantes                            |
-| `/historico`  | Histórico de ações                   |
-| `/group`      | Redireciona para o grupo do WhatsApp |
+| Rota          | Tela                                          |
+| ------------- | --------------------------------------------- |
+| `/`           | Cadastro / login                              |
+| `/stickers`   | Minhas Figurinhas                             |
+| `/duplicates` | Repetidas                                     |
+| `/matches`    | Ranking de Trocas                             |
+| `/ranking`    | Ranking do Álbum                              |
+| `/missing`    | Faltantes                                     |
+| `/historico`  | Histórico de ações                            |
+| `/admin`      | Aprovações pendentes (visível só para admins) |
+| `/group`      | Redireciona para o grupo do WhatsApp          |
 
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (59 testes, 8 arquivos)
+npm test                  # roda todos os testes (95 testes, 11 arquivos)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```
 
 Framework: **Vitest v2** + **React Testing Library** + **jsdom**
 
-Cobertura: ações do servidor (`logAction`, `getAuditLog`, `saveStickers`, `registerUser`, `createTradeRequest`, `respondToTrade`, `getMatches`), utilitários (`normalize`, `parser`) e componentes (`AuditScreen`).
+Cobertura: 97% linhas / 90% branches / 96% funções (escopo: `lib/**` e `actions/**`). Cobre todas as server actions e utilitários.
 
 ### Deploy
 
@@ -180,10 +188,11 @@ Arquivos em `supabase/migrations/` — rodar após cada novo arquivo:
 supabase db push
 ```
 
-| Migração      | Descrição                                                |
-| ------------- | -------------------------------------------------------- |
-| 001–006       | Schema inicial (usuários, figurinhas, repetidas, trocas) |
-| 007_audit_log | Tabela `audit_log` para o Histórico de ações             |
+| Migração        | Descrição                                                |
+| --------------- | -------------------------------------------------------- |
+| 001–006         | Schema inicial (usuários, figurinhas, repetidas, trocas) |
+| 007_audit_log   | Tabela `audit_log` para o Histórico de ações             |
+| 008_admin_role  | Coluna `is_admin` na tabela `users`                      |
 
 ### Variáveis de ambiente
 
