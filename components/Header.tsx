@@ -3,63 +3,17 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
-const SIZES = [
-  { label: 'A', px: 15 },
-  { label: 'A+', px: 18 },
-  { label: 'A++', px: 21 },
-]
-
 export default function Header() {
-  const [active, setActive] = useState(0)
-  const [open, setOpen] = useState(false)
   const [groupHref, setGroupHref] = useState('/group')
 
   useEffect(() => {
-    const saved = localStorage.getItem('fontSize')
-    const idx = saved ? parseInt(saved, 10) : 0
-    setActive(idx)
-    document.documentElement.style.fontSize = `${SIZES[idx].px}px`
-
     const uid = localStorage.getItem('userId')
     if (uid) setGroupHref(`/group?uid=${uid}`)
   }, [])
 
-  function pick(idx: number) {
-    setActive(idx)
-    localStorage.setItem('fontSize', String(idx))
-    document.documentElement.style.fontSize = `${SIZES[idx].px}px`
-    setOpen(false)
-  }
-
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-yvy-dark text-white shadow-md">
       <div className="max-w-lg mx-auto px-4 py-3 relative flex items-center justify-center">
-
-        {/* Left side: Aa toggle + inline options */}
-        <div className="absolute left-3 flex items-center gap-1">
-          <button
-            onClick={() => setOpen((v) => !v)}
-            className="text-white/60 hover:text-white font-bold px-1.5 py-1 rounded transition-colors"
-            style={{ fontSize: '12px' }}
-            aria-label="Tamanho de fonte"
-          >
-            Aa
-          </button>
-
-          {open && SIZES.map((s, i) => (
-            <button
-              key={s.label}
-              onClick={() => pick(i)}
-              className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
-                active === i
-                  ? 'bg-white text-yvy-dark'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
 
         {/* Centered title */}
         <Link
