@@ -45,5 +45,5 @@ export async function getRanking(): Promise<RankedUser[]> {
     }
   })
 
-  return ranked.sort((a, b) => b.completionPct - a.completionPct)
+  return ranked.sort((a, b) => b.ownedCount - a.ownedCount || a.name.localeCompare(b.name))
 }

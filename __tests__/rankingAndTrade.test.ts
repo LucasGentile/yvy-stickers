@@ -92,7 +92,7 @@ describe('getRanking', () => {
     expect(result[0].ownedCount).toBe(total - 5)
   })
 
-  it('sorts users by completionPct descending', async () => {
+  it('sorts users by ownedCount descending', async () => {
     const total = ALL_STICKER_IDS.length
     let callCount = 0
     mockAdminFrom.mockImplementation(() => {
@@ -122,8 +122,39 @@ describe('getRanking', () => {
     const result = await getRanking()
     expect(result[0].id).toBe('u2')
     expect(result[1].id).toBe('u1')
-    expect(result[0].completionPct).toBeGreaterThan(result[1].completionPct)
+    expect(result[0].ownedCount).toBeGreaterThan(result[1].ownedCount)
     expect(result[0].totalCount).toBe(total)
+  })
+
+  it('breaks ties in ownedCount alphabetically by name', async () => {
+    let callCount = 0
+    mockAdminFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockResolvedValue({
+            data: [
+              { id: 'u1', name: 'Zara', apartment: '101', tower: 'A', input_mode: 'have' },
+              { id: 'u2', name: 'Ana', apartment: '202', tower: 'B', input_mode: 'have' },
+            ],
+          }),
+        }
+      }
+      // both have 10 stickers
+      return {
+        select: vi.fn().mockResolvedValue({
+          data: [
+            ...Array.from({ length: 10 }, () => ({ user_id: 'u1' })),
+            ...Array.from({ length: 10 }, () => ({ user_id: 'u2' })),
+          ],
+        }),
+      }
+    })
+
+    const result = await getRanking()
+    expect(result[0].name).toBe('Ana')
+    expect(result[1].name).toBe('Zara')
   })
 })
 
