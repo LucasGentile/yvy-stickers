@@ -24,17 +24,21 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     label: () => 'Álbum salvo',
     detail: (m) => {
       const total = m.total as number
-      if (m.added !== undefined) {
-        const added = m.added as number
-        return added === 0
-          ? `${total} figurinha${total !== 1 ? 's' : ''} no total — nenhuma nova`
-          : `+${added} nova${added !== 1 ? 's' : ''} · ${total} no total`
+      const added = (m.added as number | undefined) ?? 0
+      const removed = (m.removed as number | undefined) ?? 0
+      if (m.added === undefined && m.removed === undefined) {
+        // legacy entries that only have total
+        return `${total} figurinha${total !== 1 ? 's' : ''} no total`
       }
-      return `${total} figurinha${total !== 1 ? 's' : ''} no total`
+      const parts: string[] = []
+      if (added > 0) parts.push(`+${added}`)
+      if (removed > 0) parts.push(`−${removed}`)
+      const delta = parts.length > 0 ? parts.join(' / ') : 'sem alterações'
+      return `${delta} · ${total} no total`
     },
     realLifeHint: (m) => {
-      const added = m.added as number | undefined
-      if (added === undefined || added === 0) return ''
+      const added = (m.added as number | undefined) ?? 0
+      if (added === 0) return ''
       return `Cole ${added === 1 ? 'a figurinha nova' : `as ${added} figurinhas novas`} no álbum físico`
     },
   },

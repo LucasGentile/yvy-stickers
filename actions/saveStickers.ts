@@ -21,6 +21,7 @@ export async function saveStickers(
     .select('sticker_id')
     .eq('user_id', userId)
   const existingSet = new Set((existing ?? []).map((r) => r.sticker_id))
+  const newSet = new Set(stickerIds)
 
   // Delete existing stickers for this user (idempotent replace)
   const { error: deleteError } = await supabase.from('user_stickers').delete().eq('user_id', userId)
@@ -29,7 +30,11 @@ export async function saveStickers(
     return { success: false, error: 'Erro ao atualizar figurinhas. Tente novamente.' }
   }
 
+  const added = stickerIds.filter((id) => !existingSet.has(id)).length
+  const removed = [...existingSet].filter((id) => !newSet.has(id)).length
+
   if (stickerIds.length === 0) {
+    logAction(userId, 'stickers_saved', { added: 0, removed, total: 0 })
     return { success: true, count: 0 }
   }
 
@@ -41,7 +46,6 @@ export async function saveStickers(
     return { success: false, error: 'Erro ao salvar figurinhas. Tente novamente.' }
   }
 
-  const added = stickerIds.filter((id) => !existingSet.has(id)).length
-  logAction(userId, 'stickers_saved', { added, total: stickerIds.length })
+  logAction(userId, 'stickers_saved', { added, removed, total: stickerIds.length })
   return { success: true, count: stickerIds.length }
 }

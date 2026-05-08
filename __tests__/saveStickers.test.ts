@@ -80,14 +80,14 @@ describe('saveStickers', () => {
     expect(result.success).toBe(false)
   })
 
-  it('logs only the added count, not total', async () => {
+  it('logs added and removed counts', async () => {
     const { logAction } = await import('@/actions/logAction')
     const insertMock = vi.fn().mockResolvedValue({ error: null })
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      // existing: MEX1 already saved
-      if (callCount === 1) return makeSelectChain(['MEX1'])
+      // existing: MEX1 + BRA5; new save: MEX1 + MEX2 + MEX3 → added=2, removed=1
+      if (callCount === 1) return makeSelectChain(['MEX1', 'BRA5'])
       if (callCount === 2) return makeDeleteChain()
       return { insert: insertMock }
     })
@@ -96,7 +96,24 @@ describe('saveStickers', () => {
     expect(logAction).toHaveBeenCalledWith(
       'user-a',
       'stickers_saved',
-      expect.objectContaining({ added: 2, total: 3 })
+      expect.objectContaining({ added: 2, removed: 1, total: 3 })
+    )
+  })
+
+  it('logs removed count when saving empty list', async () => {
+    const { logAction } = await import('@/actions/logAction')
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) return makeSelectChain(['MEX1', 'BRA5'])
+      return makeDeleteChain()
+    })
+
+    await saveStickers('user-a', [])
+    expect(logAction).toHaveBeenCalledWith(
+      'user-a',
+      'stickers_saved',
+      expect.objectContaining({ added: 0, removed: 2, total: 0 })
     )
   })
 })
