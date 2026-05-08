@@ -21,7 +21,9 @@ try {
     const [key, ...rest] = line.split('=')
     if (key && rest.length) process.env[key.trim()] = rest.join('=').trim()
   }
-} catch { /* file not found — rely on existing env */ }
+} catch {
+  /* file not found — rely on existing env */
+}
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const key = process.env.SUPABASE_SERVICE_KEY
@@ -29,7 +31,7 @@ const key = process.env.SUPABASE_SERVICE_KEY
 if (!url || !key) {
   console.error(
     'Missing env vars. Add SUPABASE_SERVICE_KEY to .env.local\n' +
-    '(Supabase dashboard → Project Settings → API → service_role key)'
+      '(Supabase dashboard → Project Settings → API → service_role key)'
   )
   process.exit(1)
 }
@@ -49,8 +51,14 @@ async function list(pendingOnly: boolean) {
   if (pendingOnly) query.eq('approved', false)
 
   const { data, error } = await query
-  if (error) { console.error(error.message); process.exit(1) }
-  if (!data?.length) { console.log(pendingOnly ? 'No pending users.' : 'No users found.'); return }
+  if (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
+  if (!data?.length) {
+    console.log(pendingOnly ? 'No pending users.' : 'No users found.')
+    return
+  }
 
   for (const u of data) {
     const status = u.approved ? '✓ aprovado' : '⏳ pendente'
@@ -88,6 +96,21 @@ async function deleteUser(phone: string) {
   console.log(`✓ Deletado: ${data.name}`)
 }
 
+async function grantAdmin(phone: string) {
+  const { data, error } = await supabase
+    .from('users')
+    .update({ is_admin: true })
+    .eq('phone', normalizePhone(phone))
+    .select('name')
+    .single()
+
+  if (error || !data) {
+    console.error('User not found or error:', error?.message)
+    process.exit(1)
+  }
+  console.log(`✓ Admin concedido: ${data.name}`)
+}
+
 async function main() {
   const [cmd, arg] = process.argv.slice(2)
 
@@ -95,13 +118,15 @@ async function main() {
   else if (cmd === 'pending') await list(true)
   else if (cmd === 'approve' && arg) await approve(arg)
   else if (cmd === 'delete' && arg) await deleteUser(arg)
+  else if (cmd === 'grant-admin' && arg) await grantAdmin(arg)
   else {
     console.log(
       'Usage:\n' +
-      '  npx tsx scripts/admin.ts list\n' +
-      '  npx tsx scripts/admin.ts pending\n' +
-      '  npx tsx scripts/admin.ts approve <phone>\n' +
-      '  npx tsx scripts/admin.ts delete <phone>'
+        '  npx tsx scripts/admin.ts list\n' +
+        '  npx tsx scripts/admin.ts pending\n' +
+        '  npx tsx scripts/admin.ts approve <phone>\n' +
+        '  npx tsx scripts/admin.ts delete <phone>\n' +
+        '  npx tsx scripts/admin.ts grant-admin <phone>'
     )
   }
 }
