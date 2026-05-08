@@ -8,53 +8,92 @@ import { getPanelinhas, Panelinha } from '@/actions/getPanelinhas'
 type Tier = {
   icon: string
   label: string
-  description: string
+  descriptions: string[]
   cardBg: string
   cardBorder: string
   labelColor: string
   countColor: string
 }
 
-function getTier(count: number): Tier {
-  if (count >= 5)
-    return {
+const TIERS: { minCount: number; tier: Tier }[] = [
+  {
+    minCount: 5,
+    tier: {
       icon: '🏆',
       label: 'Inseparáveis',
-      description: 'Já viraram referência de parceria no condomínio',
+      descriptions: [
+        'Já viraram referência de parceria no condomínio',
+        'Se um comprar um pacote, o outro já sabe o que veio',
+        'O álbum de um é quase extensão do outro',
+        'Essa dupla devia ter um álbum compartilhado',
+        'Ninguém sabe onde um termina e o outro começa',
+      ],
       cardBg: 'bg-red-50',
       cardBorder: 'border-red-300',
       labelColor: 'text-red-600',
       countColor: 'text-red-500',
-    }
-  if (count >= 3)
-    return {
+    },
+  },
+  {
+    minCount: 3,
+    tier: {
       icon: '⭐',
       label: 'Dupla de elite',
-      description: 'Essa dupla não para de trocar',
+      descriptions: [
+        'Essa dupla não para de trocar',
+        'Parceria que já virou rotina no condomínio',
+        'Já trocaram mais vezes que o Wi-Fi do prédio cai',
+        'Confia um no outro mais que no pacote de figurinhas',
+        'O síndico já suspeita de alguma coisa',
+      ],
       cardBg: 'bg-pink-50',
       cardBorder: 'border-pink-300',
       labelColor: 'text-pink-600',
       countColor: 'text-pink-500',
-    }
-  if (count === 2)
-    return {
+    },
+  },
+  {
+    minCount: 2,
+    tier: {
       icon: '🤝',
       label: 'Dupla dinâmica',
-      description: 'A parceria tá crescendo',
+      descriptions: [
+        'A parceria tá crescendo',
+        'Segundo encontro confirmado',
+        'Dois pedidos já é relacionamento sério',
+        'Começou bem — vamos ver se vai pra frente',
+        'Já passaram da fase de apresentação',
+      ],
       cardBg: 'bg-amber-50',
       cardBorder: 'border-amber-300',
       labelColor: 'text-amber-600',
       countColor: 'text-amber-500',
-    }
-  return {
-    icon: '🌱',
-    label: 'Primeiros passos',
-    description: 'Começou com uma trocinha...',
-    cardBg: 'bg-purple-50',
-    cardBorder: 'border-purple-200',
-    labelColor: 'text-purple-600',
-    countColor: 'text-purple-500',
-  }
+    },
+  },
+  {
+    minCount: 1,
+    tier: {
+      icon: '🌱',
+      label: 'Primeiros passos',
+      descriptions: [
+        'Começou com uma troquinha inocente...',
+        'Uma troca, uma amizade que pode durar até o fim do campeonato',
+        'Todo grande álbum começa com uma figurinha',
+        'Primeiro passo dado — o resto é com eles',
+        'Ainda estão se conhecendo pelo álbum',
+      ],
+      cardBg: 'bg-purple-50',
+      cardBorder: 'border-purple-200',
+      labelColor: 'text-purple-600',
+      countColor: 'text-purple-500',
+    },
+  },
+]
+
+function getTier(count: number, index: number): Tier & { description: string } {
+  const tier = (TIERS.find((t) => count >= t.minCount) ?? TIERS[TIERS.length - 1]).tier
+  const description = tier.descriptions[index % tier.descriptions.length]
+  return { ...tier, description }
 }
 
 // ─── Rank badge ───────────────────────────────────────────────────────────────
@@ -86,7 +125,7 @@ function RankBadge({ rank }: { rank: number }) {
 // ─── Pair card ────────────────────────────────────────────────────────────────
 
 function PairCard({ pair }: { pair: Panelinha }) {
-  const tier = getTier(pair.tradeCount)
+  const tier = getTier(pair.tradeCount, pair.rank - 1)
 
   return (
     <div
