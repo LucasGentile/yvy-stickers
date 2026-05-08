@@ -25,7 +25,8 @@ export async function getRanking(): Promise<RankedUser[]> {
 
   // Use an RPC aggregate instead of fetching all rows — PostgREST caps plain
   // selects at 1000 rows by default, which silently undercounts large tables.
-  const { data: stickerCounts } = await supabaseAdmin.rpc('get_sticker_counts_by_user')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: stickerCounts } = await (supabaseAdmin as any).rpc('get_sticker_counts_by_user')
 
   const countByUser: Record<string, number> = {}
   for (const row of stickerCounts ?? []) {

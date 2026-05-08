@@ -22,13 +22,15 @@ async function insertWithFallback(
 ): Promise<{ failed: string[] }> {
   if (rows.length === 0) return { failed: [] }
 
-  const { error } = await supabase.from(table).insert(rows)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const { error } = await db.from(table).insert(rows)
   if (!error) return { failed: [] }
 
   // Bulk failed — retry individually to isolate bad rows
   const failed: string[] = []
   for (const row of rows) {
-    const { error: e } = await supabase.from(table).insert(row)
+    const { error: e } = await db.from(table).insert(row)
     if (e) {
       const id = (row.sticker_id as string) ?? JSON.stringify(row)
       failed.push(id)
