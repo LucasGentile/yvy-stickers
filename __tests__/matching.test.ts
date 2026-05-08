@@ -1,15 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(),
-  },
+  supabase: { from: vi.fn() },
+}))
+
+vi.mock('@/lib/supabaseAdmin', () => ({
+  supabaseAdmin: { from: vi.fn() },
 }))
 
 import { getMatches } from '@/lib/matching'
 import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>
+const mockAdminFrom = supabaseAdmin.from as ReturnType<typeof vi.fn>
 
 // Chain for: from('users').select(...).eq(...).maybeSingle()
 function makeMyUserChain(inputMode: string) {
@@ -39,6 +43,13 @@ function makeOthersChain(data: unknown) {
   }
 }
 
+type PendingTradeMock = {
+  initiator_id: string
+  receiver_id: string
+  giving_ids: string[]
+  receiving_ids: string[]
+}
+
 type SetupOptions = {
   myMode?: string
   myStickers?: { sticker_id: string }[]
@@ -51,9 +62,16 @@ type SetupOptions = {
     user_stickers: { sticker_id: string }[]
     user_duplicates: { sticker_id: string; count: number }[]
   }[]
+  pendingTrades?: PendingTradeMock[]
 }
 
-function setupMocks({ myMode = 'have', myStickers = [], myDupes = [], others = [] }: SetupOptions) {
+function setupMocks({
+  myMode = 'have',
+  myStickers = [],
+  myDupes = [],
+  others = [],
+  pendingTrades = [],
+}: SetupOptions) {
   let usersCallCount = 0
   mockFrom.mockImplementation((table: string) => {
     if (table === 'users') {
@@ -64,12 +82,16 @@ function setupMocks({ myMode = 'have', myStickers = [], myDupes = [], others = [
     if (table === 'user_duplicates') return makeEqChain(myDupes)
     return makeEqChain([])
   })
+
+  // Admin mock for pending_trades reservation query
+  mockAdminFrom.mockReturnValue({
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockResolvedValue({ data: pendingTrades, error: null }),
+  })
 }
 
 describe('getMatches', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
+  beforeEach(() => vi.clearAllMocks())
 
   it('returns empty array when there are no other users', async () => {
     setupMocks({})
@@ -180,5 +202,99 @@ describe('getMatches', () => {
     const results = await getMatches('user-a')
     expect(results).toHaveLength(1)
     expect(results[0].matchScore).toBe(0)
+  })
+
+  it('excludes reserved stickers from reciprocalStickers when my dupe is in a pending trade', async () => {
+    // user-a has BRA1 dupe but it is reserved in a pending trade (giving to user-c)
+    // user-b needs BRA1 → but reciprocalScore should be 0 because BRA1 is reserved
+    setupMocks({
+      myStickers: [{ sticker_id: 'BRA1' }],
+      myDupes: [{ sticker_id: 'BRA1', count: 2 }],
+      others: [
+        {
+          id: 'user-b',
+          display_key: 'b-0101-1',
+          phone: '1',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'MEX1' }],
+          user_duplicates: [],
+        },
+      ],
+      pendingTrades: [
+        {
+          initiator_id: 'user-a',
+          receiver_id: 'user-c',
+          giving_ids: ['BRA1'],
+          receiving_ids: [],
+        },
+      ],
+    })
+
+    const results = await getMatches('user-a')
+    expect(results[0].reciprocalScore).toBe(0)
+    expect(results[0].reciprocalStickers).toEqual([])
+  })
+
+  it('excludes reserved stickers from matchStickers when their dupe is in a pending trade', async () => {
+    // user-a needs BRA1; user-b has BRA1 dupe but it's reserved for another trade
+    setupMocks({
+      myStickers: [{ sticker_id: 'MEX1' }], // user-a owns MEX1, needs BRA1
+      others: [
+        {
+          id: 'user-b',
+          display_key: 'b-0101-1',
+          phone: '1',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'BRA1' }],
+          user_duplicates: [{ sticker_id: 'BRA1', count: 2 }],
+        },
+      ],
+      pendingTrades: [
+        {
+          initiator_id: 'user-b',
+          receiver_id: 'user-c',
+          giving_ids: ['BRA1'],
+          receiving_ids: [],
+        },
+      ],
+    })
+
+    const results = await getMatches('user-a')
+    expect(results[0].matchScore).toBe(0)
+    expect(results[0].matchStickers).toEqual([])
+  })
+
+  it('keeps non-reserved dupes available even when some are reserved', async () => {
+    // user-a has MEX1 and MEX2 dupes; MEX1 is reserved, MEX2 is free
+    // user-b needs both → only MEX2 should appear in reciprocalStickers
+    setupMocks({
+      myStickers: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }],
+      myDupes: [
+        { sticker_id: 'MEX1', count: 2 },
+        { sticker_id: 'MEX2', count: 1 },
+      ],
+      others: [
+        {
+          id: 'user-b',
+          display_key: 'b-0101-1',
+          phone: '1',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'BRA1' }],
+          user_duplicates: [],
+        },
+      ],
+      pendingTrades: [
+        {
+          initiator_id: 'user-a',
+          receiver_id: 'user-c',
+          giving_ids: ['MEX1'],
+          receiving_ids: [],
+        },
+      ],
+    })
+
+    const results = await getMatches('user-a')
+    expect(results[0].reciprocalStickers).toEqual(['MEX2'])
+    expect(results[0].reciprocalScore).toBe(1)
   })
 })

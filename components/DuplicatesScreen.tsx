@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
 import { getDuplicates, DuplicateEntry } from '@/actions/getDuplicates'
+import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
 import { upsertDuplicate } from '@/actions/upsertDuplicate'
 import { decrementDuplicate } from '@/actions/decrementDuplicate'
 import { removeDuplicate } from '@/actions/removeDuplicate'
@@ -16,6 +17,7 @@ export default function DuplicatesScreen() {
   const [duplicates, setDuplicates] = useState<DuplicateEntry[]>([])
   const [selectedSticker, setSelectedSticker] = useState('')
   const [addCount, setAddCount] = useState(1)
+  const [reservedIds, setReservedIds] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
@@ -29,23 +31,27 @@ export default function DuplicatesScreen() {
       setLoading(false)
       return
     }
-    Promise.all([getUserData(id), getDuplicates(id)]).then(([userData, dupes]) => {
-      if (userData) {
-        const marked = new Set(userData.stickerIds)
-        const owned =
-          userData.inputMode === 'have'
-            ? marked
-            : new Set(ALL_STICKER_IDS.filter((sid) => !marked.has(sid)))
-        setOwnedSet(owned)
+    Promise.all([getUserData(id), getDuplicates(id), getReservedStickerIds(id)]).then(
+      ([userData, dupes, reserved]) => {
+        if (userData) {
+          const marked = new Set(userData.stickerIds)
+          const owned =
+            userData.inputMode === 'have'
+              ? marked
+              : new Set(ALL_STICKER_IDS.filter((sid) => !marked.has(sid)))
+          setOwnedSet(owned)
+        }
+        setDuplicates(dupes)
+        setReservedIds(new Set(reserved))
+        setLoading(false)
       }
-      setDuplicates(dupes)
-      setLoading(false)
-    })
+    )
   }, [])
 
   const refreshDuplicates = useCallback(async (id: string) => {
-    const fresh = await getDuplicates(id)
+    const [fresh, reserved] = await Promise.all([getDuplicates(id), getReservedStickerIds(id)])
     setDuplicates(fresh)
+    setReservedIds(new Set(reserved))
   }, [])
 
   const showToast = useCallback((message: string, onUndo: () => Promise<void>) => {
@@ -224,11 +230,19 @@ export default function DuplicatesScreen() {
           <div className="divide-y divide-yvy-border">
             {duplicates.map(({ stickerId, count }) => {
               const busy = savingId === stickerId
+              const reserved = reservedIds.has(stickerId)
               return (
                 <div key={stickerId} className="flex items-center justify-between py-2.5 gap-3">
-                  <span className="text-sm font-semibold text-yvy-dark min-w-0 truncate">
-                    {stickerId}
-                  </span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`text-sm font-semibold min-w-0 truncate ${reserved ? 'text-red-600' : 'text-yvy-dark'}`}>
+                      {stickerId}
+                    </span>
+                    {reserved && (
+                      <span className="shrink-0 text-[10px] font-semibold text-red-500 border border-red-200 bg-red-50 rounded px-1.5 py-0.5 leading-none">
+                        em troca
+                      </span>
+                    )}
+                  </div>
 
                   {/* Inline stepper */}
                   <div className="flex items-center gap-1 shrink-0">
