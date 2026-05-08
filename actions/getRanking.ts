@@ -30,20 +30,22 @@ export async function getRanking(): Promise<RankedUser[]> {
     countByUser[row.user_id] = (countByUser[row.user_id] ?? 0) + 1
   }
 
-  const ranked: RankedUser[] = users.map((u) => {
-    const count = countByUser[u.id] ?? 0
-    const ownedCount = u.input_mode === 'need' ? total - count : count
-    const completionPct = Math.round((ownedCount / total) * 100)
-    return {
-      id: u.id,
-      name: u.name,
-      apartment: u.apartment,
-      tower: u.tower,
-      ownedCount,
-      totalCount: total,
-      completionPct,
-    }
-  })
+  const ranked: RankedUser[] = users
+    .filter((u) => (countByUser[u.id] ?? 0) > 0) // exclude users who haven't submitted any sticker data
+    .map((u) => {
+      const count = countByUser[u.id]!
+      const ownedCount = u.input_mode === 'need' ? total - count : count
+      const completionPct = Math.round((ownedCount / total) * 100)
+      return {
+        id: u.id,
+        name: u.name,
+        apartment: u.apartment,
+        tower: u.tower,
+        ownedCount,
+        totalCount: total,
+        completionPct,
+      }
+    })
 
   return ranked.sort((a, b) => b.ownedCount - a.ownedCount || a.name.localeCompare(b.name))
 }

@@ -126,6 +126,37 @@ describe('getRanking', () => {
     expect(result[0].totalCount).toBe(total)
   })
 
+  it('excludes users with zero sticker rows (need mode would otherwise appear 100%)', async () => {
+    const total = ALL_STICKER_IDS.length
+    let callCount = 0
+    mockAdminFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockResolvedValue({
+            data: [
+              { id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'need' },
+              { id: 'u2', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'have' },
+            ],
+          }),
+        }
+      }
+      // u1 has 0 rows (need mode, no data yet), u2 has 5 rows
+      return {
+        select: vi.fn().mockResolvedValue({
+          data: Array.from({ length: 5 }, () => ({ user_id: 'u2' })),
+        }),
+      }
+    })
+
+    const result = await getRanking()
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('u2')
+    expect(result[0].ownedCount).toBe(5)
+    expect(result[0].totalCount).toBe(total)
+  })
+
   it('breaks ties in ownedCount alphabetically by name', async () => {
     let callCount = 0
     mockAdminFrom.mockImplementation(() => {

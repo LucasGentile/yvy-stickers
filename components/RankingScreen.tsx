@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getRanking, RankedUser } from '@/actions/getRanking'
 
 const MEDAL = [
@@ -100,14 +100,23 @@ function RankCard({ user, rank }: { user: RankedUser; rank: number }) {
 export default function RankingScreen() {
   const [ranking, setRanking] = useState<RankedUser[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    getRanking()
+  const load = useCallback((opts?: { silent?: boolean }) => {
+    if (opts?.silent) setRefreshing(true)
+    return getRanking()
       .then(setRanking)
-      .catch(() => setError('Erro ao carregar o ranking. Tente novamente.'))
-      .finally(() => setLoading(false))
+      .catch(() => { if (!opts?.silent) setError('Erro ao carregar o ranking. Tente novamente.') })
+      .finally(() => { setLoading(false); setRefreshing(false) })
   }, [])
+
+  useEffect(() => {
+    load()
+    const handleVisibility = () => { if (!document.hidden) load({ silent: true }) }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [load])
 
   if (loading) {
     return (
@@ -131,7 +140,16 @@ export default function RankingScreen() {
         <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
           Ranking do Álbum
         </h2>
-        <p className="text-xs text-yvy-muted">{ranking.length} participantes</p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-yvy-muted">{ranking.length} participantes</p>
+          <button
+            onClick={() => load({ silent: true })}
+            disabled={refreshing}
+            className="text-xs text-yvy-accent underline disabled:opacity-40"
+          >
+            {refreshing ? 'Atualizando...' : 'Atualizar'}
+          </button>
+        </div>
       </div>
 
       {ranking.length === 0 ? (
