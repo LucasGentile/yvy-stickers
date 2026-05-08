@@ -1,6 +1,7 @@
 'use server'
 
 import { supabase } from '@/lib/supabase'
+import { logAction } from './logAction'
 
 export async function removeDuplicate(userId: string, stickerId: string): Promise<void> {
   await supabase
@@ -8,4 +9,5 @@ export async function removeDuplicate(userId: string, stickerId: string): Promis
     .delete()
     .eq('user_id', userId)
     .eq('sticker_id', stickerId)
+  logAction(userId, 'duplicate_removed', { stickerId })
 }

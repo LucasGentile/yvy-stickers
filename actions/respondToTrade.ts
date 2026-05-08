@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { effectuateTrade } from './effectuateTrade'
+import { logAction } from './logAction'
 
 export type RespondResult = { success: true } | { success: false; error: string }
 
@@ -49,6 +50,23 @@ export async function respondToTrade(
     .from('pending_trades')
     .update({ status: statusMap[action] })
     .eq('id', tradeId)
+
+  // Fire-and-forget: look up partner name and log
+  ;(async () => {
+    const partnerId = action === 'cancel' ? trade.receiver_id : trade.initiator_id
+    const { data: partner } = await supabaseAdmin
+      .from('users').select('name').eq('id', partnerId).maybeSingle()
+    const partnerName = partner?.name ?? 'Usuário'
+    const actionKey = `trade_${statusMap[action]}` as const
+    // From receiver's perspective: giving/receiving are swapped vs the trade record
+    const givingCount = userId === trade.receiver_id
+      ? trade.receiving_ids.length
+      : trade.giving_ids.length
+    const receivingCount = userId === trade.receiver_id
+      ? trade.giving_ids.length
+      : trade.receiving_ids.length
+    logAction(userId, actionKey, { partnerName, givingCount, receivingCount })
+  })()
 
   return { success: true }
 }

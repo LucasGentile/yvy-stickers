@@ -1,6 +1,7 @@
 'use server'
 
 import { supabase } from '@/lib/supabase'
+import { logAction } from './logAction'
 
 export type SaveStickersResult =
   | { success: true; count: number }
@@ -33,5 +34,6 @@ export async function saveStickers(
     return { success: false, error: 'Erro ao salvar figurinhas. Tente novamente.' }
   }
 
+  logAction(userId, 'stickers_saved', { total: stickerIds.length })
   return { success: true, count: stickerIds.length }
 }

@@ -2,6 +2,7 @@
 
 import { supabase } from '@/lib/supabase'
 import { STICKER_SET } from '@/lib/stickers'
+import { logAction } from './logAction'
 
 export type UpsertDuplicateResult = { success: true } | { success: false; error: string }
 
@@ -47,5 +48,6 @@ export async function upsertDuplicate(
     .upsert({ user_id: userId, sticker_id: stickerId, count }, { onConflict: 'user_id,sticker_id' })
 
   if (error) return { success: false, error: error.message }
+  logAction(userId, 'duplicate_updated', { stickerId, count })
   return { success: true }
 }

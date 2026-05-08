@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/matches', label: 'Ranking de Trocas' },
   { href: '/duplicates', label: 'Repetidas' },
   { href: '/missing', label: 'Faltantes' },
+  { href: '/historico', label: 'Histórico' },
 ]
 
 const FONT_SIZES = [
@@ -67,20 +68,22 @@ export default function Header() {
         <div className="max-w-lg mx-auto px-4 py-3 relative flex items-center justify-center">
 
           {/* Left: hamburger */}
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
-            className="absolute left-4 flex flex-col gap-[5px] justify-center items-center w-8 h-8 relative"
-          >
-            <span className="block w-5 h-0.5 bg-white rounded-full" />
-            <span className="block w-5 h-0.5 bg-white rounded-full" />
-            <span className="block w-5 h-0.5 bg-white rounded-full" />
-            {pendingCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
-                {pendingCount > 9 ? '9+' : pendingCount}
-              </span>
-            )}
-          </button>
+          <div className="absolute left-4">
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+              className="relative flex flex-col gap-[5px] justify-center items-center w-8 h-8"
+            >
+              <span className="block w-5 h-0.5 bg-white rounded-full" />
+              <span className="block w-5 h-0.5 bg-white rounded-full" />
+              <span className="block w-5 h-0.5 bg-white rounded-full" />
+              {pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
+                  {pendingCount > 9 ? '9+' : pendingCount}
+                </span>
+              )}
+            </button>
+          </div>
 
           {/* Center: title */}
           <Link
@@ -107,7 +110,7 @@ export default function Header() {
               </span>
             </div>
 
-            <nav className="flex-1 py-2">
+            <nav className="flex-1 py-2 overflow-y-auto">
               {NAV_ITEMS.map((item) => {
                 const active = pathname === item.href
                 return (
