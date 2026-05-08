@@ -43,11 +43,11 @@ export default function MissingScreen() {
 
   // Build searchable list of sections/teams that have at least one missing sticker
   type SearchOption = { id: string; label: string; sub: string; flagCode?: string; icon?: string }
-  const allOptions: SearchOption[] = ALL_STICKER_SECTIONS.flatMap((section) => {
+  const allOptions: SearchOption[] = ALL_STICKER_SECTIONS.flatMap<SearchOption>((section) => {
     if (section.type === 'group') {
       return (section as StickerGroup).teams
         .filter((t) => t.stickers.some((id) => missingSet.has(id)))
-        .map((t) => ({ id: `missing-${t.code}`, label: t.name, sub: t.code, flagCode: t.flagCode }))
+        .map((t): SearchOption => ({ id: `missing-${t.code}`, label: t.name, sub: t.code, flagCode: t.flagCode }))
     }
     if (!section.stickers.some((id) => missingSet.has(id))) return []
     const prefix = section.stickers[0].replace(/\d+$/, '')
