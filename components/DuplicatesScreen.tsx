@@ -14,27 +14,24 @@ export default function DuplicatesScreen() {
   const [loading, setLoading] = useState(true)
   const [ownedSet, setOwnedSet] = useState<Set<string>>(new Set())
   const [duplicates, setDuplicates] = useState<DuplicateEntry[]>([])
-  const [stickerInput, setStickerInput] = useState('')
-  const [countInput, setCountInput] = useState(1)
-  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
+  const [selectedSticker, setSelectedSticker] = useState('')
+  const [addCount, setAddCount] = useState(1)
   const [saving, setSaving] = useState(false)
+  const [savingId, setSavingId] = useState<string | null>(null)
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
   const [toast, setToast] = useState<{ message: string; onUndo: () => Promise<void> } | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const id = localStorage.getItem('userId')
     setUserId(id)
-    if (!id) {
-      setLoading(false)
-      return
-    }
+    if (!id) { setLoading(false); return }
     Promise.all([getUserData(id), getDuplicates(id)]).then(([userData, dupes]) => {
       if (userData) {
         const marked = new Set(userData.stickerIds)
-        const owned =
-          userData.inputMode === 'have'
-            ? marked
-            : new Set(ALL_STICKER_IDS.filter((id) => !marked.has(id)))
+        const owned = userData.inputMode === 'have'
+          ? marked
+          : new Set(ALL_STICKER_IDS.filter((sid) => !marked.has(sid)))
         setOwnedSet(owned)
       }
       setDuplicates(dupes)
@@ -61,49 +58,69 @@ export default function DuplicatesScreen() {
     await refreshDuplicates(userId)
   }, [toast, userId, refreshDuplicates])
 
-  const handleSave = useCallback(async () => {
-    if (!userId) return
-    const code = stickerInput.trim().toUpperCase()
-    if (!code) {
-      setMsg({ text: 'Informe o código da figurinha.', ok: false })
-      return
-    }
-    if (!ownedSet.has(code)) {
-      setMsg({ text: `Figurinha ${code} não está na sua coleção.`, ok: false })
-      return
-    }
+  // Add / update from the picker form
+  const handleAdd = useCallback(async () => {
+    if (!userId || !selectedSticker) return
     setSaving(true)
     setMsg(null)
-    const result = await upsertDuplicate(userId, code, countInput)
+    const result = await upsertDuplicate(userId, selectedSticker, addCount)
     setSaving(false)
     if (result.success) {
-      setStickerInput('')
-      setCountInput(1)
-      setMsg({
-        text: `✓ Figurinha ${code} salva com ${countInput} repetida${countInput !== 1 ? 's' : ''}.`,
-        ok: true,
-      })
+      setMsg({ text: `✓ ${selectedSticker} salva com ${addCount} repetida${addCount !== 1 ? 's' : ''}.`, ok: true })
+      setSelectedSticker('')
+      setAddCount(1)
       await refreshDuplicates(userId)
     } else {
       setMsg({ text: `Erro: ${result.error}`, ok: false })
     }
-  }, [userId, stickerInput, countInput, ownedSet, refreshDuplicates])
+  }, [userId, selectedSticker, addCount, refreshDuplicates])
+
+  // Inline +1 on existing item
+  const handleIncrement = useCallback(async (stickerId: string, currentCount: number) => {
+    if (!userId) return
+    setSavingId(stickerId)
+    await upsertDuplicate(userId, stickerId, currentCount + 1)
+    await refreshDuplicates(userId)
+    setSavingId(null)
+  }, [userId, refreshDuplicates])
+
+  // Inline −1 on existing item
+  const handleDecrement = useCallback(async (stickerId: string, currentCount: number) => {
+    if (!userId) return
+    setSavingId(stickerId)
+    await decrementDuplicate(userId, stickerId)
+    await refreshDuplicates(userId)
+    setSavingId(null)
+    showToast(
+      currentCount === 1
+        ? `${stickerId} removida das repetidas`
+        : `${stickerId}: ${currentCount} → ${currentCount - 1} repetida${currentCount - 1 !== 1 ? 's' : ''}`,
+      async () => { await upsertDuplicate(userId, stickerId, currentCount) }
+    )
+  }, [userId, refreshDuplicates, showToast])
+
+  // Remove entirely
+  const handleRemove = useCallback(async (stickerId: string, currentCount: number) => {
+    if (!userId) return
+    setSavingId(stickerId)
+    await removeDuplicate(userId, stickerId)
+    await refreshDuplicates(userId)
+    setSavingId(null)
+    showToast(
+      `${stickerId} removida das repetidas`,
+      async () => { await upsertDuplicate(userId, stickerId, currentCount) }
+    )
+  }, [userId, refreshDuplicates, showToast])
 
   if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-yvy-muted">
-        <p>Carregando...</p>
-      </div>
-    )
+    return <div className="flex flex-1 items-center justify-center text-yvy-muted"><p>Carregando...</p></div>
   }
 
   if (!userId) {
     return (
       <div className="p-6 text-center text-yvy-muted">
         <p>Você precisa se identificar primeiro.</p>
-        <a href="/" className="text-yvy-accent underline mt-2 inline-block">
-          Ir para o cadastro
-        </a>
+        <a href="/" className="text-yvy-accent underline mt-2 inline-block">Ir para o cadastro</a>
       </div>
     )
   }
@@ -112,55 +129,51 @@ export default function DuplicatesScreen() {
     <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">Minhas repetidas</h2>
-        <a href="/stickers" className="text-xs text-yvy-muted underline">
-          ← Figurinhas
-        </a>
+        <a href="/stickers" className="text-xs text-yvy-muted underline">← Figurinhas</a>
       </div>
 
-      {/* Add / update form */}
+      {/* Add form */}
       <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
-        <p className="text-sm font-medium text-yvy-text">Adicionar ou atualizar</p>
-        <p className="text-xs text-yvy-muted">
-          Busque pelo país e selecione a figurinha, ou digite o código diretamente.
-        </p>
+        <p className="text-sm font-medium text-yvy-text">Adicionar repetida</p>
 
         <DuplicatePicker
           ownedSet={ownedSet}
-          onSelect={(id) => setStickerInput(id)}
+          onSelect={(id) => { setSelectedSticker(id); setAddCount(1); setMsg(null) }}
         />
 
-        <div className="flex gap-2 items-center">
-          <input
-            type="text"
-            value={stickerInput}
-            onChange={(e) => setStickerInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-            placeholder="ex: MEX1, FWC5"
-            className="flex-1 rounded-lg border border-yvy-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent"
-          />
-          <button
-            type="button"
-            onClick={() => setCountInput((c) => Math.max(1, c - 1))}
-            className="w-9 h-9 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-lg font-bold leading-none"
-          >
-            −
-          </button>
-          <span className="w-5 text-center text-sm font-semibold text-yvy-dark">{countInput}</span>
-          <button
-            type="button"
-            onClick={() => setCountInput((c) => c + 1)}
-            className="w-9 h-9 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-lg font-bold leading-none"
-          >
-            +
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || !stickerInput}
-            className="px-3 py-2 rounded-lg bg-yvy-dark text-white text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
-          >
-            {saving ? '...' : 'Salvar'}
-          </button>
-        </div>
+        {selectedSticker && (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="flex-1 text-sm font-semibold text-yvy-dark bg-yvy-bg border border-yvy-border rounded-lg px-3 py-2">
+              {selectedSticker}
+            </span>
+
+            {/* Count stepper */}
+            <button
+              type="button"
+              onClick={() => setAddCount((c) => Math.max(1, c - 1))}
+              className="w-10 h-10 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-xl font-bold leading-none flex items-center justify-center"
+            >
+              −
+            </button>
+            <span className="w-8 text-center text-sm font-bold text-yvy-dark">{addCount}</span>
+            <button
+              type="button"
+              onClick={() => setAddCount((c) => c + 1)}
+              className="w-10 h-10 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-xl font-bold leading-none flex items-center justify-center"
+            >
+              +
+            </button>
+
+            <button
+              onClick={handleAdd}
+              disabled={saving}
+              className="px-4 py-2 rounded-lg bg-yvy-dark text-white text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
+            >
+              {saving ? '...' : 'Salvar'}
+            </button>
+          </div>
+        )}
+
         {msg && (
           <p className={`text-sm ${msg.ok ? 'text-yvy-accent' : 'text-red-600'}`}>{msg.text}</p>
         )}
@@ -173,52 +186,46 @@ export default function DuplicatesScreen() {
             ? 'Nenhuma repetida cadastrada ainda.'
             : `${duplicates.length} figurinha${duplicates.length !== 1 ? 's' : ''} com repetidas`}
         </p>
+
         {duplicates.length > 0 && (
           <div className="divide-y divide-yvy-border">
-            {duplicates.map(({ stickerId, count }) => (
-              <div key={stickerId} className="flex items-center justify-between py-2.5">
-                <span className="text-sm text-yvy-text">
-                  <strong>#{stickerId}</strong>
-                  <span className="ml-2 text-yvy-muted">
-                    {count} repetida{count !== 1 ? 's' : ''}
-                  </span>
-                </span>
-                <div className="flex gap-1.5">
-                  <button
-                    onClick={async () => {
-                      const prev = count
-                      await decrementDuplicate(userId, stickerId)
-                      await refreshDuplicates(userId)
-                      showToast(
-                        prev === 1
-                          ? `Figurinha #${stickerId} removida`
-                          : `Figurinha #${stickerId}: ${prev} → ${prev - 1} repetida${prev - 1 !== 1 ? 's' : ''}`,
-                        async () => { await upsertDuplicate(userId, stickerId, prev) }
-                      )
-                    }}
-                    className="text-xs px-2.5 py-1 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark font-medium hover:bg-yvy-border transition-colors"
-                    title="Registrar troca (−1)"
-                  >
-                    −1
-                  </button>
-                  <button
-                    onClick={async () => {
-                      const prev = count
-                      await removeDuplicate(userId, stickerId)
-                      await refreshDuplicates(userId)
-                      showToast(
-                        `Figurinha #${stickerId} removida`,
-                        async () => { await upsertDuplicate(userId, stickerId, prev) }
-                      )
-                    }}
-                    className="text-xs px-2.5 py-1 rounded-lg border border-red-200 text-red-600 font-medium hover:bg-red-50 transition-colors"
-                    title="Remover"
-                  >
-                    ×
-                  </button>
+            {duplicates.map(({ stickerId, count }) => {
+              const busy = savingId === stickerId
+              return (
+                <div key={stickerId} className="flex items-center justify-between py-2.5 gap-3">
+                  <span className="text-sm font-semibold text-yvy-dark min-w-0 truncate">{stickerId}</span>
+
+                  {/* Inline stepper */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      disabled={busy}
+                      onClick={() => handleDecrement(stickerId, count)}
+                      className="w-8 h-8 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-base font-bold leading-none flex items-center justify-center disabled:opacity-40 hover:bg-yvy-border transition-colors"
+                    >
+                      −
+                    </button>
+                    <span className="w-8 text-center text-sm font-semibold text-yvy-dark">
+                      {busy ? '·' : count}
+                    </span>
+                    <button
+                      disabled={busy}
+                      onClick={() => handleIncrement(stickerId, count)}
+                      className="w-8 h-8 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-base font-bold leading-none flex items-center justify-center disabled:opacity-40 hover:bg-yvy-border transition-colors"
+                    >
+                      +
+                    </button>
+                    <button
+                      disabled={busy}
+                      onClick={() => handleRemove(stickerId, count)}
+                      className="w-8 h-8 rounded-lg border border-red-200 text-red-500 text-sm font-bold flex items-center justify-center disabled:opacity-40 hover:bg-red-50 transition-colors ml-1"
+                      title="Remover"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
@@ -228,10 +235,7 @@ export default function DuplicatesScreen() {
         <div className="fixed bottom-6 left-0 right-0 flex justify-center px-4 z-50">
           <div className="bg-yvy-dark text-white rounded-xl px-4 py-3 flex items-center gap-4 shadow-lg w-full max-w-sm">
             <p className="text-sm flex-1">{toast.message}</p>
-            <button
-              onClick={handleUndo}
-              className="text-yvy-accent font-semibold text-sm whitespace-nowrap"
-            >
+            <button onClick={handleUndo} className="text-yvy-accent font-semibold text-sm whitespace-nowrap">
               Desfazer
             </button>
           </div>
