@@ -39,6 +39,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          id: string
+          user_id: string
+          action: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          action: string
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          action?: string
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pending_trades: {
         Row: {
           id: string
