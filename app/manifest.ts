@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'YVY Figurinhas',
-    short_name: 'Figurinhas',
+    name: 'YVY FIGURINHAS',
+    short_name: 'YVY FIGURINHAS',
     description: 'Troca de figurinhas da Copa do Mundo 2026 – Condomínio YVY Lindóia',
     start_url: '/',
     display: 'standalone',
