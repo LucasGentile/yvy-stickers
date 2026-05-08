@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { logAction } from './logAction'
 
 export type SaveStickersResult =
-  | { success: true; count: number }
+  | { success: true; count: number; removedWithDupes: string[] }
   | { success: false; error: string }
 
 export async function saveStickers(
@@ -35,7 +35,7 @@ export async function saveStickers(
 
   if (stickerIds.length === 0) {
     logAction(userId, 'stickers_saved', { added: 0, removed, total: 0 })
-    return { success: true, count: 0 }
+    return { success: true, count: 0, removedWithDupes: [] }
   }
 
   const rows = stickerIds.map((sticker_id) => ({ user_id: userId, sticker_id }))
@@ -46,6 +46,18 @@ export async function saveStickers(
     return { success: false, error: 'Erro ao salvar figurinhas. Tente novamente.' }
   }
 
+  // Check if any removed stickers still have duplicates registered
+  const removedIds = [...existingSet].filter((id) => !newSet.has(id))
+  let removedWithDupes: string[] = []
+  if (removedIds.length > 0) {
+    const { data: dupes } = await supabase
+      .from('user_duplicates')
+      .select('sticker_id')
+      .eq('user_id', userId)
+      .in('sticker_id', removedIds)
+    removedWithDupes = (dupes ?? []).map((d) => d.sticker_id)
+  }
+
   logAction(userId, 'stickers_saved', { added, removed, total: stickerIds.length })
-  return { success: true, count: stickerIds.length }
+  return { success: true, count: stickerIds.length, removedWithDupes }
 }

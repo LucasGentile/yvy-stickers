@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { setInputMode } from '@/actions/setInputMode'
 import { saveStickers } from '@/actions/saveStickers'
 import { importStickerFile } from '@/actions/importStickerFile'
+import { removeDuplicate } from '@/actions/removeDuplicate'
 import { getUserData } from '@/actions/getUserData'
 import { parseStickerFile } from '@/lib/parser'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
@@ -21,6 +22,8 @@ export default function StickersScreen() {
   const [parseErrors, setParseErrors] = useState<string[]>([])
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [dupeWarning, setDupeWarning] = useState<string[] | null>(null)
+  const [clearingDupes, setClearingDupes] = useState(false)
   const [importing, setImporting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [fileOpen, setFileOpen] = useState(false)
@@ -144,6 +147,7 @@ export default function StickersScreen() {
     if (result.success) {
       lastSaved.current = new Set(selected)
       setSaveMsg(`✓ ${result.count} figurinhas salvas com sucesso!`)
+      if (result.removedWithDupes.length > 0) setDupeWarning(result.removedWithDupes)
     } else {
       setSaveMsg(`Erro: ${result.error}`)
     }
@@ -368,6 +372,48 @@ export default function StickersScreen() {
           </div>
         )
       })()}
+
+      {/* Duplicate conflict warning */}
+      {dupeWarning && (
+        <div className="fixed bottom-6 left-0 right-0 flex justify-center px-4 z-50">
+          <div className="bg-yvy-surface border border-amber-300 rounded-xl px-4 py-3 shadow-lg w-full max-w-sm space-y-2">
+            <p className="text-sm font-semibold text-amber-800">
+              {dupeWarning.length === 1
+                ? `A figurinha ${dupeWarning[0]} foi removida do álbum mas ainda tem repetidas registradas.`
+                : `${dupeWarning.length} figurinhas removidas ainda têm repetidas: ${dupeWarning.join(', ')}.`}
+            </p>
+            <p className="text-xs text-yvy-muted">As repetidas devem ser revisadas ou limpas.</p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={async () => {
+                  if (!userId) return
+                  setClearingDupes(true)
+                  for (const id of dupeWarning) await removeDuplicate(userId, id)
+                  setClearingDupes(false)
+                  setDupeWarning(null)
+                }}
+                disabled={clearingDupes}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold py-2 rounded-lg disabled:opacity-50"
+              >
+                {clearingDupes ? 'Limpando...' : 'Limpar automaticamente'}
+              </button>
+              <a
+                href="/duplicates"
+                className="flex-1 text-center border border-yvy-border text-yvy-text text-xs font-semibold py-2 rounded-lg hover:bg-yvy-bg"
+                onClick={() => setDupeWarning(null)}
+              >
+                Revisar manualmente
+              </a>
+            </div>
+            <button
+              onClick={() => setDupeWarning(null)}
+              className="w-full text-xs text-yvy-muted underline pt-0.5"
+            >
+              Ignorar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Undo toast */}
       {toast && (

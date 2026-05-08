@@ -13,15 +13,24 @@ import { supabase } from '@/lib/supabase'
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 
-// saveStickers now makes 3 from() calls:
+// saveStickers makes these from() calls:
 // 1. select existing stickers (to compute delta)
 // 2. delete existing stickers
 // 3. insert new stickers (only when list is non-empty)
+// 4. user_duplicates select (only when stickers were removed AND list is non-empty)
 
 function makeSelectChain(existing: string[]) {
   return {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockResolvedValue({ data: existing.map((s) => ({ sticker_id: s })), error: null }),
+  }
+}
+
+function makeDupesCheckChain(dupeIds: string[]) {
+  return {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockResolvedValue({ data: dupeIds.map((s) => ({ sticker_id: s })), error: null }),
   }
 }
 
@@ -89,7 +98,8 @@ describe('saveStickers', () => {
       // existing: MEX1 + BRA5; new save: MEX1 + MEX2 + MEX3 → added=2, removed=1
       if (callCount === 1) return makeSelectChain(['MEX1', 'BRA5'])
       if (callCount === 2) return makeDeleteChain()
-      return { insert: insertMock }
+      if (callCount === 3) return { insert: insertMock }
+      return makeDupesCheckChain([]) // call 4: duplicates check — none found
     })
 
     await saveStickers('user-a', ['MEX1', 'MEX2', 'MEX3'])
@@ -98,6 +108,38 @@ describe('saveStickers', () => {
       'stickers_saved',
       expect.objectContaining({ added: 2, removed: 1, total: 3 })
     )
+  })
+
+  it('returns removedWithDupes when removed stickers have duplicates registered', async () => {
+    const insertMock = vi.fn().mockResolvedValue({ error: null })
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) return makeSelectChain(['MEX1', 'BRA5'])
+      if (callCount === 2) return makeDeleteChain()
+      if (callCount === 3) return { insert: insertMock }
+      return makeDupesCheckChain(['BRA5']) // BRA5 was removed and has dupes
+    })
+
+    const result = await saveStickers('user-a', ['MEX1', 'MEX2'])
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.removedWithDupes).toEqual(['BRA5'])
+  })
+
+  it('returns empty removedWithDupes when no removed stickers have duplicates', async () => {
+    const insertMock = vi.fn().mockResolvedValue({ error: null })
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) return makeSelectChain(['MEX1', 'BRA5'])
+      if (callCount === 2) return makeDeleteChain()
+      if (callCount === 3) return { insert: insertMock }
+      return makeDupesCheckChain([]) // no dupes found for removed stickers
+    })
+
+    const result = await saveStickers('user-a', ['MEX1', 'MEX2'])
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.removedWithDupes).toEqual([])
   })
 
   it('logs removed count when saving empty list', async () => {
