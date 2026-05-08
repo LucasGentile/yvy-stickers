@@ -14,11 +14,25 @@ export default function MatchesScreen() {
   })
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const loadPending = useCallback(async (uid: string) => {
     const result = await getPendingTrades(uid)
     setPending(result)
+  }, [])
+
+  const refreshMatches = useCallback(async (uid: string) => {
+    setRefreshing(true)
+    try {
+      const [fresh, freshPending] = await Promise.all([getMatches(uid), getPendingTrades(uid)])
+      setMatches(fresh)
+      setPending(freshPending)
+    } catch {
+      /* silently ignore refresh errors */
+    } finally {
+      setRefreshing(false)
+    }
   }, [])
 
   useEffect(() => {
@@ -39,6 +53,14 @@ export default function MatchesScreen() {
       .catch(() => {
         /* pending trades failing silently — matches still show */
       })
+
+    // Refresh pending trades when the tab regains focus — cheap and keeps trade
+    // status up to date without polling (user may have acted on another device).
+    const handleVisibility = () => {
+      if (!document.hidden) loadPending(uid)
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [])
 
   if (loading) {
@@ -75,9 +97,13 @@ export default function MatchesScreen() {
             </span>
           )}
         </div>
-        <a href="/stickers" className="text-sm text-yvy-accent underline">
-          Atualizar figurinhas
-        </a>
+        <button
+          onClick={() => userId && refreshMatches(userId)}
+          disabled={refreshing}
+          className="text-sm text-yvy-accent underline disabled:opacity-40"
+        >
+          {refreshing ? 'Atualizando...' : 'Atualizar'}
+        </button>
       </div>
 
       {userId && (pending.received.length > 0 || pending.sent.length > 0) && (

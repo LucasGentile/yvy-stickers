@@ -23,6 +23,30 @@ export async function createTradeRequest(
     return { success: false, error: 'Nenhuma figurinha selecionada.' }
   }
 
+  // Check that none of the giving stickers are already reserved in another pending trade
+  if (givingIds.length > 0) {
+    const { data: existingTrades } = await supabaseAdmin
+      .from('pending_trades')
+      .select('initiator_id, giving_ids, receiving_ids')
+      .or(`initiator_id.eq.${initiatorId},receiver_id.eq.${initiatorId}`)
+      .eq('status', 'pending')
+
+    const reservedByMe = new Set<string>()
+    for (const trade of existingTrades ?? []) {
+      const myGiving =
+        trade.initiator_id === initiatorId ? trade.giving_ids : trade.receiving_ids
+      for (const id of myGiving ?? []) reservedByMe.add(id)
+    }
+
+    const conflicts = givingIds.filter((id) => reservedByMe.has(id))
+    if (conflicts.length > 0) {
+      return {
+        success: false,
+        error: `Figurinha${conflicts.length > 1 ? 's' : ''} já reservada${conflicts.length > 1 ? 's' : ''} em outra troca: ${conflicts.join(', ')}`,
+      }
+    }
+  }
+
   const { data, error } = await supabaseAdmin
     .from('pending_trades')
     .insert({

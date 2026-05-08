@@ -33,6 +33,23 @@ export async function respondToTrade(
     return { success: false, error: 'Apenas o destinatário pode aceitar ou recusar.' }
   }
 
+  const statusMap = { accept: 'accepted', reject: 'rejected', cancel: 'cancelled' } as const
+  const newStatus = statusMap[action]
+
+  // Atomic status transition: only one concurrent call can win this update.
+  // If the trade was already processed on another device, `updated` will be null.
+  const { data: updated } = await supabaseAdmin
+    .from('pending_trades')
+    .update({ status: newStatus })
+    .eq('id', tradeId)
+    .eq('status', 'pending')
+    .select('id')
+    .maybeSingle()
+
+  if (!updated) {
+    return { success: false, error: 'Pedido já foi processado em outro dispositivo.' }
+  }
+
   if (action === 'accept') {
     const tradeResult = await effectuateTrade(
       trade.initiator_id,
@@ -41,12 +58,14 @@ export async function respondToTrade(
       trade.receiving_ids
     )
     if (!tradeResult.success) {
+      // Revert status so the user can retry
+      await supabaseAdmin
+        .from('pending_trades')
+        .update({ status: 'pending' })
+        .eq('id', tradeId)
       return { success: false, error: tradeResult.error }
     }
   }
-
-  const statusMap = { accept: 'accepted', reject: 'rejected', cancel: 'cancelled' } as const
-  await supabaseAdmin.from('pending_trades').update({ status: statusMap[action] }).eq('id', tradeId)
 
   // Fire-and-forget: look up partner name and log
   ;(async () => {
@@ -57,7 +76,7 @@ export async function respondToTrade(
       .eq('id', partnerId)
       .maybeSingle()
     const partnerName = partner?.name ?? 'Usuário'
-    const actionKey = `trade_${statusMap[action]}` as const
+    const actionKey = `trade_${newStatus}` as const
     // From receiver's perspective: giving/receiving are swapped vs the trade record
     const givingCount =
       userId === trade.receiver_id ? trade.receiving_ids.length : trade.giving_ids.length
