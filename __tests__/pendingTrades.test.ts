@@ -178,6 +178,12 @@ describe('createTradeRequest', () => {
 
 // ─── getPendingTrades ────────────────────────────────────────────────────────
 
+// getPendingTrades now makes two parallel queries via Promise.all:
+//   call 1: pending_trades (status=pending)
+//   call 2: pending_trades (status=accepted, within 10-min window)
+//   call 3: users lookup
+// We mock by table-call index.
+
 describe('getPendingTrades', () => {
   beforeEach(() => vi.clearAllMocks())
 
@@ -185,13 +191,21 @@ describe('getPendingTrades', () => {
     const result = await getPendingTrades('')
     expect(result.received).toEqual([])
     expect(result.sent).toEqual([])
+    expect(result.recentlyAccepted).toEqual([])
   })
 
   it('returns empty when no trades exist', async () => {
-    mockFrom.mockReturnValue(makeSelectChain({ data: [], error: null }))
+    // Both parallel queries return empty
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount <= 2) return makeSelectChain({ data: [], error: null })
+      return { select: vi.fn().mockReturnThis(), in: vi.fn().mockResolvedValue({ data: [] }) }
+    })
     const result = await getPendingTrades('user-a')
     expect(result.received).toEqual([])
     expect(result.sent).toEqual([])
+    expect(result.recentlyAccepted).toEqual([])
   })
 
   it('separates received and sent trades correctly', async () => {
@@ -199,7 +213,7 @@ describe('getPendingTrades', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) {
-        // pending_trades query
+        // pending_trades (status=pending)
         return {
           select: vi.fn().mockReturnThis(),
           or: vi.fn().mockReturnThis(),
@@ -229,6 +243,16 @@ describe('getPendingTrades', () => {
           }),
         }
       }
+      if (callCount === 2) {
+        // pending_trades (status=accepted, recently accepted)
+        return {
+          select: vi.fn().mockReturnThis(),
+          or: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          gte: vi.fn().mockReturnThis(),
+          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }
+      }
       // users query
       return {
         select: vi.fn().mockReturnThis(),
@@ -256,6 +280,63 @@ describe('getPendingTrades', () => {
     expect(result.received[0].myGivingIds).toEqual(['FRA1'])
     expect(result.received[0].myReceivingIds).toEqual(['ARG1'])
     expect(result.received[0].isSender).toBe(false)
+  })
+
+  it('returns recentlyAccepted trades within the 10-minute window', async () => {
+    const recentAt = new Date(Date.now() - 60_000).toISOString() // 1 min ago
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) {
+        // pending_trades (status=pending) — empty
+        return {
+          select: vi.fn().mockReturnThis(),
+          or: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+        }
+      }
+      if (callCount === 2) {
+        // pending_trades (status=accepted, recently accepted)
+        return {
+          select: vi.fn().mockReturnThis(),
+          or: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          gte: vi.fn().mockReturnThis(),
+          order: vi.fn().mockResolvedValue({
+            data: [
+              {
+                id: 'trade-10',
+                initiator_id: 'user-a',
+                receiver_id: 'user-b',
+                giving_ids: ['MEX1'],
+                receiving_ids: ['BRA1'],
+                accepted_at: recentAt,
+                rollback_requested_by: null,
+              },
+            ],
+            error: null,
+          }),
+        }
+      }
+      // users query
+      return {
+        select: vi.fn().mockReturnThis(),
+        in: vi.fn().mockResolvedValue({
+          data: [{ id: 'user-b', name: 'Diego Estima', phone: '111' }],
+          error: null,
+        }),
+      }
+    })
+
+    const result = await getPendingTrades('user-a')
+
+    expect(result.recentlyAccepted).toHaveLength(1)
+    expect(result.recentlyAccepted[0].id).toBe('trade-10')
+    expect(result.recentlyAccepted[0].myGivingIds).toEqual(['MEX1'])
+    expect(result.recentlyAccepted[0].myReceivingIds).toEqual(['BRA1'])
+    expect(result.recentlyAccepted[0].rollbackRequestedBy).toBeNull()
+    expect(result.recentlyAccepted[0].isSender).toBe(true)
   })
 })
 

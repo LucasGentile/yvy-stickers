@@ -6,6 +6,10 @@ vi.mock('@/actions/getAuditLog', () => ({
   getAuditLog: vi.fn(),
 }))
 
+vi.mock('@/actions/rollbackTrade', () => ({
+  rollbackTrade: vi.fn(),
+}))
+
 import AuditScreen from '@/components/AuditScreen'
 import { getAuditLog } from '@/actions/getAuditLog'
 
