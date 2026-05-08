@@ -74,7 +74,15 @@ function StickerGrid({ selected, onChange, onBulkChange }: Props) {
 
   return (
     <div className="space-y-5">
-      {ALL_STICKER_SECTIONS.map((section) => (
+      {ALL_STICKER_SECTIONS.map((section) => {
+        const sectionStickers = section.type === 'group'
+          ? section.teams.flatMap((t) => t.stickers)
+          : section.stickers
+        const sectionOwned = sectionStickers.filter((id) => selected.has(id)).length
+        const sectionTotal = sectionStickers.length
+        const sectionPct = Math.round((sectionOwned / sectionTotal) * 100)
+        const sectionComplete = sectionOwned === sectionTotal
+        return (
         <div key={section.label}>
           {/* Section header */}
           <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-yvy-border">
@@ -88,11 +96,19 @@ function StickerGrid({ selected, onChange, onBulkChange }: Props) {
                 {section.label}
               </span>
             )}
+            <span className={`ml-auto text-[10px] font-semibold ${sectionComplete ? 'text-green-600' : 'text-yvy-muted'}`}>
+              {sectionOwned}/{sectionTotal} · {sectionPct}%
+            </span>
           </div>
 
           {section.type === 'group' ? (
             <div className="space-y-2">
-              {section.teams.map((team) => (
+              {section.teams.map((team) => {
+                const ownedCount = team.stickers.filter((id) => selected.has(id)).length
+                const total = team.stickers.length
+                const pct = Math.round((ownedCount / total) * 100)
+                const complete = ownedCount === total
+                return (
                 <div key={team.code} id={`country-${team.code}`} className="scroll-mt-20">
                   {/* Country row header */}
                   <div className="flex items-center gap-1.5 mb-1">
@@ -105,16 +121,19 @@ function StickerGrid({ selected, onChange, onBulkChange }: Props) {
                     />
                     <span className="text-xs font-medium text-yvy-text">{team.name}</span>
                     <span className="text-[10px] text-yvy-muted font-mono">{team.code}</span>
+                    <span className={`text-[10px] font-semibold ${complete ? 'text-green-600' : 'text-yvy-muted'}`}>
+                      {ownedCount}/{total} · {pct}%
+                    </span>
                     <button
                       type="button"
                       onClick={() => toggleTeam(team)}
                       className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded transition-colors shrink-0 ${
-                        team.stickers.every((id) => selected.has(id))
+                        complete
                           ? 'bg-yvy-dark text-white'
                           : 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
                       }`}
                     >
-                      {team.stickers.every((id) => selected.has(id)) ? 'Desmarcar' : 'Marcar todos'}
+                      {complete ? 'Desmarcar' : 'Marcar todos'}
                     </button>
                   </div>
                   {/* Sticker chips — show number only (1–20) */}
@@ -138,7 +157,7 @@ function StickerGrid({ selected, onChange, onBulkChange }: Props) {
                     })}
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           ) : (
             /* Special section — show full sticker code */
@@ -161,7 +180,7 @@ function StickerGrid({ selected, onChange, onBulkChange }: Props) {
             </div>
           )}
         </div>
-      ))}
+      )})}
     </div>
   )
 }
