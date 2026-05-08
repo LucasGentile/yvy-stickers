@@ -67,7 +67,7 @@ export default function DuplicatesScreen() {
     setSaving(false)
     if (result.success) {
       setMsg({ text: `✓ ${selectedSticker} salva com ${addCount} repetida${addCount !== 1 ? 's' : ''}.`, ok: true })
-      setSelectedSticker('')
+      setSelectedSticker('') // deselect sticker but keep team panel open in picker
       setAddCount(1)
       await refreshDuplicates(userId)
     } else {
@@ -138,7 +138,13 @@ export default function DuplicatesScreen() {
 
         <DuplicatePicker
           ownedSet={ownedSet}
-          onSelect={(id) => { setSelectedSticker(id); setAddCount(1); setMsg(null) }}
+          selectedId={selectedSticker}
+          duplicatesMap={Object.fromEntries(duplicates.map((d) => [d.stickerId, d.count]))}
+          onSelect={(id, currentCount) => {
+            setSelectedSticker(id)
+            setAddCount(currentCount ?? 1)
+            setMsg(null)
+          }}
         />
 
         {selectedSticker && (

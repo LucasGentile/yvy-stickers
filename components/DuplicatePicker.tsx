@@ -32,10 +32,12 @@ const ALL_SECTIONS: PickerSection[] = [
 
 interface Props {
   ownedSet: Set<string>
-  onSelect: (stickerId: string) => void
+  onSelect: (stickerId: string, currentCount?: number) => void
+  selectedId?: string
+  duplicatesMap?: Record<string, number>
 }
 
-export default function DuplicatePicker({ ownedSet, onSelect }: Props) {
+export default function DuplicatePicker({ ownedSet, onSelect, selectedId, duplicatesMap = {} }: Props) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<PickerSection | null>(null)
@@ -57,9 +59,8 @@ export default function DuplicatePicker({ ownedSet, onSelect }: Props) {
   }
 
   function selectSticker(id: string) {
-    onSelect(id)
-    setSelected(null)
-    setQuery('')
+    onSelect(id, duplicatesMap[id])
+    // Keep section open so user can quickly pick the next sticker
   }
 
   function clear() {
@@ -150,21 +151,30 @@ export default function DuplicatePicker({ ownedSet, onSelect }: Props) {
           <div className="flex flex-wrap gap-1">
             {selected.stickers.map((id, idx) => {
               const owned = ownedSet.has(id)
+              const isSelected = id === selectedId
+              const dupeCount = duplicatesMap[id]
               return (
                 <button
                   key={id}
                   type="button"
                   disabled={!owned}
                   onClick={() => selectSticker(id)}
-                  className={`rounded-lg text-xs font-semibold transition-colors ${
+                  className={`relative rounded-lg text-xs font-semibold transition-colors ${
                     selected.isSpecial ? 'px-2 h-8' : 'w-10 h-10'
                   } ${
-                    owned
+                    isSelected
+                      ? 'bg-yvy-accent text-white ring-2 ring-yvy-accent ring-offset-1'
+                      : owned
                       ? 'bg-yvy-dark text-white hover:bg-yvy-dark-hover'
                       : 'bg-yvy-border text-yvy-muted opacity-40 cursor-not-allowed'
                   }`}
                 >
                   {selected.isSpecial ? id : idx + 1}
+                  {dupeCount && !isSelected && (
+                    <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 bg-yvy-gold text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                      {dupeCount}
+                    </span>
+                  )}
                 </button>
               )
             })}
