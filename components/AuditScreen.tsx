@@ -77,18 +77,9 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     realLifeHint: (m) => {
       const giving = (m.givingIds as string[] | undefined) ?? []
       const receiving = (m.receivingIds as string[] | undefined) ?? []
-      const MAX = 12
       const lines: string[] = [`Combine com ${m.partnerName} para trocar as figurinhas físicas`]
-      if (giving.length > 0) {
-        const shown = giving.slice(0, MAX).join(', ')
-        const extra = giving.length > MAX ? ` e mais ${giving.length - MAX}` : ''
-        lines.push(`Dar: ${shown}${extra}`)
-      }
-      if (receiving.length > 0) {
-        const shown = receiving.slice(0, MAX).join(', ')
-        const extra = receiving.length > MAX ? ` e mais ${receiving.length - MAX}` : ''
-        lines.push(`Receber: ${shown}${extra}`)
-      }
+      if (giving.length > 0) lines.push(`Dar: ${giving.join(', ')}`)
+      if (receiving.length > 0) lines.push(`Receber: ${receiving.join(', ')}`)
       return lines.join('\n')
     },
   },
