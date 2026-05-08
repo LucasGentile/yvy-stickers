@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/stickers', label: 'Minhas Figurinhas' },
   { href: '/ranking', label: 'Ranking do Álbum' },
   { href: '/matches', label: 'Ranking de Trocas' },
+  { href: '/panelinhas', label: 'Panelinhas do YVY' },
   { href: '/duplicates', label: 'Repetidas' },
   { href: '/missing', label: 'Faltantes' },
   { href: '/historico', label: 'Histórico' },
