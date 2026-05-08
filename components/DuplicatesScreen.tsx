@@ -17,7 +17,7 @@ export default function DuplicatesScreen() {
   const [duplicates, setDuplicates] = useState<DuplicateEntry[]>([])
   const [selectedSticker, setSelectedSticker] = useState('')
   const [addCount, setAddCount] = useState(1)
-  const [reservedIds, setReservedIds] = useState<Set<string>>(new Set())
+  const [reservedCounts, setReservedCounts] = useState<Record<string, number>>({})
   const [saving, setSaving] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
@@ -42,7 +42,7 @@ export default function DuplicatesScreen() {
           setOwnedSet(owned)
         }
         setDuplicates(dupes)
-        setReservedIds(new Set(reserved))
+        setReservedCounts(reserved)
         setLoading(false)
       }
     )
@@ -51,7 +51,7 @@ export default function DuplicatesScreen() {
   const refreshDuplicates = useCallback(async (id: string) => {
     const [fresh, reserved] = await Promise.all([getDuplicates(id), getReservedStickerIds(id)])
     setDuplicates(fresh)
-    setReservedIds(new Set(reserved))
+    setReservedCounts(reserved)
   }, [])
 
   const showToast = useCallback((message: string, onUndo: () => Promise<void>) => {
@@ -230,32 +230,41 @@ export default function DuplicatesScreen() {
           <div className="divide-y divide-yvy-border">
             {duplicates.map(({ stickerId, count }) => {
               const busy = savingId === stickerId
-              const reserved = reservedIds.has(stickerId)
+              const reserved = reservedCounts[stickerId] ?? 0
+              const available = count - reserved
               return (
                 <div key={stickerId} className="flex items-center justify-between py-2.5 gap-3">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className={`text-sm font-semibold min-w-0 truncate ${reserved ? 'text-red-600' : 'text-yvy-dark'}`}>
+                    <span className="text-sm font-semibold min-w-0 truncate text-yvy-dark">
                       {stickerId}
                     </span>
-                    {reserved && (
+                    {reserved > 0 && (
                       <span className="shrink-0 text-[10px] font-semibold text-red-500 border border-red-200 bg-red-50 rounded px-1.5 py-0.5 leading-none">
-                        em troca
+                        {reserved} em troca
                       </span>
                     )}
                   </div>
 
-                  {/* Inline stepper */}
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      disabled={busy}
+                      disabled={busy || count <= reserved}
                       onClick={() => handleDecrement(stickerId, count)}
                       className="w-8 h-8 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-base font-bold leading-none flex items-center justify-center disabled:opacity-40 hover:bg-yvy-border transition-colors"
                     >
                       −
                     </button>
-                    <span className="w-8 text-center text-sm font-semibold text-yvy-dark">
-                      {busy ? '·' : count}
-                    </span>
+                    <div className="w-12 text-center">
+                      {busy ? (
+                        <span className="text-sm font-semibold text-yvy-dark">·</span>
+                      ) : reserved > 0 ? (
+                        <div className="flex flex-col items-center leading-none">
+                          <span className="text-sm font-bold text-yvy-dark">{available}</span>
+                          <span className="text-[9px] text-red-400 font-medium">+{reserved}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-semibold text-yvy-dark">{count}</span>
+                      )}
+                    </div>
                     <button
                       disabled={busy}
                       onClick={() => handleIncrement(stickerId, count)}
@@ -264,7 +273,7 @@ export default function DuplicatesScreen() {
                       +
                     </button>
                     <button
-                      disabled={busy}
+                      disabled={busy || reserved > 0}
                       onClick={() => handleRemove(stickerId, count)}
                       className="w-8 h-8 rounded-lg border border-red-200 text-red-500 text-sm font-bold flex items-center justify-center disabled:opacity-40 hover:bg-red-50 transition-colors ml-1"
                       title="Remover"

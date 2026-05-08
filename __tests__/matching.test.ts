@@ -205,11 +205,10 @@ describe('getMatches', () => {
   })
 
   it('excludes reserved stickers from reciprocalStickers when my dupe is in a pending trade', async () => {
-    // user-a has BRA1 dupe but it is reserved in a pending trade (giving to user-c)
-    // user-b needs BRA1 → but reciprocalScore should be 0 because BRA1 is reserved
+    // user-a has BRA1 dupe (count=1, fully reserved) — should not appear as available
     setupMocks({
       myStickers: [{ sticker_id: 'BRA1' }],
-      myDupes: [{ sticker_id: 'BRA1', count: 2 }],
+      myDupes: [{ sticker_id: 'BRA1', count: 1 }],
       others: [
         {
           id: 'user-b',
@@ -236,7 +235,7 @@ describe('getMatches', () => {
   })
 
   it('excludes reserved stickers from matchStickers when their dupe is in a pending trade', async () => {
-    // user-a needs BRA1; user-b has BRA1 dupe but it's reserved for another trade
+    // user-b has BRA1 dupe (count=1, fully reserved) — should not appear for user-a
     setupMocks({
       myStickers: [{ sticker_id: 'MEX1' }], // user-a owns MEX1, needs BRA1
       others: [
@@ -246,7 +245,7 @@ describe('getMatches', () => {
           phone: '1',
           input_mode: 'have',
           user_stickers: [{ sticker_id: 'BRA1' }],
-          user_duplicates: [{ sticker_id: 'BRA1', count: 2 }],
+          user_duplicates: [{ sticker_id: 'BRA1', count: 1 }],
         },
       ],
       pendingTrades: [
@@ -264,9 +263,9 @@ describe('getMatches', () => {
     expect(results[0].matchStickers).toEqual([])
   })
 
-  it('keeps non-reserved dupes available even when some are reserved', async () => {
-    // user-a has MEX1 and MEX2 dupes; MEX1 is reserved, MEX2 is free
-    // user-b needs both → only MEX2 should appear in reciprocalStickers
+  it('keeps partially-reserved dupes available (count > reserved)', async () => {
+    // user-a has MEX1 (count=2, 1 reserved → 1 free) and MEX2 (count=1, free)
+    // user-b needs both → both should appear since MEX1 still has a free copy
     setupMocks({
       myStickers: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }],
       myDupes: [
@@ -294,7 +293,7 @@ describe('getMatches', () => {
     })
 
     const results = await getMatches('user-a')
-    expect(results[0].reciprocalStickers).toEqual(['MEX2'])
-    expect(results[0].reciprocalScore).toBe(1)
+    expect(results[0].reciprocalStickers).toEqual(['MEX1', 'MEX2'])
+    expect(results[0].reciprocalScore).toBe(2)
   })
 })

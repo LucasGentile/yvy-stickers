@@ -64,29 +64,42 @@ export async function getMatches(currentUserId: string): Promise<MatchResult[]> 
   const others = (othersResult as { data: OtherUser[] | null }).data
   if (!others) return []
 
-  // Build per-user reserved sticker sets from pending trades
-  const reservedByUser = new Map<string, Set<string>>()
+  // Build per-user reserved sticker counts from pending trades.
+  // A sticker can be reserved multiple times if the user has enough copies.
+  const reservedByUser = new Map<string, Map<string, number>>()
   for (const trade of pendingTrades ?? []) {
-    if (!reservedByUser.has(trade.initiator_id)) reservedByUser.set(trade.initiator_id, new Set())
-    for (const id of trade.giving_ids ?? []) reservedByUser.get(trade.initiator_id)!.add(id)
-    if (!reservedByUser.has(trade.receiver_id)) reservedByUser.set(trade.receiver_id, new Set())
-    for (const id of trade.receiving_ids ?? []) reservedByUser.get(trade.receiver_id)!.add(id)
+    if (!reservedByUser.has(trade.initiator_id)) reservedByUser.set(trade.initiator_id, new Map())
+    for (const id of trade.giving_ids ?? []) {
+      const m = reservedByUser.get(trade.initiator_id)!
+      m.set(id, (m.get(id) ?? 0) + 1)
+    }
+    if (!reservedByUser.has(trade.receiver_id)) reservedByUser.set(trade.receiver_id, new Map())
+    for (const id of trade.receiving_ids ?? []) {
+      const m = reservedByUser.get(trade.receiver_id)!
+      m.set(id, (m.get(id) ?? 0) + 1)
+    }
   }
 
   const myMarked = new Set((myStickers ?? []).map((r) => r.sticker_id))
   const myNeeded = computeNeeded(myUser.input_mode, myMarked)
-  const myAllDupes = new Set((myDupes ?? []).map((r) => r.sticker_id))
-  const myReserved = reservedByUser.get(currentUserId) ?? new Set<string>()
-  // Only available (unreserved) duplicates count for matching
-  const myDupeSet = new Set([...myAllDupes].filter((id) => !myReserved.has(id)))
+  const myReserved = reservedByUser.get(currentUserId) ?? new Map<string, number>()
+  // Only stickers with more copies than reserved count are available for trading
+  const myDupeSet = new Set(
+    (myDupes ?? [])
+      .filter((r) => r.count > (myReserved.get(r.sticker_id) ?? 0))
+      .map((r) => r.sticker_id)
+  )
 
   const results: MatchResult[] = others
     .map((user) => {
       const theirMarked = new Set(user.user_stickers.map((r) => r.sticker_id))
       const theirNeeded = computeNeeded(user.input_mode, theirMarked)
-      const theirAllDupes = new Set(user.user_duplicates.map((r) => r.sticker_id))
-      const theirReserved = reservedByUser.get(user.id) ?? new Set<string>()
-      const theirDupeSet = new Set([...theirAllDupes].filter((id) => !theirReserved.has(id)))
+      const theirReserved = reservedByUser.get(user.id) ?? new Map<string, number>()
+      const theirDupeSet = new Set(
+        user.user_duplicates
+          .filter((r) => r.count > (theirReserved.get(r.sticker_id) ?? 0))
+          .map((r) => r.sticker_id)
+      )
 
       // Stickers they have available duplicates of that I need
       const matchStickers = [...theirDupeSet].filter((id) => myNeeded.has(id)).sort()
