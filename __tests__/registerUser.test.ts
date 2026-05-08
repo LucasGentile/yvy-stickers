@@ -37,7 +37,7 @@ describe('registerUser', () => {
 
   it('returns error for invalid apartment (not 4 digits)', async () => {
     const result = await registerUser(
-      formData({ name: 'Lucas', apartment: '12', tower: '1', phone: '11999' })
+      formData({ name: 'Lucas Gentile', apartment: '12', tower: '1', phone: '11999998888' })
     )
     expect(result.success).toBe(false)
     if (!result.success) expect(result.error).toMatch(/apartamento/i)
@@ -45,21 +45,21 @@ describe('registerUser', () => {
 
   it('returns error for invalid tower (more than 2 digits)', async () => {
     const result = await registerUser(
-      formData({ name: 'Lucas', apartment: '0806', tower: '123', phone: '11999' })
+      formData({ name: 'Lucas Gentile', apartment: '0806', tower: '123', phone: '11999998888' })
     )
     expect(result.success).toBe(false)
     if (!result.success) expect(result.error).toMatch(/torre/i)
   })
 
   it('returns existing user when phone already registered', async () => {
-    mockFrom.mockReturnValue(makeChain({ id: 'existing-id', display_key: 'lucas-0806-2' }))
+    mockFrom.mockReturnValue(makeChain({ id: 'existing-id', display_key: 'lucas gentile-0806-2' }))
     const result = await registerUser(
-      formData({ name: 'Lucas', apartment: '0806', tower: '2', phone: '11999998888' })
+      formData({ name: 'Lucas Gentile', apartment: '0806', tower: '2', phone: '11999998888' })
     )
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.userId).toBe('existing-id')
-      expect(result.displayKey).toBe('lucas-0806-2')
+      expect(result.displayKey).toBe('lucas gentile-0806-2')
     }
   })
 
@@ -70,14 +70,14 @@ describe('registerUser', () => {
       maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
       insert: vi.fn().mockReturnThis(),
       single: vi.fn().mockResolvedValue({
-        data: { id: 'new-id', display_key: 'lucas-0806-2' },
+        data: { id: 'new-id', display_key: 'lucas gentile-0806-2' },
         error: null,
       }),
     }
     mockFrom.mockReturnValue(chain)
 
     const result = await registerUser(
-      formData({ name: 'Lucas', apartment: '0806', tower: '2', phone: '11999998888' })
+      formData({ name: 'Lucas Gentile', apartment: '0806', tower: '2', phone: '11999998888' })
     )
     expect(result.success).toBe(true)
     if (result.success) expect(result.userId).toBe('new-id')

@@ -8,6 +8,10 @@ vi.mock('@/actions/effectuateTrade', () => ({
   effectuateTrade: vi.fn(),
 }))
 
+vi.mock('@/actions/logAction', () => ({
+  logAction: vi.fn(),
+}))
+
 import { createTradeRequest } from '@/actions/createTradeRequest'
 import { getPendingTrades } from '@/actions/getPendingTrades'
 import { respondToTrade } from '@/actions/respondToTrade'
@@ -68,8 +72,12 @@ describe('createTradeRequest', () => {
   })
 
   it('returns tradeId on success', async () => {
-    const chain = makeInsertChain({ data: { id: 'trade-123' }, error: null })
-    mockFrom.mockReturnValue(chain)
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
+      return makeSelectChain({ data: { name: 'Parceiro' }, error: null }) // fire-and-forget name lookup
+    })
 
     const result = await createTradeRequest('user-a', 'user-b', ['MEX1'], ['BRA1'])
     expect(result.success).toBe(true)
@@ -85,8 +93,12 @@ describe('createTradeRequest', () => {
   })
 
   it('accepts giving-only or receiving-only trades', async () => {
-    const chain = makeInsertChain({ data: { id: 'trade-456' }, error: null })
-    mockFrom.mockReturnValue(chain)
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
+      return makeSelectChain({ data: { name: 'Parceiro' }, error: null })
+    })
 
     const result = await createTradeRequest('user-a', 'user-b', [], ['BRA1'])
     expect(result.success).toBe(true)
@@ -245,7 +257,8 @@ describe('respondToTrade', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
-      return makeUpdateChain()
+      if (callCount === 2) return makeUpdateChain()
+      return makeSelectChain({ data: { name: 'Parceiro' }, error: null }) // fire-and-forget name lookup
     })
     mockEffectuate.mockResolvedValue({ success: true })
 
@@ -267,7 +280,8 @@ describe('respondToTrade', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
-      return makeUpdateChain()
+      if (callCount === 2) return makeUpdateChain()
+      return makeSelectChain({ data: { name: 'Parceiro' }, error: null }) // fire-and-forget name lookup
     })
 
     const result = await respondToTrade('trade-1', 'user-b', 'reject')
@@ -288,7 +302,8 @@ describe('respondToTrade', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
-      return makeUpdateChain()
+      if (callCount === 2) return makeUpdateChain()
+      return makeSelectChain({ data: { name: 'Parceiro' }, error: null }) // fire-and-forget name lookup
     })
 
     const result = await respondToTrade('trade-1', 'user-a', 'cancel')

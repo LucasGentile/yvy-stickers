@@ -4,6 +4,10 @@ vi.mock('@/lib/supabase', () => ({
   supabase: { from: vi.fn() },
 }))
 
+vi.mock('@/actions/logAction', () => ({
+  logAction: vi.fn(),
+}))
+
 import { saveStickers } from '@/actions/saveStickers'
 import { supabase } from '@/lib/supabase'
 

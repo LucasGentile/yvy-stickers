@@ -29,11 +29,13 @@ function makeEqChain(data: unknown) {
   }
 }
 
-// Chain for: from('users').select(...).neq(...)  → resolves directly (others list)
+// Chain for: from('users').select(...).neq(...).eq('approved', true)  → resolves
 function makeOthersChain(data: unknown) {
   return {
     select: vi.fn().mockReturnThis(),
-    neq: vi.fn().mockResolvedValue({ data, error: null }),
+    neq: vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ data, error: null }),
+    }),
   }
 }
 
