@@ -38,8 +38,15 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     },
     realLifeHint: (m) => {
       const added = (m.added as number | undefined) ?? 0
-      if (added === 0) return ''
-      return `Cole ${added === 1 ? 'a figurinha nova' : `as ${added} figurinhas novas`} no álbum físico`
+      const removed = (m.removed as number | undefined) ?? 0
+      const hints: string[] = []
+      if (added > 0)
+        hints.push(`Cole ${added === 1 ? 'a figurinha nova' : `as ${added} figurinhas novas`} no álbum físico`)
+      if (removed > 0)
+        hints.push(
+          `Verifique o álbum físico — ${removed === 1 ? '1 figurinha foi removida' : `${removed} figurinhas foram removidas`} por engano?`
+        )
+      return hints.join('\n')
     },
   },
   trade_sent: {
