@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getAuditLog, AuditEntry } from '@/actions/getAuditLog'
+import { rollbackTrade } from '@/actions/rollbackTrade'
 
 // ─── Event config ─────────────────────────────────────────────────────────────
 
@@ -98,6 +99,14 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     iconColor: 'text-yvy-muted',
     label: () => 'Pedido cancelado',
     detail: (m) => `Para ${m.partnerName}`,
+  },
+  trade_rolled_back: {
+    icon: '↩',
+    borderColor: 'border-l-amber-400',
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+    label: () => 'Troca desfeita',
+    detail: (m) => `Com ${m.partnerName}`,
   },
   duplicate_updated: {
     icon: '＋',
@@ -204,15 +213,80 @@ function groupByDay(entries: AuditEntry[]): { day: string; entries: AuditEntry[]
   return groups
 }
 
+// ─── Rollback button ──────────────────────────────────────────────────────────
+
+const ROLLBACK_WINDOW_MS = 10 * 60 * 1000
+
+function RollbackButton({
+  tradeId,
+  userId,
+  acceptedAt,
+}: {
+  tradeId: string
+  userId: string
+  acceptedAt: string
+}) {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [msg, setMsg] = useState<string | null>(null)
+
+  const elapsed = Date.now() - new Date(acceptedAt).getTime()
+  const remaining = Math.ceil((ROLLBACK_WINDOW_MS - elapsed) / 60000)
+
+  if (elapsed >= ROLLBACK_WINDOW_MS) return null
+
+  if (status === 'done') {
+    return (
+      <p className="text-[11px] text-amber-700 font-medium mt-1.5">
+        Solicitação enviada — aguardando confirmação do outro participante.
+      </p>
+    )
+  }
+
+  return (
+    <div className="mt-1.5 space-y-1">
+      <p className="text-[11px] text-yvy-muted">
+        Disponível para desfazer por mais {remaining} min (requer confirmação de ambos).
+      </p>
+      {msg && <p className="text-[11px] text-red-600">{msg}</p>}
+      <button
+        disabled={status === 'loading'}
+        onClick={async () => {
+          setStatus('loading')
+          setMsg(null)
+          try {
+            const result = await rollbackTrade(tradeId, userId, 'request')
+            if (result.success) {
+              setStatus('done')
+            } else {
+              setMsg(result.error)
+              setStatus('idle')
+            }
+          } catch {
+            setMsg('Erro inesperado.')
+            setStatus('idle')
+          }
+        }}
+        className="text-[11px] text-amber-600 underline disabled:opacity-50"
+      >
+        {status === 'loading' ? 'Solicitando...' : 'Desfazer troca'}
+      </button>
+    </div>
+  )
+}
+
 // ─── Event card ───────────────────────────────────────────────────────────────
 
-function EventCard({ entry }: { entry: AuditEntry }) {
+function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
   const cfg = EVENT_CONFIG[entry.action]
   if (!cfg) return null
 
   const label = cfg.label(entry.metadata)
   const detail = cfg.detail(entry.metadata)
   const hint = cfg.realLifeHint?.(entry.metadata)
+
+  const tradeId = entry.action === 'trade_accepted'
+    ? (entry.metadata.tradeId as string | undefined)
+    : undefined
 
   return (
     <div className={`flex gap-3 border-l-[3px] pl-3 py-1 ${cfg.borderColor}`}>
@@ -242,6 +316,11 @@ function EventCard({ entry }: { entry: AuditEntry }) {
             </p>
           </div>
         )}
+
+        {/* Rollback button for recent accepted trades */}
+        {tradeId && (
+          <RollbackButton tradeId={tradeId} userId={userId} acceptedAt={entry.created_at} />
+        )}
       </div>
     </div>
   )
@@ -253,15 +332,15 @@ export default function AuditScreen() {
   const [entries, setEntries] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string>('')
 
   useEffect(() => {
-    const uid = localStorage.getItem('userId')
+    const uid = localStorage.getItem('userId') ?? ''
+    setUserId(uid)
     if (!uid) {
       setLoading(false)
       return
     }
-    setUserId(uid)
     getAuditLog(uid)
       .then(setEntries)
       .catch(() => setError('Erro ao carregar histórico.'))
@@ -276,7 +355,7 @@ export default function AuditScreen() {
     )
   }
 
-  if (!userId) {
+  if (!userId && !loading) {
     return (
       <div className="p-6 text-center text-yvy-muted">
         <p>Você precisa se identificar primeiro.</p>
@@ -335,7 +414,7 @@ export default function AuditScreen() {
               {/* Events */}
               <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-3 space-y-4">
                 {dayEntries.map((entry) => (
-                  <EventCard key={entry.id} entry={entry} />
+                  <EventCard key={entry.id} entry={entry} userId={userId} />
                 ))}
               </div>
             </div>

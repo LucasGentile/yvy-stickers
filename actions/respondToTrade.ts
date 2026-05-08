@@ -38,9 +38,12 @@ export async function respondToTrade(
 
   // Atomic status transition: only one concurrent call can win this update.
   // If the trade was already processed on another device, `updated` will be null.
-  const { data: updated } = await supabaseAdmin
+  const updatePayload: Record<string, unknown> = { status: newStatus }
+  if (action === 'accept') updatePayload.accepted_at = new Date().toISOString()
+
+  const { data: updated } = await (supabaseAdmin as any)
     .from('pending_trades')
-    .update({ status: newStatus })
+    .update(updatePayload)
     .eq('id', tradeId)
     .eq('status', 'pending')
     .select('id')
@@ -79,11 +82,13 @@ export async function respondToTrade(
     if (action === 'accept') {
       // Log for both parties so each has a checklist entry in their history
       logAction(trade.receiver_id, 'trade_accepted', {
+        tradeId: trade.id,
         partnerName: initiatorName,
         givingIds: trade.receiving_ids, // receiver gives what initiator requested
         receivingIds: trade.giving_ids, // receiver gets what initiator offered
       })
       logAction(trade.initiator_id, 'trade_accepted', {
+        tradeId: trade.id,
         partnerName: receiverName,
         givingIds: trade.giving_ids,
         receivingIds: trade.receiving_ids,

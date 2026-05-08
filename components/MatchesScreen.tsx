@@ -8,9 +8,14 @@ import PendingTradesSection from './PendingTradesSection'
 
 export default function MatchesScreen() {
   const [matches, setMatches] = useState<MatchResult[]>([])
-  const [pending, setPending] = useState<{ received: PendingTrade[]; sent: PendingTrade[] }>({
+  const [pending, setPending] = useState<{
+    received: PendingTrade[]
+    sent: PendingTrade[]
+    recentlyAccepted: import('@/actions/getPendingTrades').RecentTrade[]
+  }>({
     received: [],
     sent: [],
+    recentlyAccepted: [],
   })
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -106,13 +111,17 @@ export default function MatchesScreen() {
         </button>
       </div>
 
-      {userId && (pending.received.length > 0 || pending.sent.length > 0) && (
-        <PendingTradesSection
-          received={pending.received}
-          sent={pending.sent}
-          userId={userId}
-          onRefresh={() => loadPending(userId)}
-        />
+      {userId &&
+        (pending.received.length > 0 ||
+          pending.sent.length > 0 ||
+          pending.recentlyAccepted.length > 0) && (
+          <PendingTradesSection
+            received={pending.received}
+            sent={pending.sent}
+            recentlyAccepted={pending.recentlyAccepted}
+            userId={userId}
+            onRefresh={() => loadPending(userId)}
+          />
       )}
 
       {matches.length === 0 ? (
