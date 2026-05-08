@@ -18,9 +18,9 @@ type Tier = {
 function getTier(count: number): Tier {
   if (count >= 5)
     return {
-      icon: '❤️‍🔥',
+      icon: '🏆',
       label: 'Inseparáveis',
-      description: 'Já combinam até o cheiro das figurinhas',
+      description: 'Já viraram referência de parceria no condomínio',
       cardBg: 'bg-red-50',
       cardBorder: 'border-red-300',
       labelColor: 'text-red-600',
@@ -28,9 +28,9 @@ function getTier(count: number): Tier {
     }
   if (count >= 3)
     return {
-      icon: '💕',
-      label: 'Apaixonados',
-      description: 'Mal podem esperar pra trocar de novo',
+      icon: '⭐',
+      label: 'Dupla de elite',
+      description: 'Essa dupla não para de trocar',
       cardBg: 'bg-pink-50',
       cardBorder: 'border-pink-300',
       labelColor: 'text-pink-600',
@@ -38,18 +38,18 @@ function getTier(count: number): Tier {
     }
   if (count === 2)
     return {
-      icon: '💛',
-      label: 'Namorando',
-      description: 'Trocam mais que mensagem',
+      icon: '🤝',
+      label: 'Dupla dinâmica',
+      description: 'A parceria tá crescendo',
       cardBg: 'bg-amber-50',
       cardBorder: 'border-amber-300',
       labelColor: 'text-amber-600',
       countColor: 'text-amber-500',
     }
   return {
-    icon: '💋',
-    label: 'Primeiro beijo',
-    description: 'Começou com uma trocinha inocente...',
+    icon: '🌱',
+    label: 'Primeiros passos',
+    description: 'Começou com uma trocinha...',
     cardBg: 'bg-purple-50',
     cardBorder: 'border-purple-200',
     labelColor: 'text-purple-600',
@@ -63,19 +63,19 @@ function RankBadge({ rank }: { rank: number }) {
   if (rank === 1)
     return (
       <span className="text-2xl" title="1º lugar">
-        💞
+        🥇
       </span>
     )
   if (rank === 2)
     return (
       <span className="text-2xl" title="2º lugar">
-        💗
+        🥈
       </span>
     )
   if (rank === 3)
     return (
       <span className="text-2xl" title="3º lugar">
-        💜
+        🥉
       </span>
     )
   return (
@@ -153,7 +153,7 @@ export default function PanelinhasScreen() {
           Panelinhas do YVYs
         </h2>
         <p className="text-xs text-yvy-muted mt-1 pl-2.5">
-          Os pares que mais se amam no condomínio 💕
+          Os pares que mais trocam figurinhas entre si 🤝
         </p>
       </div>
 
@@ -161,7 +161,7 @@ export default function PanelinhasScreen() {
       <div className="bg-pink-50 border border-pink-200 rounded-xl px-4 py-3">
         <p className="text-xs text-pink-800 leading-relaxed">
           Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais
-          inseparáveis — e mais suspeitos.
+          inseparáveis — e mais suspeitos de panelinha!
         </p>
       </div>
 
