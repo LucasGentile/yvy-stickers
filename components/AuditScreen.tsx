@@ -22,8 +22,21 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     iconBg: 'bg-yvy-dark/10',
     iconColor: 'text-yvy-dark',
     label: () => 'Álbum salvo',
-    detail: (m) => `${m.total} figurinha${(m.total as number) !== 1 ? 's' : ''} no total`,
-    realLifeHint: () => 'Cole as figurinhas novas no álbum físico se ainda não fez',
+    detail: (m) => {
+      const total = m.total as number
+      if (m.added !== undefined) {
+        const added = m.added as number
+        return added === 0
+          ? `${total} figurinha${total !== 1 ? 's' : ''} no total — nenhuma nova`
+          : `+${added} nova${added !== 1 ? 's' : ''} · ${total} no total`
+      }
+      return `${total} figurinha${total !== 1 ? 's' : ''} no total`
+    },
+    realLifeHint: (m) => {
+      const added = m.added as number | undefined
+      if (added === undefined || added === 0) return ''
+      return `Cole ${added === 1 ? 'a figurinha nova' : `as ${added} figurinhas novas`} no álbum físico`
+    },
   },
   trade_sent: {
     icon: '📤',
@@ -41,7 +54,15 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     iconColor: 'text-green-700',
     label: (m) => `Troca aceita com ${m.partnerName}`,
     detail: (m) => `${m.givingCount || 0} dando · ${m.receivingCount || 0} recebendo`,
-    realLifeHint: (m) => `Combine com ${m.partnerName} para trocar as figurinhas físicas`,
+    realLifeHint: (m) => {
+      const ids = m.receivingIds as string[] | undefined
+      const base = `Combine com ${m.partnerName} para trocar as figurinhas físicas`
+      if (!ids || ids.length === 0) return base
+      const MAX = 12
+      const shown = ids.slice(0, MAX).join(', ')
+      const extra = ids.length > MAX ? ` e mais ${ids.length - MAX}` : ''
+      return `${base}\nReceber: ${shown}${extra}`
+    },
   },
   trade_rejected: {
     icon: '✕',
@@ -150,7 +171,7 @@ function EventCard({ entry }: { entry: AuditEntry }) {
         {hint && (
           <div className="mt-1.5 flex items-start gap-1.5">
             <span className="text-amber-500 text-[10px] shrink-0 mt-px">⚑</span>
-            <p className="text-[11px] text-amber-700 font-medium leading-snug">{hint}</p>
+            <p className="text-[11px] text-amber-700 font-medium leading-snug whitespace-pre-line">{hint}</p>
           </div>
         )}
       </div>

@@ -15,6 +15,13 @@ export async function saveStickers(
     return { success: false, error: 'Usuário não identificado.' }
   }
 
+  // Fetch existing before deleting so we can compute the delta for the audit log
+  const { data: existing } = await supabase
+    .from('user_stickers')
+    .select('sticker_id')
+    .eq('user_id', userId)
+  const existingSet = new Set((existing ?? []).map((r) => r.sticker_id))
+
   // Delete existing stickers for this user (idempotent replace)
   const { error: deleteError } = await supabase.from('user_stickers').delete().eq('user_id', userId)
 
@@ -34,6 +41,7 @@ export async function saveStickers(
     return { success: false, error: 'Erro ao salvar figurinhas. Tente novamente.' }
   }
 
-  logAction(userId, 'stickers_saved', { total: stickerIds.length })
+  const added = stickerIds.filter((id) => !existingSet.has(id)).length
+  logAction(userId, 'stickers_saved', { added, total: stickerIds.length })
   return { success: true, count: stickerIds.length }
 }
