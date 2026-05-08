@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/lib/supabaseAdmin', () => ({
-  supabaseAdmin: { from: vi.fn() },
+  supabaseAdmin: { from: vi.fn(), rpc: vi.fn() },
 }))
 
 vi.mock('@/lib/supabase', () => ({
@@ -23,42 +23,40 @@ const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 describe('getRanking', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('returns empty array when no approved users', async () => {
+  // Helper: mock the two DB calls getRanking makes:
+  //   1. users table (.select().eq()) → approved users
+  //   2. get_sticker_counts_by_user RPC → [{ user_id, sticker_count }]
+  function mockRanking(
+    users: { id: string; name: string; apartment: string; tower: string; input_mode: string }[],
+    counts: { user_id: string; sticker_count: number }[]
+  ) {
     let callCount = 0
     mockAdminFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) {
         return {
           select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({ data: [] }),
+          eq: vi.fn().mockResolvedValue({ data: users }),
         }
       }
+      // Should not be called — RPC goes through supabaseAdmin.rpc, not .from()
       return { select: vi.fn().mockResolvedValue({ data: [] }) }
     })
+    ;(supabaseAdmin.rpc as ReturnType<typeof vi.fn>).mockResolvedValue({ data: counts })
+  }
 
+  it('returns empty array when no approved users', async () => {
+    mockRanking([], [])
     const result = await getRanking()
     expect(result).toEqual([])
   })
 
   it('computes completionPct correctly in have mode', async () => {
     const total = ALL_STICKER_IDS.length
-    let callCount = 0
-    mockAdminFrom.mockImplementation(() => {
-      callCount++
-      if (callCount === 1) {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({
-            data: [{ id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'have' }],
-          }),
-        }
-      }
-      return {
-        select: vi.fn().mockResolvedValue({
-          data: [{ user_id: 'u1' }, { user_id: 'u1' }, { user_id: 'u1' }],
-        }),
-      }
-    })
+    mockRanking(
+      [{ id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'have' }],
+      [{ user_id: 'u1', sticker_count: 3 }]
+    )
 
     const result = await getRanking()
     expect(result).toHaveLength(1)
@@ -69,24 +67,10 @@ describe('getRanking', () => {
 
   it('computes completionPct correctly in need mode (inverts count)', async () => {
     const total = ALL_STICKER_IDS.length
-    let callCount = 0
-    mockAdminFrom.mockImplementation(() => {
-      callCount++
-      if (callCount === 1) {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({
-            data: [{ id: 'u1', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'need' }],
-          }),
-        }
-      }
-      // 5 stickers in user_stickers → user "needs" 5 → owns total-5
-      return {
-        select: vi.fn().mockResolvedValue({
-          data: Array.from({ length: 5 }, () => ({ user_id: 'u1' })),
-        }),
-      }
-    })
+    mockRanking(
+      [{ id: 'u1', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'need' }],
+      [{ user_id: 'u1', sticker_count: 5 }]
+    )
 
     const result = await getRanking()
     expect(result[0].ownedCount).toBe(total - 5)
@@ -94,30 +78,16 @@ describe('getRanking', () => {
 
   it('sorts users by ownedCount descending', async () => {
     const total = ALL_STICKER_IDS.length
-    let callCount = 0
-    mockAdminFrom.mockImplementation(() => {
-      callCount++
-      if (callCount === 1) {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({
-            data: [
-              { id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'have' },
-              { id: 'u2', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'have' },
-            ],
-          }),
-        }
-      }
-      // u1 has 10 stickers, u2 has 50
-      return {
-        select: vi.fn().mockResolvedValue({
-          data: [
-            ...Array.from({ length: 10 }, () => ({ user_id: 'u1' })),
-            ...Array.from({ length: 50 }, () => ({ user_id: 'u2' })),
-          ],
-        }),
-      }
-    })
+    mockRanking(
+      [
+        { id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'have' },
+        { id: 'u2', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'have' },
+      ],
+      [
+        { user_id: 'u1', sticker_count: 10 },
+        { user_id: 'u2', sticker_count: 50 },
+      ]
+    )
 
     const result = await getRanking()
     expect(result[0].id).toBe('u2')
@@ -128,27 +98,14 @@ describe('getRanking', () => {
 
   it('excludes users with zero sticker rows (need mode would otherwise appear 100%)', async () => {
     const total = ALL_STICKER_IDS.length
-    let callCount = 0
-    mockAdminFrom.mockImplementation(() => {
-      callCount++
-      if (callCount === 1) {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({
-            data: [
-              { id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'need' },
-              { id: 'u2', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'have' },
-            ],
-          }),
-        }
-      }
-      // u1 has 0 rows (need mode, no data yet), u2 has 5 rows
-      return {
-        select: vi.fn().mockResolvedValue({
-          data: Array.from({ length: 5 }, () => ({ user_id: 'u2' })),
-        }),
-      }
-    })
+    // u1 is need mode but has no rows at all → must be excluded
+    mockRanking(
+      [
+        { id: 'u1', name: 'Ana', apartment: '101', tower: 'A', input_mode: 'need' },
+        { id: 'u2', name: 'Bob', apartment: '202', tower: 'B', input_mode: 'have' },
+      ],
+      [{ user_id: 'u2', sticker_count: 5 }] // u1 absent from RPC result
+    )
 
     const result = await getRanking()
     expect(result).toHaveLength(1)
@@ -158,30 +115,16 @@ describe('getRanking', () => {
   })
 
   it('breaks ties in ownedCount alphabetically by name', async () => {
-    let callCount = 0
-    mockAdminFrom.mockImplementation(() => {
-      callCount++
-      if (callCount === 1) {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockResolvedValue({
-            data: [
-              { id: 'u1', name: 'Zara', apartment: '101', tower: 'A', input_mode: 'have' },
-              { id: 'u2', name: 'Ana', apartment: '202', tower: 'B', input_mode: 'have' },
-            ],
-          }),
-        }
-      }
-      // both have 10 stickers
-      return {
-        select: vi.fn().mockResolvedValue({
-          data: [
-            ...Array.from({ length: 10 }, () => ({ user_id: 'u1' })),
-            ...Array.from({ length: 10 }, () => ({ user_id: 'u2' })),
-          ],
-        }),
-      }
-    })
+    mockRanking(
+      [
+        { id: 'u1', name: 'Zara', apartment: '101', tower: 'A', input_mode: 'have' },
+        { id: 'u2', name: 'Ana', apartment: '202', tower: 'B', input_mode: 'have' },
+      ],
+      [
+        { user_id: 'u1', sticker_count: 10 },
+        { user_id: 'u2', sticker_count: 10 },
+      ]
+    )
 
     const result = await getRanking()
     expect(result[0].name).toBe('Ana')

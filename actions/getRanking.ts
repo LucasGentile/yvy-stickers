@@ -23,11 +23,13 @@ export async function getRanking(): Promise<RankedUser[]> {
 
   if (!users || users.length === 0) return []
 
-  const { data: stickerRows } = await supabaseAdmin.from('user_stickers').select('user_id')
+  // Use an RPC aggregate instead of fetching all rows — PostgREST caps plain
+  // selects at 1000 rows by default, which silently undercounts large tables.
+  const { data: stickerCounts } = await supabaseAdmin.rpc('get_sticker_counts_by_user')
 
   const countByUser: Record<string, number> = {}
-  for (const row of stickerRows ?? []) {
-    countByUser[row.user_id] = (countByUser[row.user_id] ?? 0) + 1
+  for (const row of stickerCounts ?? []) {
+    countByUser[row.user_id] = Number(row.sticker_count)
   }
 
   const ranked: RankedUser[] = users
