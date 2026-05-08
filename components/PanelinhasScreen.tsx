@@ -150,7 +150,7 @@ export default function PanelinhasScreen() {
       {/* Header */}
       <div>
         <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
-          Panelinhas do YVY
+          Panelinhas do YVYs
         </h2>
         <p className="text-xs text-yvy-muted mt-1 pl-2.5">
           Os pares que mais se amam no condomínio 💕
