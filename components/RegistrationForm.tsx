@@ -8,6 +8,21 @@ const initialState = null
 
 export default function RegistrationForm() {
   const [mode, setMode] = useState<'register' | 'login'>('register')
+  const [phoneValue, setPhoneValue] = useState('')
+  const [phoneError, setPhoneError] = useState<string | null>(null)
+
+  function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 11)
+    setPhoneValue(digits)
+    e.target.value = digits
+    setPhoneError(null)
+  }
+
+  function handlePhoneBlur() {
+    if (phoneValue.length > 0 && (phoneValue.length < 10 || phoneValue.length > 11)) {
+      setPhoneError('Informe DDD + número (10 ou 11 dígitos)')
+    }
+  }
 
   const [regState, regAction, regPending] = useActionState(
     async (_prev: RegisterUserResult | null, formData: FormData) => registerUser(formData),
@@ -46,7 +61,7 @@ export default function RegistrationForm() {
       <div className="flex rounded-lg border border-yvy-border overflow-hidden text-sm font-medium">
         <button
           type="button"
-          onClick={() => setMode('register')}
+          onClick={() => { setMode('register'); setPhoneValue(''); setPhoneError(null) }}
           className={`flex-1 py-2 transition-colors ${
             mode === 'register'
               ? 'bg-yvy-dark text-white'
@@ -57,7 +72,7 @@ export default function RegistrationForm() {
         </button>
         <button
           type="button"
-          onClick={() => setMode('login')}
+          onClick={() => { setMode('login'); setPhoneValue(''); setPhoneError(null) }}
           className={`flex-1 py-2 transition-colors ${
             mode === 'login'
               ? 'bg-yvy-dark text-white'
@@ -124,9 +139,17 @@ export default function RegistrationForm() {
               name="phone"
               type="tel"
               required
+              inputMode="numeric"
               placeholder="ex: 51999998888"
-              className="w-full rounded-lg border border-yvy-border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-yvy-accent"
+              value={phoneValue}
+              onChange={handlePhoneChange}
+              onBlur={handlePhoneBlur}
+              className={`w-full rounded-lg border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-yvy-accent ${phoneError ? 'border-red-400' : 'border-yvy-border'}`}
             />
+            {phoneError
+              ? <p className="text-xs text-red-600 mt-1">{phoneError}</p>
+              : <p className="text-xs text-yvy-muted mt-1">Apenas números, com DDD</p>
+            }
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -151,12 +174,17 @@ export default function RegistrationForm() {
               type="tel"
               required
               autoFocus
+              inputMode="numeric"
               placeholder="ex: 51999998888"
-              className="w-full rounded-lg border border-yvy-border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-yvy-accent"
+              value={phoneValue}
+              onChange={handlePhoneChange}
+              onBlur={handlePhoneBlur}
+              className={`w-full rounded-lg border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-yvy-accent ${phoneError ? 'border-red-400' : 'border-yvy-border'}`}
             />
-            <p className="text-xs text-yvy-muted mt-1.5">
-              Use o mesmo número com que você se cadastrou no celular.
-            </p>
+            {phoneError
+              ? <p className="text-xs text-red-600 mt-1">{phoneError}</p>
+              : <p className="text-xs text-yvy-muted mt-1">Use o mesmo número com que você se cadastrou.</p>
+            }
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}

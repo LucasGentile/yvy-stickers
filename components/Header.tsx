@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { getPendingTrades } from '@/actions/getPendingTrades'
 
 const NAV_ITEMS = [
   { href: '/stickers', label: 'Minhas Figurinhas' },
@@ -22,17 +23,32 @@ export default function Header() {
   const [groupHref, setGroupHref] = useState('/group')
   const [menuOpen, setMenuOpen] = useState(false)
   const [fontSize, setFontSize] = useState(0)
+  const [pendingCount, setPendingCount] = useState(0)
   const pathname = usePathname()
 
   useEffect(() => {
     const uid = localStorage.getItem('userId')
-    if (uid) setGroupHref(`/group?uid=${uid}`)
-
+    if (uid) {
+      setGroupHref(`/group?uid=${uid}`)
+      getPendingTrades(uid)
+        .then((r) => setPendingCount(r.received.length))
+        .catch(() => {})
+    }
     const saved = localStorage.getItem('fontSize')
     const idx = saved ? parseInt(saved, 10) : 0
     setFontSize(idx)
     document.documentElement.style.fontSize = `${FONT_SIZES[idx].px}px`
   }, [])
+
+  // Refresh badge when navigating (user may have just responded to a trade)
+  useEffect(() => {
+    const uid = localStorage.getItem('userId')
+    if (uid) {
+      getPendingTrades(uid)
+        .then((r) => setPendingCount(r.received.length))
+        .catch(() => {})
+    }
+  }, [pathname])
 
   // Close drawer on navigation
   useEffect(() => {
@@ -54,11 +70,16 @@ export default function Header() {
           <button
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
-            className="absolute left-4 flex flex-col gap-[5px] justify-center items-center w-8 h-8"
+            className="absolute left-4 flex flex-col gap-[5px] justify-center items-center w-8 h-8 relative"
           >
             <span className="block w-5 h-0.5 bg-white rounded-full" />
             <span className="block w-5 h-0.5 bg-white rounded-full" />
             <span className="block w-5 h-0.5 bg-white rounded-full" />
+            {pendingCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
+                {pendingCount > 9 ? '9+' : pendingCount}
+              </span>
+            )}
           </button>
 
           {/* Center: title */}

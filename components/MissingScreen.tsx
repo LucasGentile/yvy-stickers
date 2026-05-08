@@ -9,6 +9,7 @@ export default function MissingScreen() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [filter, setFilter] = useState('')
 
   useEffect(() => {
     const id = localStorage.getItem('userId')
@@ -71,11 +72,31 @@ export default function MissingScreen() {
         <a href="/stickers" className="text-xs text-yvy-muted underline">← Figurinhas</a>
       </div>
 
+      {/* Country/section filter */}
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-yvy-muted text-sm pointer-events-none">🔍</span>
+        <input
+          type="text"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Filtrar por país ou coleção..."
+          className="w-full rounded-lg border border-yvy-border pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-surface"
+        />
+        {filter && (
+          <button
+            onClick={() => setFilter('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-yvy-muted text-xs"
+          >✕</button>
+        )}
+      </div>
+
       <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-5">
         {ALL_STICKER_SECTIONS.map((section) => {
+          const q = filter.trim().toLowerCase()
           if (section.type === 'group') {
             const teamsWithMissing = (section as StickerGroup).teams.filter((t) =>
-              t.stickers.some((id) => missingSet.has(id))
+              t.stickers.some((id) => missingSet.has(id)) &&
+              (!q || t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q))
             )
             if (teamsWithMissing.length === 0) return null
             return (
@@ -115,6 +136,8 @@ export default function MissingScreen() {
               </div>
             )
           } else {
+            const q = filter.trim().toLowerCase()
+            if (q && !section.label.toLowerCase().includes(q)) return null
             const sectionMissing = section.stickers.filter((id) => missingSet.has(id))
             if (sectionMissing.length === 0) return null
             return (

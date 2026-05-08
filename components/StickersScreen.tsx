@@ -26,6 +26,19 @@ export default function StickersScreen() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSaved = useRef<Set<string>>(new Set())
 
+  // Compute unsaved diff at component scope so effects can read it
+  const addedCount = [...selected].filter((id) => !lastSaved.current.has(id)).length
+  const removedCount = [...lastSaved.current].filter((id) => !selected.has(id)).length
+  const hasChanges = addedCount > 0 || removedCount > 0
+
+  // Warn before tab close / refresh when unsaved
+  useEffect(() => {
+    if (!hasChanges) return
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [hasChanges])
+
   function showToast(message: string, prev: Set<string>) {
     if (toastTimer.current) clearTimeout(toastTimer.current)
     setToast({ message, prev })
@@ -194,7 +207,12 @@ export default function StickersScreen() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-4">
-      <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">Minhas Figurinhas</h2>
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">Minhas Figurinhas</h2>
+        <span className="text-sm font-semibold text-yvy-accent">
+          {selected.size}<span className="text-yvy-muted font-normal">/{ALL_STICKER_IDS.length}</span>
+        </span>
+      </div>
 
       {/* Grid */}
       <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4">
@@ -284,30 +302,31 @@ export default function StickersScreen() {
         )}
       </div>
 
-      {/* Sticky footer: nav + save */}
+      {/* Sticky footer: save */}
       {(() => {
-        const added = [...selected].filter((id) => !lastSaved.current.has(id)).length
-        const removed = [...lastSaved.current].filter((id) => !selected.has(id)).length
-        const hasChanges = added > 0 || removed > 0
-
         let label: string
         if (saving) {
           label = 'Salvando...'
         } else if (!hasChanges) {
           label = lastSaved.current.size === 0 && selected.size === 0
             ? 'Nenhuma figurinha selecionada'
-            : 'Tudo salvo'
-        } else if (added > 0 && removed === 0) {
-          label = `Salvar +${added} figurinha${added !== 1 ? 's' : ''}`
-        } else if (removed > 0 && added === 0) {
-          label = `Salvar −${removed} figurinha${removed !== 1 ? 's' : ''}`
+            : 'Tudo salvo ✓'
+        } else if (addedCount > 0 && removedCount === 0) {
+          label = `Salvar +${addedCount} figurinha${addedCount !== 1 ? 's' : ''}`
+        } else if (removedCount > 0 && addedCount === 0) {
+          label = `Salvar −${removedCount} figurinha${removedCount !== 1 ? 's' : ''}`
         } else {
-          label = `Salvar +${added} / −${removed} figurinha${added + removed !== 1 ? 's' : ''}`
+          label = `Salvar +${addedCount} / −${removedCount} figurinha${addedCount + removedCount !== 1 ? 's' : ''}`
         }
 
         return (
           <div className="fixed bottom-0 left-0 right-0 z-40 bg-yvy-bg/95 backdrop-blur border-t border-yvy-border px-4 pt-3 pb-4">
             <div className="max-w-lg mx-auto">
+              {hasChanges && (
+                <p className="text-[11px] text-center text-amber-600 font-medium mb-1.5">
+                  Alterações não salvas — não feche o app antes de salvar
+                </p>
+              )}
               <button
                 onClick={handleSave}
                 disabled={saving || !hasChanges}
