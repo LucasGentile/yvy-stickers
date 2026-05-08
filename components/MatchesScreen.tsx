@@ -131,7 +131,7 @@ export default function MatchesScreen() {
 
           <div className="space-y-3">
             {matches.map((m, i) => (
-              <MatchCard key={m.userId} match={m} rank={i + 1} />
+              <MatchCard key={m.userId} match={m} rank={i + 1} onTradeCreated={() => userId && refreshMatches(userId)} />
             ))}
           </div>
         </>

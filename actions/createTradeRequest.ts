@@ -23,22 +23,37 @@ export async function createTradeRequest(
     return { success: false, error: 'Nenhuma figurinha selecionada.' }
   }
 
-  // Check that none of the giving stickers are already reserved in another pending trade
+  // Check that giving stickers have enough free copies (not fully reserved in other pending trades)
   if (givingIds.length > 0) {
-    const { data: existingTrades } = await supabaseAdmin
-      .from('pending_trades')
-      .select('initiator_id, giving_ids, receiving_ids')
-      .or(`initiator_id.eq.${initiatorId},receiver_id.eq.${initiatorId}`)
-      .eq('status', 'pending')
+    const [{ data: existingTrades }, { data: dupes }] = await Promise.all([
+      supabaseAdmin
+        .from('pending_trades')
+        .select('initiator_id, giving_ids, receiving_ids')
+        .or(`initiator_id.eq.${initiatorId},receiver_id.eq.${initiatorId}`)
+        .eq('status', 'pending'),
+      supabaseAdmin
+        .from('user_duplicates')
+        .select('sticker_id, count')
+        .eq('user_id', initiatorId)
+        .in('sticker_id', givingIds),
+    ])
 
-    const reservedByMe = new Set<string>()
+    // Count how many copies of each sticker are already committed to pending trades
+    const reservedCounts: Record<string, number> = {}
     for (const trade of existingTrades ?? []) {
       const myGiving =
         trade.initiator_id === initiatorId ? trade.giving_ids : trade.receiving_ids
-      for (const id of myGiving ?? []) reservedByMe.add(id)
+      for (const id of myGiving ?? []) reservedCounts[id] = (reservedCounts[id] ?? 0) + 1
     }
 
-    const conflicts = givingIds.filter((id) => reservedByMe.has(id))
+    const dupeCount: Record<string, number> = {}
+    for (const d of dupes ?? []) dupeCount[d.sticker_id] = d.count
+
+    // Block only if sticker is reserved AND has no free copies left
+    const conflicts = givingIds.filter((id) => {
+      const reserved = reservedCounts[id] ?? 0
+      return reserved > 0 && reserved >= (dupeCount[id] ?? 0)
+    })
     if (conflicts.length > 0) {
       return {
         success: false,

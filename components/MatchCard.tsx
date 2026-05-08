@@ -28,7 +28,7 @@ function StickerChip({
   )
 }
 
-function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => void }) {
+function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; onClose: () => void; onTradeCreated?: () => void }) {
   const [receiving, setReceiving] = useState<Set<string>>(new Set())
   const [giving, setGiving] = useState<Set<string>>(new Set())
   const [confirming, setConfirming] = useState(false)
@@ -67,6 +67,7 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
         setReceiving(new Set())
         setGiving(new Set())
         setConfirming(false)
+        onTradeCreated?.()
       } else {
         setTradeMsg({ ok: false, text: result.error })
       }
@@ -255,7 +256,7 @@ function DetailModal({ match, onClose }: { match: MatchResult; onClose: () => vo
   )
 }
 
-export default function MatchCard({ match, rank }: { match: MatchResult; rank: number }) {
+export default function MatchCard({ match, rank, onTradeCreated }: { match: MatchResult; rank: number; onTradeCreated?: () => void }) {
   const isMutual = match.mutualScore > 0
   const [showDetail, setShowDetail] = useState(false)
 
@@ -383,7 +384,7 @@ export default function MatchCard({ match, rank }: { match: MatchResult; rank: n
         </div>
       </div>
 
-      {showDetail && <DetailModal match={match} onClose={() => setShowDetail(false)} />}
+      {showDetail && <DetailModal match={match} onClose={() => setShowDetail(false)} onTradeCreated={onTradeCreated} />}
     </>
   )
 }

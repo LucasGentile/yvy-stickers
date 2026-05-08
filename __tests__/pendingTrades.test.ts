@@ -91,8 +91,9 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // conflict check — no conflicts
-      if (callCount === 2) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
+      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // pending_trades conflict check
+      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // user_duplicates
+      if (callCount === 3) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
       return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null }) // fire-and-forget name lookup
     })
 
@@ -105,7 +106,8 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // conflict check
+      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // pending_trades
+      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // user_duplicates
       return makeInsertChain({ data: null, error: { message: 'db error' } })
     })
 
@@ -127,12 +129,21 @@ describe('createTradeRequest', () => {
   })
 
   it('returns error when giving stickers are already reserved in another pending trade', async () => {
-    mockFrom.mockReturnValue(
-      makeSelectChain({
-        data: [{ initiator_id: 'user-a', giving_ids: ['MEX1'], receiving_ids: [] }],
-        error: null,
-      })
-    )
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1)
+        return makeSelectChain({
+          data: [{ initiator_id: 'user-a', giving_ids: ['MEX1'], receiving_ids: [] }],
+          error: null,
+        }) // pending_trades: MEX1 reserved once
+      if (callCount === 2)
+        return makeSelectChain({
+          data: [{ sticker_id: 'MEX1', count: 1 }],
+          error: null,
+        }) // user_duplicates: MEX1 has count=1 → fully reserved
+      return makeInsertChain({ data: null, error: null })
+    })
 
     const result = await createTradeRequest('user-a', 'user-b', ['MEX1', 'BRA1'], [])
     expect(result.success).toBe(false)
@@ -140,6 +151,28 @@ describe('createTradeRequest', () => {
       expect(result.error).toMatch(/reservada/i)
       expect(result.error).toContain('MEX1')
     }
+  })
+
+  it('allows trade when sticker has more copies than reserved', async () => {
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1)
+        return makeSelectChain({
+          data: [{ initiator_id: 'user-a', giving_ids: ['MEX1'], receiving_ids: [] }],
+          error: null,
+        }) // pending_trades: MEX1 reserved once
+      if (callCount === 2)
+        return makeSelectChain({
+          data: [{ sticker_id: 'MEX1', count: 2 }],
+          error: null,
+        }) // user_duplicates: MEX1 has count=2 → 1 free copy remaining
+      if (callCount === 3) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
+      return makeSelectChain({ data: [{ id: 'user-a', name: 'A' }, { id: 'user-b', name: 'B' }], error: null })
+    })
+
+    const result = await createTradeRequest('user-a', 'user-b', ['MEX1'], [])
+    expect(result.success).toBe(true)
   })
 })
 
