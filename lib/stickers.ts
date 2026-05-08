@@ -173,6 +173,6 @@ export const ALL_STICKER_IDS: string[] = ALL_STICKER_SECTIONS.flatMap((s) =>
 
 export const STICKER_SET = new Set(ALL_STICKER_IDS)
 
-export const ALL_TEAMS: Team[] = ALL_STICKER_SECTIONS
-  .filter((s): s is StickerGroup => s.type === 'group')
-  .flatMap((s) => s.teams)
+export const ALL_TEAMS: Team[] = ALL_STICKER_SECTIONS.filter(
+  (s): s is StickerGroup => s.type === 'group'
+).flatMap((s) => s.teams)

@@ -16,9 +16,7 @@ export type MatchResult = {
 }
 
 function computeNeeded(mode: string, marked: Set<string>): Set<string> {
-  return mode === 'have'
-    ? new Set(ALL_STICKER_IDS.filter((id) => !marked.has(id)))
-    : marked
+  return mode === 'have' ? new Set(ALL_STICKER_IDS.filter((id) => !marked.has(id))) : marked
 }
 
 export async function getMatches(currentUserId: string): Promise<MatchResult[]> {
@@ -54,7 +52,9 @@ export async function getMatches(currentUserId: string): Promise<MatchResult[]> 
 
   const { data: others } = (await supabase
     .from('users')
-    .select('id, display_key, name, apartment, tower, phone, input_mode, user_stickers(sticker_id), user_duplicates(sticker_id, count)')
+    .select(
+      'id, display_key, name, apartment, tower, phone, input_mode, user_stickers(sticker_id), user_duplicates(sticker_id, count)'
+    )
     .neq('id', currentUserId)
     .eq('approved', true)) as { data: OtherUser[] | null; error: unknown }
 
@@ -75,7 +75,19 @@ export async function getMatches(currentUserId: string): Promise<MatchResult[]> 
       const reciprocalScore = reciprocalStickers.length
 
       const mutualScore = Math.min(matchScore, reciprocalScore)
-      return { userId: user.id, displayKey: user.display_key, name: user.name, apartment: user.apartment, tower: user.tower, phone: user.phone, matchScore, reciprocalScore, mutualScore, matchStickers, reciprocalStickers }
+      return {
+        userId: user.id,
+        displayKey: user.display_key,
+        name: user.name,
+        apartment: user.apartment,
+        tower: user.tower,
+        phone: user.phone,
+        matchScore,
+        reciprocalScore,
+        mutualScore,
+        matchStickers,
+        reciprocalStickers,
+      }
     })
     .sort((a, b) => {
       if (b.mutualScore !== a.mutualScore) return b.mutualScore - a.mutualScore

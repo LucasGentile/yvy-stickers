@@ -63,8 +63,7 @@ export async function respondToTrade(
       userId === trade.receiver_id ? trade.receiving_ids.length : trade.giving_ids.length
     const receivingCount =
       userId === trade.receiver_id ? trade.giving_ids.length : trade.receiving_ids.length
-    const receivingIds =
-      userId === trade.receiver_id ? trade.giving_ids : trade.receiving_ids
+    const receivingIds = userId === trade.receiver_id ? trade.giving_ids : trade.receiving_ids
     logAction(userId, actionKey, {
       partnerName,
       givingCount,

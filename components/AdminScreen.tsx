@@ -84,7 +84,10 @@ export default function AdminScreen() {
         </h2>
         <span className="text-sm font-semibold text-yvy-accent">
           {users.length}
-          <span className="text-yvy-muted font-normal"> pendente{users.length !== 1 ? 's' : ''}</span>
+          <span className="text-yvy-muted font-normal">
+            {' '}
+            pendente{users.length !== 1 ? 's' : ''}
+          </span>
         </span>
       </div>
 

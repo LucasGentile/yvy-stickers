@@ -21,13 +21,13 @@ const ALL_SECTIONS: PickerSection[] = [
     stickers: t.stickers,
     isSpecial: false,
   })),
-  ...(ALL_STICKER_SECTIONS.filter((s): s is StickerSpecial => s.type === 'special').map((s) => ({
+  ...ALL_STICKER_SECTIONS.filter((s): s is StickerSpecial => s.type === 'special').map((s) => ({
     key: s.label,
     label: s.label,
     icon: s.icon,
     stickers: s.stickers,
     isSpecial: true,
-  }))),
+  })),
 ]
 
 interface Props {
@@ -37,17 +37,24 @@ interface Props {
   duplicatesMap?: Record<string, number>
 }
 
-export default function DuplicatePicker({ ownedSet, onSelect, selectedId, duplicatesMap = {} }: Props) {
+export default function DuplicatePicker({
+  ownedSet,
+  onSelect,
+  selectedId,
+  duplicatesMap = {},
+}: Props) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<PickerSection | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   const filtered = query.trim()
-    ? ALL_SECTIONS.filter((s) =>
-        s.label.toLowerCase().includes(query.toLowerCase()) ||
-        s.key.toLowerCase().includes(query.toLowerCase()) ||
-        (s.isSpecial && s.stickers[0]?.replace(/\d+$/, '').toLowerCase().includes(query.toLowerCase()))
+    ? ALL_SECTIONS.filter(
+        (s) =>
+          s.label.toLowerCase().includes(query.toLowerCase()) ||
+          s.key.toLowerCase().includes(query.toLowerCase()) ||
+          (s.isSpecial &&
+            s.stickers[0]?.replace(/\d+$/, '').toLowerCase().includes(query.toLowerCase()))
       )
     : ALL_SECTIONS
 
@@ -165,8 +172,8 @@ export default function DuplicatePicker({ ownedSet, onSelect, selectedId, duplic
                     isSelected
                       ? 'bg-yvy-accent text-white ring-2 ring-yvy-accent ring-offset-1'
                       : owned
-                      ? 'bg-yvy-dark text-white hover:bg-yvy-dark-hover'
-                      : 'bg-yvy-border text-yvy-muted opacity-40 cursor-not-allowed'
+                        ? 'bg-yvy-dark text-white hover:bg-yvy-dark-hover'
+                        : 'bg-yvy-border text-yvy-muted opacity-40 cursor-not-allowed'
                   }`}
                 >
                   {selected.isSpecial ? id : idx + 1}

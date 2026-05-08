@@ -7,8 +7,8 @@ export type TradeResult = { success: true } | { success: false; error: string }
 export async function effectuateTrade(
   currentUserId: string,
   otherUserId: string,
-  givingIds: string[],    // stickers current user gives
-  receivingIds: string[], // stickers current user receives
+  givingIds: string[], // stickers current user gives
+  receivingIds: string[] // stickers current user receives
 ): Promise<TradeResult> {
   if (givingIds.length === 0 && receivingIds.length === 0) {
     return { success: false, error: 'Nenhuma figurinha selecionada.' }
@@ -54,18 +54,15 @@ export async function effectuateTrade(
   async function addToCollection(userId: string, mode: string, ids: string[]) {
     if (ids.length === 0) return
     if (mode === 'have') {
-      await supabaseAdmin
-        .from('user_stickers')
-        .upsert(ids.map((sid) => ({ user_id: userId, sticker_id: sid })), {
+      await supabaseAdmin.from('user_stickers').upsert(
+        ids.map((sid) => ({ user_id: userId, sticker_id: sid })),
+        {
           onConflict: 'user_id,sticker_id',
-        })
+        }
+      )
     } else {
       // "need" mode: user marks what they need → remove received stickers (no longer needed)
-      await supabaseAdmin
-        .from('user_stickers')
-        .delete()
-        .eq('user_id', userId)
-        .in('sticker_id', ids)
+      await supabaseAdmin.from('user_stickers').delete().eq('user_id', userId).in('sticker_id', ids)
     }
   }
 

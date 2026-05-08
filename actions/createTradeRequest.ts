@@ -11,7 +11,7 @@ export async function createTradeRequest(
   initiatorId: string,
   receiverId: string,
   givingIds: string[],
-  receivingIds: string[],
+  receivingIds: string[]
 ): Promise<CreateTradeResult> {
   if (!initiatorId || !receiverId) {
     return { success: false, error: 'Usuários inválidos.' }
@@ -41,7 +41,10 @@ export async function createTradeRequest(
   // Fire-and-forget: look up receiver name and log
   ;(async () => {
     const { data: receiver } = await supabaseAdmin
-      .from('users').select('name').eq('id', receiverId).maybeSingle()
+      .from('users')
+      .select('name')
+      .eq('id', receiverId)
+      .maybeSingle()
     logAction(initiatorId, 'trade_sent', {
       partnerName: receiver?.name ?? 'Usuário',
       givingCount: givingIds.length,

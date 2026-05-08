@@ -4,9 +4,24 @@ import { useEffect, useState } from 'react'
 import { getRanking, RankedUser } from '@/actions/getRanking'
 
 const MEDAL = [
-  { border: 'border-yvy-gold border-2', banner: 'bg-yvy-gold', bar: 'bg-yvy-gold', label: 'bg-yvy-gold text-white' },
-  { border: 'border-[#9ca3af] border-2', banner: 'bg-[#9ca3af]', bar: 'bg-[#9ca3af]', label: 'bg-[#9ca3af] text-white' },
-  { border: 'border-[#b45309] border-2', banner: 'bg-[#b45309]', bar: 'bg-[#b45309]', label: 'bg-[#b45309] text-white' },
+  {
+    border: 'border-yvy-gold border-2',
+    banner: 'bg-yvy-gold',
+    bar: 'bg-yvy-gold',
+    label: 'bg-yvy-gold text-white',
+  },
+  {
+    border: 'border-[#9ca3af] border-2',
+    banner: 'bg-[#9ca3af]',
+    bar: 'bg-[#9ca3af]',
+    label: 'bg-[#9ca3af] text-white',
+  },
+  {
+    border: 'border-[#b45309] border-2',
+    banner: 'bg-[#b45309]',
+    bar: 'bg-[#b45309]',
+    label: 'bg-[#b45309] text-white',
+  },
 ]
 
 const MEDAL_LABEL = ['🥇 Ouro', '🥈 Prata', '🥉 Bronze']
@@ -51,7 +66,13 @@ function RankCard({ user, rank }: { user: RankedUser; rank: number }) {
           <div className="shrink-0 text-right">
             <p
               className={`text-lg font-bold leading-none ${
-                rank === 1 ? 'text-yvy-gold' : rank === 2 ? 'text-[#9ca3af]' : rank === 3 ? 'text-[#b45309]' : 'text-yvy-dark'
+                rank === 1
+                  ? 'text-yvy-gold'
+                  : rank === 2
+                    ? 'text-[#9ca3af]'
+                    : rank === 3
+                      ? 'text-[#b45309]'
+                      : 'text-yvy-dark'
               }`}
             >
               {user.completionPct}%
@@ -107,7 +128,9 @@ export default function RankingScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">Ranking do Álbum</h2>
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+          Ranking do Álbum
+        </h2>
         <p className="text-xs text-yvy-muted">{ranking.length} participantes</p>
       </div>
 

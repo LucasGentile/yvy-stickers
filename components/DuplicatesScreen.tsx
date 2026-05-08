@@ -25,13 +25,17 @@ export default function DuplicatesScreen() {
   useEffect(() => {
     const id = localStorage.getItem('userId')
     setUserId(id)
-    if (!id) { setLoading(false); return }
+    if (!id) {
+      setLoading(false)
+      return
+    }
     Promise.all([getUserData(id), getDuplicates(id)]).then(([userData, dupes]) => {
       if (userData) {
         const marked = new Set(userData.stickerIds)
-        const owned = userData.inputMode === 'have'
-          ? marked
-          : new Set(ALL_STICKER_IDS.filter((sid) => !marked.has(sid)))
+        const owned =
+          userData.inputMode === 'have'
+            ? marked
+            : new Set(ALL_STICKER_IDS.filter((sid) => !marked.has(sid)))
         setOwnedSet(owned)
       }
       setDuplicates(dupes)
@@ -66,7 +70,10 @@ export default function DuplicatesScreen() {
     const result = await upsertDuplicate(userId, selectedSticker, addCount)
     setSaving(false)
     if (result.success) {
-      setMsg({ text: `✓ ${selectedSticker} salva com ${addCount} repetida${addCount !== 1 ? 's' : ''}.`, ok: true })
+      setMsg({
+        text: `✓ ${selectedSticker} salva com ${addCount} repetida${addCount !== 1 ? 's' : ''}.`,
+        ok: true,
+      })
       setSelectedSticker('') // deselect sticker but keep team panel open in picker
       setAddCount(1)
       await refreshDuplicates(userId)
@@ -76,51 +83,67 @@ export default function DuplicatesScreen() {
   }, [userId, selectedSticker, addCount, refreshDuplicates])
 
   // Inline +1 on existing item
-  const handleIncrement = useCallback(async (stickerId: string, currentCount: number) => {
-    if (!userId) return
-    setSavingId(stickerId)
-    await upsertDuplicate(userId, stickerId, currentCount + 1)
-    await refreshDuplicates(userId)
-    setSavingId(null)
-  }, [userId, refreshDuplicates])
+  const handleIncrement = useCallback(
+    async (stickerId: string, currentCount: number) => {
+      if (!userId) return
+      setSavingId(stickerId)
+      await upsertDuplicate(userId, stickerId, currentCount + 1)
+      await refreshDuplicates(userId)
+      setSavingId(null)
+    },
+    [userId, refreshDuplicates]
+  )
 
   // Inline −1 on existing item
-  const handleDecrement = useCallback(async (stickerId: string, currentCount: number) => {
-    if (!userId) return
-    setSavingId(stickerId)
-    await decrementDuplicate(userId, stickerId)
-    await refreshDuplicates(userId)
-    setSavingId(null)
-    showToast(
-      currentCount === 1
-        ? `${stickerId} removida das repetidas`
-        : `${stickerId}: ${currentCount} → ${currentCount - 1} repetida${currentCount - 1 !== 1 ? 's' : ''}`,
-      async () => { await upsertDuplicate(userId, stickerId, currentCount) }
-    )
-  }, [userId, refreshDuplicates, showToast])
+  const handleDecrement = useCallback(
+    async (stickerId: string, currentCount: number) => {
+      if (!userId) return
+      setSavingId(stickerId)
+      await decrementDuplicate(userId, stickerId)
+      await refreshDuplicates(userId)
+      setSavingId(null)
+      showToast(
+        currentCount === 1
+          ? `${stickerId} removida das repetidas`
+          : `${stickerId}: ${currentCount} → ${currentCount - 1} repetida${currentCount - 1 !== 1 ? 's' : ''}`,
+        async () => {
+          await upsertDuplicate(userId, stickerId, currentCount)
+        }
+      )
+    },
+    [userId, refreshDuplicates, showToast]
+  )
 
   // Remove entirely
-  const handleRemove = useCallback(async (stickerId: string, currentCount: number) => {
-    if (!userId) return
-    setSavingId(stickerId)
-    await removeDuplicate(userId, stickerId)
-    await refreshDuplicates(userId)
-    setSavingId(null)
-    showToast(
-      `${stickerId} removida das repetidas`,
-      async () => { await upsertDuplicate(userId, stickerId, currentCount) }
-    )
-  }, [userId, refreshDuplicates, showToast])
+  const handleRemove = useCallback(
+    async (stickerId: string, currentCount: number) => {
+      if (!userId) return
+      setSavingId(stickerId)
+      await removeDuplicate(userId, stickerId)
+      await refreshDuplicates(userId)
+      setSavingId(null)
+      showToast(`${stickerId} removida das repetidas`, async () => {
+        await upsertDuplicate(userId, stickerId, currentCount)
+      })
+    },
+    [userId, refreshDuplicates, showToast]
+  )
 
   if (loading) {
-    return <div className="flex flex-1 items-center justify-center text-yvy-muted"><p>Carregando...</p></div>
+    return (
+      <div className="flex flex-1 items-center justify-center text-yvy-muted">
+        <p>Carregando...</p>
+      </div>
+    )
   }
 
   if (!userId) {
     return (
       <div className="p-6 text-center text-yvy-muted">
         <p>Você precisa se identificar primeiro.</p>
-        <a href="/" className="text-yvy-accent underline mt-2 inline-block">Ir para o cadastro</a>
+        <a href="/" className="text-yvy-accent underline mt-2 inline-block">
+          Ir para o cadastro
+        </a>
       </div>
     )
   }
@@ -128,8 +151,12 @@ export default function DuplicatesScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">Minhas repetidas</h2>
-        <a href="/stickers" className="text-xs text-yvy-muted underline">← Figurinhas</a>
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+          Minhas repetidas
+        </h2>
+        <a href="/stickers" className="text-xs text-yvy-muted underline">
+          ← Figurinhas
+        </a>
       </div>
 
       {/* Add form */}
@@ -199,7 +226,9 @@ export default function DuplicatesScreen() {
               const busy = savingId === stickerId
               return (
                 <div key={stickerId} className="flex items-center justify-between py-2.5 gap-3">
-                  <span className="text-sm font-semibold text-yvy-dark min-w-0 truncate">{stickerId}</span>
+                  <span className="text-sm font-semibold text-yvy-dark min-w-0 truncate">
+                    {stickerId}
+                  </span>
 
                   {/* Inline stepper */}
                   <div className="flex items-center gap-1 shrink-0">
@@ -241,7 +270,10 @@ export default function DuplicatesScreen() {
         <div className="fixed bottom-6 left-0 right-0 flex justify-center px-4 z-50">
           <div className="bg-yvy-dark text-white rounded-xl px-4 py-3 flex items-center gap-4 shadow-lg w-full max-w-sm">
             <p className="text-sm flex-1">{toast.message}</p>
-            <button onClick={handleUndo} className="text-yvy-accent font-semibold text-sm whitespace-nowrap">
+            <button
+              onClick={handleUndo}
+              className="text-yvy-accent font-semibold text-sm whitespace-nowrap"
+            >
               Desfazer
             </button>
           </div>

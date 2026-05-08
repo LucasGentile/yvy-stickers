@@ -54,7 +54,10 @@ export async function registerUser(formData: FormData): Promise<RegisterUserResu
     .maybeSingle()
 
   if (nameTaken) {
-    return { success: false, error: 'Esse nome já está cadastrado. Use um apelido ou nome diferente.' }
+    return {
+      success: false,
+      error: 'Esse nome já está cadastrado. Use um apelido ou nome diferente.',
+    }
   }
 
   const { data, error } = await supabase

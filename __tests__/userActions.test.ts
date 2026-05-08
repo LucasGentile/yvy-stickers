@@ -49,9 +49,7 @@ describe('loginByPhone', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi
-        .fn()
-        .mockResolvedValue({ data: { id: 'user-1', display_key: 'DISP123' } }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'user-1', display_key: 'DISP123' } }),
     })
 
     const result = await loginByPhone(makeFormData('11999998888'))
@@ -87,16 +85,12 @@ describe('getUserData', () => {
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          maybeSingle: vi
-            .fn()
-            .mockResolvedValue({ data: { input_mode: 'have', approved: true } }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: { input_mode: 'have', approved: true } }),
         }
       }
       return {
         select: vi.fn().mockReturnThis(),
-        eq: vi
-          .fn()
-          .mockResolvedValue({ data: [{ sticker_id: 'MEX1' }, { sticker_id: 'BRA5' }] }),
+        eq: vi.fn().mockResolvedValue({ data: [{ sticker_id: 'MEX1' }, { sticker_id: 'BRA5' }] }),
       }
     })
 
@@ -115,9 +109,7 @@ describe('getUserData', () => {
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          maybeSingle: vi
-            .fn()
-            .mockResolvedValue({ data: { input_mode: 'need', approved: false } }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: { input_mode: 'need', approved: false } }),
         }
       }
       return {

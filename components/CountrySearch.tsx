@@ -53,7 +53,10 @@ export default function CountrySearch() {
         {query && (
           <button
             type="button"
-            onClick={() => { setQuery(''); setOpen(false) }}
+            onClick={() => {
+              setQuery('')
+              setOpen(false)
+            }}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-yvy-muted text-xs"
           >
             ✕

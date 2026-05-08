@@ -12,10 +12,7 @@ interface Props {
 function TrophySVG() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M7 2H17V13C17 15.761 14.761 18 12 18C9.239 18 7 15.761 7 13V2Z"
-        fill="#c9a227"
-      />
+      <path d="M7 2H17V13C17 15.761 14.761 18 12 18C9.239 18 7 15.761 7 13V2Z" fill="#c9a227" />
       <path d="M7 5H4C4 5 3 10 7 11V5Z" fill="#c9a227" />
       <path d="M17 5H20C20 5 21 10 17 11V5Z" fill="#c9a227" />
       <rect x="9" y="18" width="6" height="2" fill="#c9a227" />
@@ -154,9 +151,7 @@ function StickerGrid({ selected, onChange, onBulkChange }: Props) {
                     type="button"
                     onClick={() => toggle(id)}
                     className={`h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${
-                      on
-                        ? 'bg-yvy-dark text-white'
-                        : 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
+                      on ? 'bg-yvy-dark text-white' : 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
                     }`}
                   >
                     {id}

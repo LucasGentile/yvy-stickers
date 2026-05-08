@@ -188,11 +188,11 @@ Arquivos em `supabase/migrations/` — rodar após cada novo arquivo:
 supabase db push
 ```
 
-| Migração        | Descrição                                                |
-| --------------- | -------------------------------------------------------- |
-| 001–006         | Schema inicial (usuários, figurinhas, repetidas, trocas) |
-| 007_audit_log   | Tabela `audit_log` para o Histórico de ações             |
-| 008_admin_role  | Coluna `is_admin` na tabela `users`                      |
+| Migração       | Descrição                                                |
+| -------------- | -------------------------------------------------------- |
+| 001–006        | Schema inicial (usuários, figurinhas, repetidas, trocas) |
+| 007_audit_log  | Tabela `audit_log` para o Histórico de ações             |
+| 008_admin_role | Coluna `is_admin` na tabela `users`                      |
 
 ### Variáveis de ambiente
 

@@ -41,7 +41,9 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
       const removed = (m.removed as number | undefined) ?? 0
       const hints: string[] = []
       if (added > 0)
-        hints.push(`Cole ${added === 1 ? 'a figurinha nova' : `as ${added} figurinhas novas`} no álbum físico`)
+        hints.push(
+          `Cole ${added === 1 ? 'a figurinha nova' : `as ${added} figurinhas novas`} no álbum físico`
+        )
       if (removed > 0)
         hints.push(
           `Verifique o álbum físico — ${removed === 1 ? '1 figurinha foi removida' : `${removed} figurinhas foram removidas`} por engano?`
@@ -182,7 +184,9 @@ function EventCard({ entry }: { entry: AuditEntry }) {
         {hint && (
           <div className="mt-1.5 flex items-start gap-1.5">
             <span className="text-amber-500 text-[10px] shrink-0 mt-px">⚑</span>
-            <p className="text-[11px] text-amber-700 font-medium leading-snug whitespace-pre-line">{hint}</p>
+            <p className="text-[11px] text-amber-700 font-medium leading-snug whitespace-pre-line">
+              {hint}
+            </p>
           </div>
         )}
       </div>

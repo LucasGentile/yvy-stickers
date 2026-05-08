@@ -12,14 +12,10 @@ export async function GET(req: NextRequest) {
 
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!,
+    process.env.SUPABASE_SERVICE_KEY!
   )
 
-  const { data } = await admin
-    .from('users')
-    .select('approved')
-    .eq('id', userId)
-    .maybeSingle()
+  const { data } = await admin.from('users').select('approved').eq('id', userId).maybeSingle()
 
   if (!data?.approved) {
     return NextResponse.redirect(new URL('/', req.url))

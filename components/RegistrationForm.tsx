@@ -49,9 +49,14 @@ export default function RegistrationForm() {
     }
   }, [regState, loginState, mode])
 
-  const error = mode === 'register'
-    ? (regState && !regState.success ? regState.error : null)
-    : (loginState && !loginState.success ? loginState.error : null)
+  const error =
+    mode === 'register'
+      ? regState && !regState.success
+        ? regState.error
+        : null
+      : loginState && !loginState.success
+        ? loginState.error
+        : null
 
   const pending = mode === 'register' ? regPending : loginPending
 
@@ -61,7 +66,11 @@ export default function RegistrationForm() {
       <div className="flex rounded-lg border border-yvy-border overflow-hidden text-sm font-medium">
         <button
           type="button"
-          onClick={() => { setMode('register'); setPhoneValue(''); setPhoneError(null) }}
+          onClick={() => {
+            setMode('register')
+            setPhoneValue('')
+            setPhoneError(null)
+          }}
           className={`flex-1 py-2 transition-colors ${
             mode === 'register'
               ? 'bg-yvy-dark text-white'
@@ -72,7 +81,11 @@ export default function RegistrationForm() {
         </button>
         <button
           type="button"
-          onClick={() => { setMode('login'); setPhoneValue(''); setPhoneError(null) }}
+          onClick={() => {
+            setMode('login')
+            setPhoneValue('')
+            setPhoneError(null)
+          }}
           className={`flex-1 py-2 transition-colors ${
             mode === 'login'
               ? 'bg-yvy-dark text-white'
@@ -146,10 +159,11 @@ export default function RegistrationForm() {
               onBlur={handlePhoneBlur}
               className={`w-full rounded-lg border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-yvy-accent ${phoneError ? 'border-red-400' : 'border-yvy-border'}`}
             />
-            {phoneError
-              ? <p className="text-xs text-red-600 mt-1">{phoneError}</p>
-              : <p className="text-xs text-yvy-muted mt-1">Apenas números, com DDD</p>
-            }
+            {phoneError ? (
+              <p className="text-xs text-red-600 mt-1">{phoneError}</p>
+            ) : (
+              <p className="text-xs text-yvy-muted mt-1">Apenas números, com DDD</p>
+            )}
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -181,10 +195,13 @@ export default function RegistrationForm() {
               onBlur={handlePhoneBlur}
               className={`w-full rounded-lg border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-yvy-accent ${phoneError ? 'border-red-400' : 'border-yvy-border'}`}
             />
-            {phoneError
-              ? <p className="text-xs text-red-600 mt-1">{phoneError}</p>
-              : <p className="text-xs text-yvy-muted mt-1">Use o mesmo número com que você se cadastrou.</p>
-            }
+            {phoneError ? (
+              <p className="text-xs text-red-600 mt-1">{phoneError}</p>
+            ) : (
+              <p className="text-xs text-yvy-muted mt-1">
+                Use o mesmo número com que você se cadastrou.
+              </p>
+            )}
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}

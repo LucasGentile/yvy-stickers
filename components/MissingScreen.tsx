@@ -47,11 +47,25 @@ export default function MissingScreen() {
     if (section.type === 'group') {
       return (section as StickerGroup).teams
         .filter((t) => t.stickers.some((id) => missingSet.has(id)))
-        .map((t): SearchOption => ({ id: `missing-${t.code}`, label: t.name, sub: t.code, flagCode: t.flagCode }))
+        .map(
+          (t): SearchOption => ({
+            id: `missing-${t.code}`,
+            label: t.name,
+            sub: t.code,
+            flagCode: t.flagCode,
+          })
+        )
     }
     if (!section.stickers.some((id) => missingSet.has(id))) return []
     const prefix = section.stickers[0].replace(/\d+$/, '')
-    return [{ id: `missing-section-${section.label}`, label: section.label, sub: prefix, icon: section.icon }]
+    return [
+      {
+        id: `missing-section-${section.label}`,
+        label: section.label,
+        sub: prefix,
+        icon: section.icon,
+      },
+    ]
   })
 
   const filteredOptions = query.trim()
@@ -126,7 +140,10 @@ export default function MissingScreen() {
           <input
             type="text"
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setOpen(true)
+            }}
             onFocus={() => setOpen(true)}
             placeholder="Ir para um país ou coleção..."
             className="w-full rounded-lg border border-yvy-border pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-surface"
@@ -134,7 +151,10 @@ export default function MissingScreen() {
           {query && (
             <button
               type="button"
-              onClick={() => { setQuery(''); setOpen(false) }}
+              onClick={() => {
+                setQuery('')
+                setOpen(false)
+              }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-yvy-muted text-xs"
             >
               ✕
@@ -229,7 +249,11 @@ export default function MissingScreen() {
             const sectionMissing = section.stickers.filter((id) => missingSet.has(id))
             if (sectionMissing.length === 0) return null
             return (
-              <div key={section.label} id={`missing-section-${section.label}`} className="scroll-mt-4">
+              <div
+                key={section.label}
+                id={`missing-section-${section.label}`}
+                className="scroll-mt-4"
+              >
                 <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-yvy-border">
                   <span className="text-sm">{section.icon}</span>
                   <span className="text-xs font-bold text-yvy-dark uppercase tracking-wide">

@@ -209,11 +209,14 @@ describe('effectuateTrade', () => {
     let callIndex = 0
 
     function makeMultiEqChain(result: unknown) {
-      const chain: any = {
+      const chain = {
         delete: vi.fn(),
         update: vi.fn(),
         eq: vi.fn(),
-        then: (resolve: any, reject?: any) => Promise.resolve(result).then(resolve, reject),
+        then: (
+          resolve: (v: unknown) => unknown,
+          reject?: (e: unknown) => unknown
+        ): Promise<unknown> => Promise.resolve(result).then(resolve, reject),
       }
       chain.delete.mockReturnValue(chain)
       chain.update.mockReturnValue(chain)
@@ -274,7 +277,7 @@ describe('effectuateTrade', () => {
     const inMock = vi.fn()
 
     function makeNeedDeleteChain() {
-      const chain: any = { delete: deleteMock, eq: eqMock, in: inMock }
+      const chain = { delete: deleteMock, eq: eqMock, in: inMock }
       deleteMock.mockReturnValue(chain)
       eqMock.mockReturnValue(chain)
       inMock.mockResolvedValue({ error: null })

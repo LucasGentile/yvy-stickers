@@ -23,9 +23,7 @@ export async function getRanking(): Promise<RankedUser[]> {
 
   if (!users || users.length === 0) return []
 
-  const { data: stickerRows } = await supabaseAdmin
-    .from('user_stickers')
-    .select('user_id')
+  const { data: stickerRows } = await supabaseAdmin.from('user_stickers').select('user_id')
 
   const countByUser: Record<string, number> = {}
   for (const row of stickerRows ?? []) {

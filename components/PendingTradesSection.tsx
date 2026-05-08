@@ -63,7 +63,7 @@ function TradeCard({
       </div>
 
       <StickerList ids={trade.myReceivingIds} label="Você vai receber" />
-      <StickerList ids={trade.myGivingIds}    label="Você vai dar" />
+      <StickerList ids={trade.myGivingIds} label="Você vai dar" />
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 

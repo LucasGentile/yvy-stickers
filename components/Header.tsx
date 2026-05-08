@@ -84,9 +84,9 @@ export default function Header() {
               <span className="block w-5 h-0.5 bg-white rounded-full" />
               <span className="block w-5 h-0.5 bg-white rounded-full" />
               <span className="block w-5 h-0.5 bg-white rounded-full" />
-              {(pendingCount + (pendingApprovalCount ?? 0)) > 0 && (
+              {pendingCount + (pendingApprovalCount ?? 0) > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
-                  {(pendingCount + (pendingApprovalCount ?? 0)) > 9
+                  {pendingCount + (pendingApprovalCount ?? 0) > 9
                     ? '9+'
                     : pendingCount + (pendingApprovalCount ?? 0)}
                 </span>
@@ -139,29 +139,30 @@ export default function Header() {
               })}
 
               {/* Admin-only item */}
-              {pendingApprovalCount !== null && (() => {
-                const active = pathname === '/admin'
-                return (
-                  <Link
-                    href="/admin"
-                    className={`flex items-center px-5 py-3.5 text-sm font-medium transition-colors border-t border-white/10 mt-1 pt-3.5 ${
-                      active
-                        ? 'bg-white/15 text-white'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <span>Aprovações</span>
-                    {pendingApprovalCount > 0 && (
-                      <span className="ml-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
-                        {pendingApprovalCount > 9 ? '9+' : pendingApprovalCount}
-                      </span>
-                    )}
-                    {active && pendingApprovalCount === 0 && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
-                    )}
-                  </Link>
-                )
-              })()}
+              {pendingApprovalCount !== null &&
+                (() => {
+                  const active = pathname === '/admin'
+                  return (
+                    <Link
+                      href="/admin"
+                      className={`flex items-center px-5 py-3.5 text-sm font-medium transition-colors border-t border-white/10 mt-1 pt-3.5 ${
+                        active
+                          ? 'bg-white/15 text-white'
+                          : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      <span>Aprovações</span>
+                      {pendingApprovalCount > 0 && (
+                        <span className="ml-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
+                          {pendingApprovalCount > 9 ? '9+' : pendingApprovalCount}
+                        </span>
+                      )}
+                      {active && pendingApprovalCount === 0 && (
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </Link>
+                  )
+                })()}
             </nav>
 
             {/* Font size */}

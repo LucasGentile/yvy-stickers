@@ -19,11 +19,12 @@ const mockLogAction = logAction as ReturnType<typeof vi.fn>
 
 /** Chainable mock that resolves when awaited: supports .delete/.update/.eq chains */
 function makeChainable(result: unknown = { error: null }) {
-  const chain: Record<string, ReturnType<typeof vi.fn>> & { then: (r: unknown, j?: unknown) => Promise<unknown> } = {
+  const chain = {
     delete: vi.fn(),
     update: vi.fn(),
     eq: vi.fn(),
-    then: (resolve: any, reject?: any) => Promise.resolve(result).then(resolve, reject),
+    then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown): Promise<unknown> =>
+      Promise.resolve(result).then(resolve, reject),
   }
   chain.delete.mockReturnValue(chain)
   chain.update.mockReturnValue(chain)
