@@ -61,9 +61,18 @@ describe('parseStickerFile', () => {
     }
   })
 
-  it('rejects plain numbers', () => {
+  it('rejects plain numbers (except 00)', () => {
     const result = parseStickerFile('1;5;23')
     expect(result.valid).toBe(false)
+  })
+
+  it('normalizes bare 00 to FWC00', () => {
+    const result = parseStickerFile('00;MEX1')
+    expect(result.valid).toBe(true)
+    if (result.valid) {
+      expect(result.stickers).toContain('FWC00')
+      expect(result.stickers).not.toContain('00')
+    }
   })
 
   it('returns error for empty input', () => {

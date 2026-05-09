@@ -11,7 +11,10 @@ export function parseStickerFile(content: string): ParseResult {
 
   const parts = content
     .split(/[;\n]/)
-    .map((p) => p.trim().toUpperCase())
+    .map((p) => {
+      const normalized = p.trim().toUpperCase()
+      return normalized === '00' ? 'FWC00' : normalized
+    })
     .filter((p) => p !== '')
 
   const errors: string[] = []

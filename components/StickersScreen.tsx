@@ -29,6 +29,7 @@ export default function StickersScreen() {
   const [importing, setImporting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [fileOpen, setFileOpen] = useState(false)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [toast, setToast] = useState<{ message: string; prev: Set<string> } | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSaved = useRef<Set<string>>(new Set())
@@ -96,39 +97,41 @@ export default function StickersScreen() {
     setStep('input')
   }
 
-  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !userId) return
-    const reader = new FileReader()
-    reader.onload = async (ev) => {
-      const content = ev.target?.result as string
-      const parsed = parseStickerFile(content)
-      if (!parsed.valid) {
-        setParseErrors(parsed.errors)
-        return
-      }
-      setParseErrors([])
-      setImporting(true)
-      const result = await importStickerFile(userId, parsed.stickers, parsed.counts)
-      setImporting(false)
-      if (!result.success) {
-        setSaveMsg(`Erro na importação: ${result.error}`)
-        return
-      }
-      const loaded = new Set<string>(parsed.stickers)
-      setSelected(loaded)
-      lastSaved.current = new Set(loaded)
-      setStep('input')
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setPendingFile(file)
+    setParseErrors([])
+  }
 
-      const parts: string[] = [`${result.totalStickers} figurinhas salvas`]
-      if (result.newDuplicates > 0)
-        parts.push(`${result.newDuplicates} repetidas (${result.totalDuplicateCopies} cópias extras)`)
-      const failures = [...result.failedStickers, ...result.failedDuplicates]
-      if (failures.length > 0)
-        parts.push(`${failures.length} não salvos: ${failures.slice(0, 5).join(', ')}${failures.length > 5 ? ` e mais ${failures.length - 5}` : ''}`)
-      setSaveMsg(failures.length > 0 ? `Importado com erros — ${parts.join(' · ')}` : `✓ ${parts.join(' · ')}`)
+  async function handleFileImport() {
+    if (!pendingFile || !userId) return
+    const content = await pendingFile.text()
+    const parsed = parseStickerFile(content)
+    if (!parsed.valid) {
+      setParseErrors(parsed.errors)
+      return
     }
-    reader.readAsText(file)
+    setParseErrors([])
+    setImporting(true)
+    const result = await importStickerFile(userId, parsed.stickers, parsed.counts)
+    setImporting(false)
+    setPendingFile(null)
+    if (!result.success) {
+      setSaveMsg(`Erro na importação: ${result.error}`)
+      return
+    }
+    const loaded = new Set<string>(parsed.stickers)
+    setSelected(loaded)
+    lastSaved.current = new Set(loaded)
+    setStep('input')
+
+    const parts: string[] = [`${result.totalStickers} figurinhas salvas`]
+    if (result.newDuplicates > 0)
+      parts.push(`${result.newDuplicates} repetidas (${result.totalDuplicateCopies} cópias extras)`)
+    const failures = [...result.failedStickers, ...result.failedDuplicates]
+    if (failures.length > 0)
+      parts.push(`${failures.length} não salvos: ${failures.slice(0, 5).join(', ')}${failures.length > 5 ? ` e mais ${failures.length - 5}` : ''}`)
+    setSaveMsg(failures.length > 0 ? `Importado com erros — ${parts.join(' · ')}` : `✓ ${parts.join(' · ')}`)
   }
 
   const handleSave = useCallback(async () => {
@@ -339,9 +342,21 @@ export default function StickersScreen() {
             <input
               type="file"
               accept=".txt"
-              onChange={handleFileUpload}
+              onChange={handleFileSelect}
               className="block w-full text-sm text-yvy-muted file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-yvy-bg file:text-yvy-dark file:font-medium hover:file:bg-yvy-border"
             />
+            {pendingFile && (
+              <div className="flex items-center justify-between gap-3 bg-yvy-bg rounded-lg px-3 py-2">
+                <span className="text-xs text-yvy-text truncate">{pendingFile.name}</span>
+                <button
+                  type="button"
+                  onClick={handleFileImport}
+                  className="shrink-0 px-3 py-1.5 rounded-lg bg-yvy-dark text-white text-xs font-semibold hover:bg-yvy-dark-hover transition-colors"
+                >
+                  Importar
+                </button>
+              </div>
+            )}
             {parseErrors.length > 0 && (
               <div className="text-xs text-red-600 space-y-0.5">
                 {parseErrors.map((e, i) => (
