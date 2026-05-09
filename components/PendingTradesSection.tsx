@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { PendingTrade, RecentTrade } from '@/actions/getPendingTrades'
+import type { MatchResult } from '@/lib/matching'
 import { respondToTrade } from '@/actions/respondToTrade'
 import { rollbackTrade } from '@/actions/rollbackTrade'
 import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
@@ -36,10 +37,12 @@ function StickerList({ ids, label }: { ids: string[]; label: string }) {
 function TradeCard({
   trade,
   userId,
+  matches,
   onDone,
 }: {
   trade: PendingTrade
   userId: string
+  matches?: MatchResult[]
   onDone: () => void
 }) {
   const [loading, setLoading] = useState<'accept' | 'reject' | 'cancel' | null>(null)
@@ -61,6 +64,13 @@ function TradeCard({
     }
   }
 
+  const totalReceiving = trade.myReceivingIds.length
+  const totalGiving = trade.myGivingIds.length
+  const tradeMutual = Math.min(totalReceiving, totalGiving)
+  const betterMatch = matches
+    ?.filter((m) => m.userId !== trade.otherUserId && m.mutualScore > tradeMutual)
+    .at(0)
+
   return (
     <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -70,8 +80,27 @@ function TradeCard({
         </span>
       </div>
 
+      {/* Sticker count summary */}
+      <p className="text-[11px] text-yvy-muted">
+        {totalReceiving > 0 && totalGiving > 0
+          ? `${totalReceiving + totalGiving} figurinhas — ${totalReceiving} você recebe · ${totalGiving} você dá`
+          : totalReceiving > 0
+            ? `${totalReceiving} figurinha${totalReceiving !== 1 ? 's' : ''} você recebe`
+            : `${totalGiving} figurinha${totalGiving !== 1 ? 's' : ''} você dá`}
+      </p>
+
       <StickerList ids={trade.myReceivingIds} label="Você vai receber" />
       <StickerList ids={trade.myGivingIds} label="Você vai dar" />
+
+      {/* Better match alert — only shown to the receiver */}
+      {!trade.isSender && betterMatch && (
+        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <span className="text-amber-500 text-sm shrink-0 mt-px">⚠️</span>
+          <p className="text-[11px] text-amber-800 leading-snug">
+            <strong className="capitalize">{betterMatch.name.split(' ')[0]}</strong> tem uma troca mais equilibrada disponível para você no ranking ({betterMatch.mutualScore} figurinhas mútuas). Considere antes de aceitar.
+          </p>
+        </div>
+      )}
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 
@@ -200,6 +229,7 @@ interface Props {
   sent: PendingTrade[]
   recentlyAccepted: RecentTrade[]
   userId: string
+  matches?: MatchResult[]
   onRefresh: () => void
 }
 
@@ -208,6 +238,7 @@ export default function PendingTradesSection({
   sent,
   recentlyAccepted,
   userId,
+  matches,
   onRefresh,
 }: Props) {
   const total = received.length + sent.length
@@ -227,7 +258,7 @@ export default function PendingTradesSection({
           {received.length > 0 && (
             <div className="space-y-2">
               {received.map((t) => (
-                <TradeCard key={t.id} trade={t} userId={userId} onDone={onRefresh} />
+                <TradeCard key={t.id} trade={t} userId={userId} matches={matches} onDone={onRefresh} />
               ))}
             </div>
           )}
@@ -235,7 +266,7 @@ export default function PendingTradesSection({
           {sent.length > 0 && (
             <div className="space-y-2">
               {sent.map((t) => (
-                <TradeCard key={t.id} trade={t} userId={userId} onDone={onRefresh} />
+                <TradeCard key={t.id} trade={t} userId={userId} matches={matches} onDone={onRefresh} />
               ))}
             </div>
           )}

@@ -124,6 +124,7 @@ export default function Header() {
             <nav className="flex-1 py-2 overflow-y-auto">
               {NAV_ITEMS.map((item) => {
                 const active = pathname === item.href
+                const showDot = item.href === '/matches' && pendingCount > 0
                 return (
                   <Link
                     key={item.href}
@@ -135,7 +136,12 @@ export default function Header() {
                     }`}
                   >
                     {item.label}
-                    {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
+                    {showDot && (
+                      <span className="ml-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
+                        {pendingCount > 9 ? '9+' : pendingCount}
+                      </span>
+                    )}
+                    {active && !showDot && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
                   </Link>
                 )
               })}

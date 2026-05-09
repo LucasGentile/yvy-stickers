@@ -120,6 +120,7 @@ export default function MatchesScreen() {
             sent={pending.sent}
             recentlyAccepted={pending.recentlyAccepted}
             userId={userId}
+            matches={matches}
             onRefresh={() => loadPending(userId)}
           />
       )}
