@@ -23,9 +23,9 @@ function StickerList({ ids, label }: { ids: string[]; label: string }) {
         {ids.map((id) => (
           <span
             key={id}
-            className={`text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
+            className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text"
           >
-            {id}
+            {isChromeSticker(id) ? <span className="font-bold text-amber-500">{id}</span> : id}
           </span>
         ))}
       </div>

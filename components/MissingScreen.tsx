@@ -233,9 +233,9 @@ export default function MissingScreen() {
                                 missing
                                   ? 'bg-amber-50 border border-amber-300 text-amber-800'
                                   : 'bg-yvy-bg text-yvy-border'
-                              }${missing && isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
+                              }`}
                             >
-                              {idx + 1}
+                              {missing && isChromeSticker(id) ? <span className="font-bold text-amber-500">{idx + 1}</span> : idx + 1}
                             </span>
                           )
                         })}
@@ -270,9 +270,9 @@ export default function MissingScreen() {
                           missing
                             ? 'bg-amber-50 border border-amber-300 text-amber-800'
                             : 'bg-yvy-bg text-yvy-border'
-                        }${missing && isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
+                        }`}
                       >
-                        {id}
+                        {missing && isChromeSticker(id) ? <span className="font-bold text-amber-500">{id}</span> : id}
                       </span>
                     )
                   })}

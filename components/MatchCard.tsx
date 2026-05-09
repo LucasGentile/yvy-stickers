@@ -22,9 +22,9 @@ function StickerChip({
         selected
           ? 'bg-yvy-dark text-white border-yvy-dark'
           : 'bg-yvy-bg text-yvy-text border-yvy-border hover:border-yvy-dark'
-      }${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
+      }`}
     >
-      {id}
+      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : id}
     </button>
   )
 }
@@ -111,9 +111,9 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                   {[...receiving].map((id) => (
                     <span
                       key={id}
-                      className={`text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
+                      className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white"
                     >
-                      {id}
+                      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : id}
                     </span>
                   ))}
                 </div>
@@ -129,9 +129,9 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                   {[...giving].map((id) => (
                     <span
                       key={id}
-                      className={`text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
+                      className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text"
                     >
-                      {id}
+                      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : id}
                     </span>
                   ))}
                 </div>

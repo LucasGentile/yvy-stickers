@@ -154,9 +154,9 @@ function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFr
                           key={id}
                           type="button"
                           onClick={() => toggle(id)}
-                          className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived)}${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
+                          className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived)}`}
                         >
-                          {idx + 1}
+                          {isChromeSticker(id) ? <span className="font-bold text-amber-400">{idx + 1}</span> : idx + 1}
                           {isNew && (
                             <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
                           )}
@@ -178,9 +178,9 @@ function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFr
                     key={id}
                     type="button"
                     onClick={() => toggle(id)}
-                    className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived)}${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
+                    className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived)}`}
                   >
-                    {id}
+                    {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : id}
                     {isNew && (
                       <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
                     )}
