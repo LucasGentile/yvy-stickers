@@ -45,7 +45,7 @@ function RankCard({ user, rank }: { user: RankedUser; rank: number }) {
         </div>
       )}
 
-      <div className={`px-4 py-3 flex flex-col gap-2 ${isTop3 ? '' : ''}`}>
+      <div className="px-4 py-3 flex flex-col gap-2">
         {/* Header row */}
         <div className="flex items-center gap-2.5">
           <span
