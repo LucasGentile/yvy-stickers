@@ -4,19 +4,26 @@ import { useState } from 'react'
 import type { PendingTrade, RecentTrade } from '@/actions/getPendingTrades'
 import { respondToTrade } from '@/actions/respondToTrade'
 import { rollbackTrade } from '@/actions/rollbackTrade'
+import { isChromeSticker } from '@/lib/stickers'
 
 function StickerList({ ids, label }: { ids: string[]; label: string }) {
   if (ids.length === 0) return null
+  const chromeCount = ids.filter(isChromeSticker).length
   return (
     <div>
       <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">
         {label}
+        {chromeCount > 0 && (
+          <span className="ml-1.5 text-amber-600 normal-case font-medium">
+            · ✨ {chromeCount} cromada{chromeCount !== 1 ? 's' : ''}
+          </span>
+        )}
       </p>
       <div className="flex flex-wrap gap-1">
         {ids.map((id) => (
           <span
             key={id}
-            className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text"
+            className={`text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
           >
             {id}
           </span>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
-import { ALL_STICKER_IDS } from '@/lib/stickers'
+import { ALL_STICKER_IDS, isChromeSticker } from '@/lib/stickers'
 import { getDuplicates, DuplicateEntry } from '@/actions/getDuplicates'
 import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
 import { upsertDuplicate } from '@/actions/upsertDuplicate'
@@ -236,7 +236,7 @@ export default function DuplicatesScreen() {
                 <div key={stickerId} className="flex items-center justify-between py-2.5 gap-3">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm font-semibold min-w-0 truncate text-yvy-dark">
-                      {stickerId}
+                      {isChromeSticker(stickerId) ? '✨ ' : ''}{stickerId}
                     </span>
                     {reserved > 0 && (
                       <span className="shrink-0 text-[10px] font-semibold text-red-500 border border-red-200 bg-red-50 rounded px-1.5 py-0.5 leading-none">

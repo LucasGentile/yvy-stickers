@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
-import { ALL_STICKER_IDS, ALL_STICKER_SECTIONS, StickerGroup } from '@/lib/stickers'
+import { ALL_STICKER_IDS, ALL_STICKER_SECTIONS, StickerGroup, isChromeSticker } from '@/lib/stickers'
 
 export default function MissingScreen() {
   const [missingSet, setMissingSet] = useState<Set<string>>(new Set())
@@ -233,7 +233,7 @@ export default function MissingScreen() {
                                 missing
                                   ? 'bg-amber-50 border border-amber-300 text-amber-800'
                                   : 'bg-yvy-bg text-yvy-border'
-                              }`}
+                              }${missing && isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
                             >
                               {idx + 1}
                             </span>
@@ -270,7 +270,7 @@ export default function MissingScreen() {
                           missing
                             ? 'bg-amber-50 border border-amber-300 text-amber-800'
                             : 'bg-yvy-bg text-yvy-border'
-                        }`}
+                        }${missing && isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
                       >
                         {id}
                       </span>

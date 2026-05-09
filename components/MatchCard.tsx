@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { MatchResult } from '@/lib/matching'
 import { createTradeRequest } from '@/actions/createTradeRequest'
+import { isChromeSticker } from '@/lib/stickers'
 
 function StickerChip({
   id,
@@ -21,7 +22,7 @@ function StickerChip({
         selected
           ? 'bg-yvy-dark text-white border-yvy-dark'
           : 'bg-yvy-bg text-yvy-text border-yvy-border hover:border-yvy-dark'
-      }`}
+      }${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
     >
       {id}
     </button>
@@ -110,7 +111,7 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                   {[...receiving].map((id) => (
                     <span
                       key={id}
-                      className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white"
+                      className={`text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
                     >
                       {id}
                     </span>
@@ -128,7 +129,7 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                   {[...giving].map((id) => (
                     <span
                       key={id}
-                      className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text"
+                      className={`text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text${isChromeSticker(id) ? ' ring-2 ring-amber-400 ring-offset-1' : ''}`}
                     >
                       {id}
                     </span>
@@ -322,30 +323,46 @@ export default function MatchCard({ match, rank, onTradeCreated }: { match: Matc
         <div className={rank === 1 ? 'px-4 pb-4 flex flex-col gap-3' : 'flex flex-col gap-3'}>
           {match.matchScore > 0 || match.reciprocalScore > 0 ? (
             <>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-yvy-bg rounded-lg px-3 py-2">
-                  <p className="text-[10px] text-yvy-muted uppercase tracking-wide mb-0.5">
-                    Ele/ela tem para mim
-                  </p>
-                  <p className="text-lg font-bold text-yvy-dark leading-none">
-                    {match.matchScore}
-                    <span className="text-xs font-normal text-yvy-muted ml-1">
-                      {match.matchScore === 1 ? 'figurinha' : 'figurinhas'}
-                    </span>
-                  </p>
-                </div>
-                <div className="bg-yvy-bg rounded-lg px-3 py-2">
-                  <p className="text-[10px] text-yvy-muted uppercase tracking-wide mb-0.5">
-                    Eu tenho para ele/ela
-                  </p>
-                  <p className="text-lg font-bold text-yvy-accent leading-none">
-                    {match.reciprocalScore}
-                    <span className="text-xs font-normal text-yvy-muted ml-1">
-                      {match.reciprocalScore === 1 ? 'figurinha' : 'figurinhas'}
-                    </span>
-                  </p>
-                </div>
-              </div>
+              {(() => {
+                const chromeMatch = match.matchStickers.filter(isChromeSticker).length
+                const chromeReciprocal = match.reciprocalStickers.filter(isChromeSticker).length
+                return (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-yvy-bg rounded-lg px-3 py-2">
+                      <p className="text-[10px] text-yvy-muted uppercase tracking-wide mb-0.5">
+                        Ele/ela tem para mim
+                      </p>
+                      <p className="text-lg font-bold text-yvy-dark leading-none">
+                        {match.matchScore}
+                        <span className="text-xs font-normal text-yvy-muted ml-1">
+                          {match.matchScore === 1 ? 'figurinha' : 'figurinhas'}
+                        </span>
+                      </p>
+                      {chromeMatch > 0 && (
+                        <p className="text-[10px] text-amber-600 font-medium mt-0.5">
+                          ✨ {chromeMatch} cromada{chromeMatch !== 1 ? 's' : ''}
+                        </p>
+                      )}
+                    </div>
+                    <div className="bg-yvy-bg rounded-lg px-3 py-2">
+                      <p className="text-[10px] text-yvy-muted uppercase tracking-wide mb-0.5">
+                        Eu tenho para ele/ela
+                      </p>
+                      <p className="text-lg font-bold text-yvy-accent leading-none">
+                        {match.reciprocalScore}
+                        <span className="text-xs font-normal text-yvy-muted ml-1">
+                          {match.reciprocalScore === 1 ? 'figurinha' : 'figurinhas'}
+                        </span>
+                      </p>
+                      {chromeReciprocal > 0 && (
+                        <p className="text-[10px] text-amber-600 font-medium mt-0.5">
+                          ✨ {chromeReciprocal} cromada{chromeReciprocal !== 1 ? 's' : ''}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
 
               {isMutual && (
                 <p className="text-xs text-yvy-dark font-medium">

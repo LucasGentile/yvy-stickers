@@ -296,6 +296,10 @@ export default function StickersScreen() {
                     Troca recente (48h)
                   </span>
                 )}
+                <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                  <span className="w-3 h-3 rounded shrink-0 bg-yvy-bg ring-2 ring-amber-400 ring-offset-1" />
+                  Cromada
+                </span>
               </div>
             </>
           )
