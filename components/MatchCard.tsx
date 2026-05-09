@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import type { MatchResult } from '@/lib/matching'
 import { createTradeRequest } from '@/actions/createTradeRequest'
-import { isChromeSticker } from '@/lib/stickers'
+import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 
 function StickerChip({
   id,
@@ -24,7 +24,7 @@ function StickerChip({
           : 'bg-yvy-bg text-yvy-text border-yvy-border hover:border-yvy-dark'
       }`}
     >
-      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : id}
+      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
     </button>
   )
 }
@@ -113,7 +113,7 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                       key={id}
                       className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white"
                     >
-                      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : id}
+                      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
                     </span>
                   ))}
                 </div>
@@ -131,7 +131,7 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                       key={id}
                       className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text"
                     >
-                      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : id}
+                      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
                     </span>
                   ))}
                 </div>

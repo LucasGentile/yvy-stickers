@@ -190,3 +190,7 @@ export const CHROME_STICKER_IDS: Set<string> = new Set([
 export function isChromeSticker(id: string): boolean {
   return CHROME_STICKER_IDS.has(id)
 }
+
+export function isCocaColaSticker(id: string): boolean {
+  return id.startsWith('CC')
+}

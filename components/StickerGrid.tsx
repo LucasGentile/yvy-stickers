@@ -1,7 +1,7 @@
 'use client'
 
 import { memo } from 'react'
-import { ALL_STICKER_SECTIONS, isChromeSticker } from '@/lib/stickers'
+import { ALL_STICKER_SECTIONS, isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 
 interface Props {
   selected: Set<string>
@@ -180,7 +180,7 @@ function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFr
                     onClick={() => toggle(id)}
                     className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived)}`}
                   >
-                    {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : id}
+                    {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
                     {isNew && (
                       <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
                     )}

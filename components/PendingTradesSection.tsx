@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { PendingTrade, RecentTrade } from '@/actions/getPendingTrades'
 import { respondToTrade } from '@/actions/respondToTrade'
 import { rollbackTrade } from '@/actions/rollbackTrade'
-import { isChromeSticker } from '@/lib/stickers'
+import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 
 function StickerList({ ids, label }: { ids: string[]; label: string }) {
   if (ids.length === 0) return null
@@ -25,7 +25,7 @@ function StickerList({ ids, label }: { ids: string[]; label: string }) {
             key={id}
             className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text"
           >
-            {isChromeSticker(id) ? <span className="font-bold text-amber-500">{id}</span> : id}
+            {isChromeSticker(id) ? <span className="font-bold text-amber-500">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
           </span>
         ))}
       </div>
