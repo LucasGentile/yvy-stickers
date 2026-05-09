@@ -223,7 +223,10 @@ export default function DuplicatesScreen() {
         <p className="text-sm font-medium text-yvy-text mb-3">
           {duplicates.length === 0
             ? 'Nenhuma repetida cadastrada ainda.'
-            : `${duplicates.length} figurinha${duplicates.length !== 1 ? 's' : ''} com repetidas`}
+            : (() => {
+                const totalCopies = duplicates.reduce((sum, d) => sum + d.count, 0)
+                return `${totalCopies} cópia${totalCopies !== 1 ? 's' : ''} repetida${totalCopies !== 1 ? 's' : ''} · ${duplicates.length} figurinha${duplicates.length !== 1 ? 's' : ''} diferente${duplicates.length !== 1 ? 's' : ''}`
+              })()}
         </p>
 
         {duplicates.length > 0 && (
