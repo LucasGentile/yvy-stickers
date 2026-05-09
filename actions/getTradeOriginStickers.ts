@@ -1,0 +1,37 @@
+'use server'
+
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
+
+export type TradeOriginResult = {
+  fromTradeIds: string[] // all stickers ever received from accepted trades
+  newestIds: string[]   // stickers received in the last 48 hours
+}
+
+const NEWEST_WINDOW_MS = 48 * 60 * 60 * 1000
+
+export async function getTradeOriginStickers(userId: string): Promise<TradeOriginResult> {
+  if (!userId) return { fromTradeIds: [], newestIds: [] }
+
+  const { data: trades } = await supabaseAdmin
+    .from('pending_trades')
+    .select('initiator_id, giving_ids, receiving_ids, accepted_at')
+    .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
+    .eq('status', 'accepted')
+
+  const fromTrade = new Set<string>()
+  const newest = new Set<string>()
+  const cutoff = Date.now() - NEWEST_WINDOW_MS
+
+  for (const trade of trades ?? []) {
+    const received =
+      trade.initiator_id === userId ? trade.receiving_ids : trade.giving_ids
+    for (const id of received ?? []) {
+      fromTrade.add(id)
+      if (trade.accepted_at && new Date(trade.accepted_at).getTime() > cutoff) {
+        newest.add(id)
+      }
+    }
+  }
+
+  return { fromTradeIds: [...fromTrade], newestIds: [...newest] }
+}

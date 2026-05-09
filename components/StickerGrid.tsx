@@ -7,6 +7,8 @@ interface Props {
   selected: Set<string>
   onChange: (next: Set<string>) => void
   onBulkChange?: (next: Set<string>, message: string) => void
+  tradeReceived?: Set<string>
+  newestFromTrade?: Set<string>
 }
 
 function TrophySVG() {
@@ -48,7 +50,13 @@ function SectionIcon({ label, icon }: { label: string; icon: string }) {
   return <span className="text-sm">{icon}</span>
 }
 
-function StickerGrid({ selected, onChange, onBulkChange }: Props) {
+function stickerColor(id: string, on: boolean, tradeReceived?: Set<string>): string {
+  if (!on) return 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
+  if (tradeReceived?.has(id)) return 'bg-blue-500 text-white'
+  return tradeReceived ? 'bg-green-600 text-white' : 'bg-yvy-dark text-white'
+}
+
+function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFromTrade }: Props) {
   function toggle(id: string) {
     const next = new Set(selected)
     if (next.has(id)) {
@@ -140,18 +148,18 @@ function StickerGrid({ selected, onChange, onBulkChange }: Props) {
                   <div className="flex flex-wrap gap-1">
                     {team.stickers.map((id, idx) => {
                       const on = selected.has(id)
+                      const isNew = on && newestFromTrade?.has(id)
                       return (
                         <button
                           key={id}
                           type="button"
                           onClick={() => toggle(id)}
-                          className={`w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${
-                            on
-                              ? 'bg-yvy-dark text-white'
-                              : 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
-                          }`}
+                          className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived)}`}
                         >
                           {idx + 1}
+                          {isNew && (
+                            <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                          )}
                         </button>
                       )
                     })}
@@ -164,16 +172,18 @@ function StickerGrid({ selected, onChange, onBulkChange }: Props) {
             <div className="flex flex-wrap gap-1">
               {section.stickers.map((id) => {
                 const on = selected.has(id)
+                const isNew = on && newestFromTrade?.has(id)
                 return (
                   <button
                     key={id}
                     type="button"
                     onClick={() => toggle(id)}
-                    className={`h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${
-                      on ? 'bg-yvy-dark text-white' : 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
-                    }`}
+                    className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived)}`}
                   >
                     {id}
+                    {isNew && (
+                      <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                    )}
                   </button>
                 )
               })}

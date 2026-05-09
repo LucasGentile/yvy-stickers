@@ -74,6 +74,8 @@ export type Database = {
           receiving_ids: string[]
           status: string
           created_at: string
+          accepted_at: string | null
+          rollback_requested_by: string | null
         }
         Insert: {
           id?: string
@@ -83,6 +85,8 @@ export type Database = {
           receiving_ids?: string[]
           status?: string
           created_at?: string
+          accepted_at?: string | null
+          rollback_requested_by?: string | null
         }
         Update: {
           id?: string
@@ -92,6 +96,8 @@ export type Database = {
           receiving_ids?: string[]
           status?: string
           created_at?: string
+          accepted_at?: string | null
+          rollback_requested_by?: string | null
         }
         Relationships: [
           {

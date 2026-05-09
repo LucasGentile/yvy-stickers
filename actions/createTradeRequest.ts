@@ -62,6 +62,43 @@ export async function createTradeRequest(
     }
   }
 
+  // Check that the receiver has enough free copies of the stickers they are expected to give
+  if (receivingIds.length > 0) {
+    const [{ data: receiverTrades }, { data: receiverDupes }] = await Promise.all([
+      supabaseAdmin
+        .from('pending_trades')
+        .select('initiator_id, giving_ids, receiving_ids')
+        .or(`initiator_id.eq.${receiverId},receiver_id.eq.${receiverId}`)
+        .eq('status', 'pending'),
+      supabaseAdmin
+        .from('user_duplicates')
+        .select('sticker_id, count')
+        .eq('user_id', receiverId)
+        .in('sticker_id', receivingIds),
+    ])
+
+    const receiverReserved: Record<string, number> = {}
+    for (const trade of receiverTrades ?? []) {
+      const theirGiving =
+        trade.initiator_id === receiverId ? trade.giving_ids : trade.receiving_ids
+      for (const id of theirGiving ?? []) receiverReserved[id] = (receiverReserved[id] ?? 0) + 1
+    }
+
+    const receiverDupeCount: Record<string, number> = {}
+    for (const d of receiverDupes ?? []) receiverDupeCount[d.sticker_id] = d.count
+
+    const receiverConflicts = receivingIds.filter((id) => {
+      const reserved = receiverReserved[id] ?? 0
+      return reserved > 0 && reserved >= (receiverDupeCount[id] ?? 0)
+    })
+    if (receiverConflicts.length > 0) {
+      return {
+        success: false,
+        error: `Figurinha${receiverConflicts.length > 1 ? 's' : ''} já reservada${receiverConflicts.length > 1 ? 's' : ''} em outra troca: ${receiverConflicts.join(', ')}`,
+      }
+    }
+  }
+
   const { data, error } = await supabaseAdmin
     .from('pending_trades')
     .insert({

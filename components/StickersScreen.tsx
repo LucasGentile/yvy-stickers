@@ -6,6 +6,7 @@ import { saveStickers } from '@/actions/saveStickers'
 import { importStickerFile } from '@/actions/importStickerFile'
 import { removeDuplicate } from '@/actions/removeDuplicate'
 import { getUserData } from '@/actions/getUserData'
+import { getTradeOriginStickers, type TradeOriginResult } from '@/actions/getTradeOriginStickers'
 import { parseStickerFile } from '@/lib/parser'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
 import StickerGrid from './StickerGrid'
@@ -17,7 +18,8 @@ type Step = 'mode' | 'input' | 'pending'
 export default function StickersScreen() {
   const [userId, setUserId] = useState<string | null>(null)
   const [step, setStep] = useState<Step>('mode')
-  const [, setMode] = useState<Mode>('have')
+  const [mode, setMode] = useState<Mode>('have')
+  const [tradeOrigin, setTradeOrigin] = useState<TradeOriginResult | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [parseErrors, setParseErrors] = useState<string[]>([])
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
@@ -67,7 +69,8 @@ export default function StickersScreen() {
       setLoading(false)
       return
     }
-    getUserData(id).then((data) => {
+    Promise.all([getUserData(id), getTradeOriginStickers(id)]).then(([data, origin]) => {
+      setTradeOrigin(origin)
       if (data) {
         if (!data.approved) {
           setStep('pending' as Step)
@@ -269,6 +272,35 @@ export default function StickersScreen() {
             </button>
           </div>
         </div>
+
+        {mode === 'have' && tradeOrigin && (() => {
+          const tradeSet = new Set(tradeOrigin.fromTradeIds)
+          const tradeCount = [...selected].filter((id) => tradeSet.has(id)).length
+          const boughtCount = selected.size - tradeCount
+          return (
+            <>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                  <span className="w-3 h-3 rounded bg-green-600 shrink-0" />
+                  Comprada/colada
+                  <span className="font-semibold text-yvy-text">({boughtCount})</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                  <span className="w-3 h-3 rounded bg-blue-500 shrink-0" />
+                  Recebida em troca
+                  <span className="font-semibold text-yvy-text">({tradeCount})</span>
+                </span>
+                {tradeOrigin.newestIds.length > 0 && (
+                  <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
+                    Troca recente (48h)
+                  </span>
+                )}
+              </div>
+            </>
+          )
+        })()}
+
         <StickerGrid
           selected={selected}
           onChange={setSelected}
@@ -276,6 +308,8 @@ export default function StickersScreen() {
             showToast(message, new Set(selected))
             setSelected(next)
           }}
+          tradeReceived={mode === 'have' && tradeOrigin ? new Set(tradeOrigin.fromTradeIds) : undefined}
+          newestFromTrade={mode === 'have' && tradeOrigin ? new Set(tradeOrigin.newestIds) : undefined}
         />
       </div>
 

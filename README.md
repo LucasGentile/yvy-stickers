@@ -59,6 +59,12 @@ Selecione suas figurinhas na grade — organizadas por grupos e seleções com a
 - O app avisa se você tentar sair sem salvar
   💾 Não esqueça de salvar no final!
 
+As figurinhas marcadas aparecem em cores diferentes:
+🟢 _Verde_ — comprada/colada no álbum físico
+🔵 _Azul_ — recebida via troca no app
+🟡 _Ponto amarelo_ — recebida em troca nas últimas 48h
+A contagem _"Compradas: X · De trocas: Y"_ aparece acima da grade.
+
 🔁 _3. Repetidas_
 Informe quais figurinhas você tem duplicadas e quantas. Essas ficam disponíveis pra troca.
 
@@ -88,7 +94,7 @@ Veja todas as figurinhas que ainda precisa. Use a busca para filtrar por país o
 Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — inclui maior investidor, rei das repetidas, figurinheiro negociante e o investimento coletivo convertido em pizzas. Fins humorísticos. Sem julgamentos (mentira).
 
 📜 _9. Histórico_
-Revise suas últimas 50 ações no app. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico. Use como checklist!
+Revise suas últimas 50 ações no app, organizadas em páginas de 10 com navegação _"← Anterior"_ e _"Próxima →"_. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico. Use como checklist!
 
 ➖➖➖➖➖➖➖➖➖
 
@@ -141,6 +147,9 @@ npm exec -- tsx scripts/admin.ts find-trades "Nome"
 
 # Recriar entradas de histórico para uma troca aceita
 npm exec -- tsx scripts/admin.ts backfill-trade "<trade-uuid>"
+
+# Desfazer manualmente uma troca aceita (sem limite de 10 min)
+npm exec -- tsx scripts/admin.ts admin-rollback-trade "<trade-uuid>"
 ```
 
 > Requer `SUPABASE_SERVICE_KEY` no arquivo `.env.local`
@@ -177,7 +186,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (128 testes, 13 arquivos)
+npm test                  # roda todos os testes (132 testes, 13 arquivos)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```

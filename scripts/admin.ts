@@ -231,6 +231,71 @@ async function findTrades(nameFragment: string) {
   }
 }
 
+async function adminRollbackTrade(tradeId: string) {
+  const { data: trade, error } = await supabase
+    .from('pending_trades')
+    .select('id, initiator_id, receiver_id, giving_ids, receiving_ids, status')
+    .eq('id', tradeId)
+    .maybeSingle()
+
+  if (error || !trade) { console.error('Trade not found:', error?.message); process.exit(1) }
+  if (trade.status !== 'accepted') { console.error(`Trade status is "${trade.status}", not "accepted" — nothing to roll back`); process.exit(1) }
+
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, name')
+    .in('id', [trade.initiator_id, trade.receiver_id])
+
+  const initiatorName = users?.find((u) => u.id === trade.initiator_id)?.name ?? trade.initiator_id
+  const receiverName = users?.find((u) => u.id === trade.receiver_id)?.name ?? trade.receiver_id
+
+  console.log(`\nRolling back trade ${trade.id}`)
+  console.log(`  ${initiatorName} → ${receiverName}`)
+  console.log(`  giving:    ${trade.giving_ids?.join(', ') || '(none)'}`)
+  console.log(`  receiving: ${trade.receiving_ids?.join(', ') || '(none)'}`)
+
+  // Mark as rolled_back (atomic check on status)
+  const { data: updated } = await supabase
+    .from('pending_trades')
+    .update({ status: 'rolled_back' })
+    .eq('id', tradeId)
+    .eq('status', 'accepted')
+    .select('id')
+    .maybeSingle()
+
+  if (!updated) { console.error('Trade already changed status during rollback — aborting'); process.exit(1) }
+
+  // Restore duplicates for both parties
+  async function restoreDupe(userId: string, ids: string[]) {
+    for (const sid of ids) {
+      const { data } = await supabase.from('user_duplicates').select('count').eq('user_id', userId).eq('sticker_id', sid).maybeSingle()
+      if (data) {
+        await supabase.from('user_duplicates').update({ count: data.count + 1 }).eq('user_id', userId).eq('sticker_id', sid)
+        console.log(`  ↩ restored dupe ${sid} for ${users?.find((u) => u.id === userId)?.name ?? userId} (count ${data.count} → ${data.count + 1})`)
+      } else {
+        await supabase.from('user_duplicates').insert({ user_id: userId, sticker_id: sid, count: 1 })
+        console.log(`  ↩ re-inserted dupe ${sid} for ${users?.find((u) => u.id === userId)?.name ?? userId} (count 1)`)
+      }
+    }
+  }
+
+  // Remove received stickers from collection
+  async function removeFromCollection(userId: string, ids: string[]) {
+    if (!ids.length) return
+    await supabase.from('user_stickers').delete().eq('user_id', userId).in('sticker_id', ids)
+    console.log(`  ↩ removed from collection of ${users?.find((u) => u.id === userId)?.name ?? userId}: ${ids.join(', ')}`)
+  }
+
+  // Initiator gave giving_ids → restore; received receiving_ids → remove from collection
+  // Receiver gave receiving_ids → restore; received giving_ids → remove from collection
+  await restoreDupe(trade.initiator_id, trade.giving_ids ?? [])
+  await removeFromCollection(trade.initiator_id, trade.receiving_ids ?? [])
+  await restoreDupe(trade.receiver_id, trade.receiving_ids ?? [])
+  await removeFromCollection(trade.receiver_id, trade.giving_ids ?? [])
+
+  console.log(`\n✓ Trade ${trade.id} rolled back successfully`)
+}
+
 async function main() {
   const [cmd, arg] = process.argv.slice(2)
 
@@ -242,6 +307,7 @@ async function main() {
   else if (cmd === 'debug-user' && arg) await debugUser(arg)
   else if (cmd === 'find-trades' && arg) await findTrades(arg)
   else if (cmd === 'backfill-trade' && arg) await backfillTrade(arg)
+  else if (cmd === 'admin-rollback-trade' && arg) await adminRollbackTrade(arg)
   else {
     console.log(
       'Usage:\n' +
@@ -250,7 +316,9 @@ async function main() {
         '  npx tsx scripts/admin.ts approve <phone>\n' +
         '  npx tsx scripts/admin.ts delete <phone>\n' +
         '  npx tsx scripts/admin.ts grant-admin <phone>\n' +
-        '  npx tsx scripts/admin.ts debug-user <name>'
+        '  npx tsx scripts/admin.ts debug-user <name>\n' +
+        '  npx tsx scripts/admin.ts find-trades <name>\n' +
+        '  npx tsx scripts/admin.ts admin-rollback-trade <tradeId>'
     )
   }
 }

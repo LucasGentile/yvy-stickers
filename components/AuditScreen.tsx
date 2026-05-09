@@ -328,9 +328,12 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
+const PAGE_SIZE = 10
+
 export default function AuditScreen() {
   const [entries, setEntries] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [userId, setUserId] = useState<string>('')
 
@@ -346,6 +349,9 @@ export default function AuditScreen() {
       .catch(() => setError('Erro ao carregar histórico.'))
       .finally(() => setLoading(false))
   }, [])
+
+  const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE))
+  const pageEntries = entries.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
 
   if (loading) {
     return (
@@ -374,15 +380,13 @@ export default function AuditScreen() {
     )
   }
 
-  const groups = groupByDay(entries)
-
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
       <div className="flex items-baseline justify-between">
         <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
           Histórico
         </h2>
-        <span className="text-xs text-yvy-muted">Últimas 50 ações</span>
+        <span className="text-xs text-yvy-muted">Últimas {entries.length} ações</span>
       </div>
 
       {/* What this page is for */}
@@ -401,17 +405,14 @@ export default function AuditScreen() {
         </div>
       ) : (
         <div className="space-y-6">
-          {groups.map(({ day, entries: dayEntries }) => (
+          {groupByDay(pageEntries).map(({ day, entries: dayEntries }) => (
             <div key={day}>
-              {/* Day header */}
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted">
                   {day}
                 </span>
                 <div className="flex-1 h-px bg-yvy-border" />
               </div>
-
-              {/* Events */}
               <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-3 space-y-4">
                 {dayEntries.map((entry) => (
                   <EventCard key={entry.id} entry={entry} userId={userId} />
@@ -419,6 +420,28 @@ export default function AuditScreen() {
               </div>
             </div>
           ))}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-1">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ← Anterior
+              </button>
+              <span className="text-xs text-yvy-muted">
+                {page + 1} / {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page === totalPages - 1}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Próxima →
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

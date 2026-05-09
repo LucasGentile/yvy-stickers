@@ -91,9 +91,11 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // pending_trades conflict check
-      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // user_duplicates
-      if (callCount === 3) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
+      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // initiator: pending_trades
+      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // initiator: user_duplicates
+      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // receiver: user_duplicates
+      if (callCount === 5) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
       return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null }) // fire-and-forget name lookup
     })
 
@@ -119,8 +121,10 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      // No givingIds → no conflict check; first call is the insert
-      if (callCount === 1) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
+      // No givingIds → skip initiator check; receiver check runs first
+      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
+      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // receiver: user_duplicates
+      if (callCount === 3) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
       return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null })
     })
 
@@ -151,6 +155,55 @@ describe('createTradeRequest', () => {
       expect(result.error).toMatch(/reservada/i)
       expect(result.error).toContain('MEX1')
     }
+  })
+
+  it('returns error when receiver stickers are already reserved in another pending trade', async () => {
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      // No givingIds → skip initiator check
+      if (callCount === 1)
+        return makeSelectChain({
+          data: [{ initiator_id: 'user-b', giving_ids: ['BRA1'], receiving_ids: [] }],
+          error: null,
+        }) // receiver: pending_trades — BRA1 reserved once
+      if (callCount === 2)
+        return makeSelectChain({
+          data: [{ sticker_id: 'BRA1', count: 1 }],
+          error: null,
+        }) // receiver: user_duplicates — BRA1 count=1, fully reserved
+      return makeInsertChain({ data: null, error: null })
+    })
+
+    const result = await createTradeRequest('user-a', 'user-b', [], ['BRA1'])
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error).toMatch(/reservada/i)
+      expect(result.error).toContain('BRA1')
+    }
+  })
+
+  it('allows trade when receiver sticker has more copies than reserved', async () => {
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      // No givingIds → skip initiator check
+      if (callCount === 1)
+        return makeSelectChain({
+          data: [{ initiator_id: 'user-b', giving_ids: ['BRA1'], receiving_ids: [] }],
+          error: null,
+        }) // receiver: pending_trades — BRA1 reserved once
+      if (callCount === 2)
+        return makeSelectChain({
+          data: [{ sticker_id: 'BRA1', count: 2 }],
+          error: null,
+        }) // receiver: user_duplicates — BRA1 count=2, 1 free copy
+      if (callCount === 3) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
+      return makeSelectChain({ data: [{ id: 'user-a', name: 'A' }, { id: 'user-b', name: 'B' }], error: null })
+    })
+
+    const result = await createTradeRequest('user-a', 'user-b', [], ['BRA1'])
+    expect(result.success).toBe(true)
   })
 
   it('allows trade when sticker has more copies than reserved', async () => {

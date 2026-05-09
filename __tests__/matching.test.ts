@@ -263,6 +263,68 @@ describe('getMatches', () => {
     expect(results[0].matchStickers).toEqual([])
   })
 
+  it('excludes incoming stickers from myNeeded when already receiving from a pending trade', async () => {
+    // user-a owns MEX1 → needs BRA1; but a pending trade will give BRA1 to user-a
+    // user-b has BRA1 as a free duplicate
+    // Expected: BRA1 should NOT appear in matchStickers because user-a is already getting it
+    setupMocks({
+      myStickers: [{ sticker_id: 'MEX1' }],
+      others: [
+        {
+          id: 'user-b',
+          display_key: 'b-0101-1',
+          phone: '1',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'BRA1' }],
+          user_duplicates: [{ sticker_id: 'BRA1', count: 1 }],
+        },
+      ],
+      pendingTrades: [
+        {
+          initiator_id: 'user-c',
+          receiver_id: 'user-a', // user-a is receiver → will receive giving_ids
+          giving_ids: ['BRA1'],
+          receiving_ids: [],
+        },
+      ],
+    })
+
+    const results = await getMatches('user-a')
+    expect(results[0].matchScore).toBe(0)
+    expect(results[0].matchStickers).toEqual([])
+  })
+
+  it('excludes incoming stickers from theirNeeded when other user already receiving from a pending trade', async () => {
+    // user-a has BRA1 as a free duplicate; user-b needs BRA1 but already has a pending trade to receive it
+    // Expected: BRA1 should NOT appear in reciprocalStickers
+    setupMocks({
+      myStickers: [{ sticker_id: 'BRA1' }],
+      myDupes: [{ sticker_id: 'BRA1', count: 1 }],
+      others: [
+        {
+          id: 'user-b',
+          display_key: 'b-0101-1',
+          phone: '1',
+          input_mode: 'have',
+          user_stickers: [{ sticker_id: 'MEX1' }], // user-b needs BRA1
+          user_duplicates: [],
+        },
+      ],
+      pendingTrades: [
+        {
+          initiator_id: 'user-b', // user-b as initiator → will receive receiving_ids
+          receiver_id: 'user-c',
+          giving_ids: [],
+          receiving_ids: ['BRA1'],
+        },
+      ],
+    })
+
+    const results = await getMatches('user-a')
+    expect(results[0].reciprocalScore).toBe(0)
+    expect(results[0].reciprocalStickers).toEqual([])
+  })
+
   it('keeps partially-reserved dupes available (count > reserved)', async () => {
     // user-a has MEX1 (count=2, 1 reserved → 1 free) and MEX2 (count=1, free)
     // user-b needs both → both should appear since MEX1 still has a free copy

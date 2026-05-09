@@ -67,21 +67,35 @@ export async function getMatches(currentUserId: string): Promise<MatchResult[]> 
   // Build per-user reserved sticker counts from pending trades.
   // A sticker can be reserved multiple times if the user has enough copies.
   const reservedByUser = new Map<string, Map<string, number>>()
+  // Build per-user incoming sticker sets (stickers they will receive from pending trades).
+  const incomingByUser = new Map<string, Set<string>>()
   for (const trade of pendingTrades ?? []) {
     if (!reservedByUser.has(trade.initiator_id)) reservedByUser.set(trade.initiator_id, new Map())
+    if (!incomingByUser.has(trade.initiator_id)) incomingByUser.set(trade.initiator_id, new Set())
     for (const id of trade.giving_ids ?? []) {
       const m = reservedByUser.get(trade.initiator_id)!
       m.set(id, (m.get(id) ?? 0) + 1)
     }
+    for (const id of trade.receiving_ids ?? []) {
+      incomingByUser.get(trade.initiator_id)!.add(id)
+    }
     if (!reservedByUser.has(trade.receiver_id)) reservedByUser.set(trade.receiver_id, new Map())
+    if (!incomingByUser.has(trade.receiver_id)) incomingByUser.set(trade.receiver_id, new Set())
     for (const id of trade.receiving_ids ?? []) {
       const m = reservedByUser.get(trade.receiver_id)!
       m.set(id, (m.get(id) ?? 0) + 1)
     }
+    for (const id of trade.giving_ids ?? []) {
+      incomingByUser.get(trade.receiver_id)!.add(id)
+    }
   }
 
   const myMarked = new Set((myStickers ?? []).map((r) => r.sticker_id))
-  const myNeeded = computeNeeded(myUser.input_mode, myMarked)
+  const myIncoming = incomingByUser.get(currentUserId) ?? new Set<string>()
+  // Exclude stickers already incoming from pending trades — treat them as virtually owned
+  const myNeeded = new Set(
+    [...computeNeeded(myUser.input_mode, myMarked)].filter((id) => !myIncoming.has(id))
+  )
   const myReserved = reservedByUser.get(currentUserId) ?? new Map<string, number>()
   // Only stickers with more copies than reserved count are available for trading
   const myDupeSet = new Set(
@@ -93,7 +107,11 @@ export async function getMatches(currentUserId: string): Promise<MatchResult[]> 
   const results: MatchResult[] = others
     .map((user) => {
       const theirMarked = new Set(user.user_stickers.map((r) => r.sticker_id))
-      const theirNeeded = computeNeeded(user.input_mode, theirMarked)
+      const theirIncoming = incomingByUser.get(user.id) ?? new Set<string>()
+      // Exclude stickers already incoming from pending trades — treat them as virtually owned
+      const theirNeeded = new Set(
+        [...computeNeeded(user.input_mode, theirMarked)].filter((id) => !theirIncoming.has(id))
+      )
       const theirReserved = reservedByUser.get(user.id) ?? new Map<string, number>()
       const theirDupeSet = new Set(
         user.user_duplicates
