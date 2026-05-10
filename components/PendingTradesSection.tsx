@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { PendingTrade, RecentTrade } from '@/actions/getPendingTrades'
-import type { MatchResult } from '@/lib/matching'
 import { respondToTrade } from '@/actions/respondToTrade'
 import { rollbackTrade } from '@/actions/rollbackTrade'
+import { getBetterMatchExcludingTrade, type BetterMatchResult } from '@/actions/getBetterMatchExcludingTrade'
 import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 
 function StickerList({ ids, label }: { ids: string[]; label: string }) {
@@ -37,16 +37,26 @@ function StickerList({ ids, label }: { ids: string[]; label: string }) {
 function TradeCard({
   trade,
   userId,
-  matches,
   onDone,
 }: {
   trade: PendingTrade
   userId: string
-  matches?: MatchResult[]
   onDone: () => void
 }) {
   const [loading, setLoading] = useState<'accept' | 'reject' | 'cancel' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  const [betterMatch, setBetterMatch] = useState<BetterMatchResult | null | undefined>(undefined)
+
+  const totalReceiving = trade.myReceivingIds.length
+  const totalGiving = trade.myGivingIds.length
+  const tradeMutual = Math.min(totalReceiving, totalGiving)
+
+  useEffect(() => {
+    if (trade.isSender) return
+    getBetterMatchExcludingTrade(userId, trade.id, trade.otherUserId, tradeMutual)
+      .then(setBetterMatch)
+      .catch(() => setBetterMatch(null))
+  }, [trade.id])
 
   async function handle(action: 'accept' | 'reject' | 'cancel') {
     setLoading(action)
@@ -63,13 +73,6 @@ function TradeCard({
       setLoading(null)
     }
   }
-
-  const totalReceiving = trade.myReceivingIds.length
-  const totalGiving = trade.myGivingIds.length
-  const tradeMutual = Math.min(totalReceiving, totalGiving)
-  const betterMatch = matches
-    ?.filter((m) => m.userId !== trade.otherUserId && m.mutualScore > tradeMutual)
-    .at(0)
 
   return (
     <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
@@ -229,7 +232,6 @@ interface Props {
   sent: PendingTrade[]
   recentlyAccepted: RecentTrade[]
   userId: string
-  matches?: MatchResult[]
   onRefresh: () => void
 }
 
@@ -238,7 +240,6 @@ export default function PendingTradesSection({
   sent,
   recentlyAccepted,
   userId,
-  matches,
   onRefresh,
 }: Props) {
   const total = received.length + sent.length
@@ -258,7 +259,7 @@ export default function PendingTradesSection({
           {received.length > 0 && (
             <div className="space-y-2">
               {received.map((t) => (
-                <TradeCard key={t.id} trade={t} userId={userId} matches={matches} onDone={onRefresh} />
+                <TradeCard key={t.id} trade={t} userId={userId} onDone={onRefresh} />
               ))}
             </div>
           )}
@@ -266,7 +267,7 @@ export default function PendingTradesSection({
           {sent.length > 0 && (
             <div className="space-y-2">
               {sent.map((t) => (
-                <TradeCard key={t.id} trade={t} userId={userId} matches={matches} onDone={onRefresh} />
+                <TradeCard key={t.id} trade={t} userId={userId} onDone={onRefresh} />
               ))}
             </div>
           )}

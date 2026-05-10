@@ -22,7 +22,7 @@ function computeNeeded(mode: string, marked: Set<string>): Set<string> {
   return mode === 'have' ? new Set(ALL_STICKER_IDS.filter((id) => !marked.has(id))) : marked
 }
 
-export async function getMatches(currentUserId: string): Promise<MatchResult[]> {
+export async function getMatches(currentUserId: string, excludeTradeIds?: string[]): Promise<MatchResult[]> {
   // Fetch current user's mode, stickers, duplicates, and all pending trades in parallel
   const { data: myUser } = await supabase
     .from('users')
@@ -38,7 +38,7 @@ export async function getMatches(currentUserId: string): Promise<MatchResult[]> 
       supabase.from('user_duplicates').select('sticker_id, count').eq('user_id', currentUserId),
       supabaseAdmin
         .from('pending_trades')
-        .select('initiator_id, receiver_id, giving_ids, receiving_ids')
+        .select('id, initiator_id, receiver_id, giving_ids, receiving_ids')
         .eq('status', 'pending'),
       supabase
         .from('users')
@@ -69,7 +69,8 @@ export async function getMatches(currentUserId: string): Promise<MatchResult[]> 
   const reservedByUser = new Map<string, Map<string, number>>()
   // Build per-user incoming sticker sets (stickers they will receive from pending trades).
   const incomingByUser = new Map<string, Set<string>>()
-  for (const trade of pendingTrades ?? []) {
+  const excludeSet = new Set(excludeTradeIds ?? [])
+  for (const trade of (pendingTrades ?? []).filter((t) => !excludeSet.has(t.id))) {
     if (!reservedByUser.has(trade.initiator_id)) reservedByUser.set(trade.initiator_id, new Map())
     if (!incomingByUser.has(trade.initiator_id)) incomingByUser.set(trade.initiator_id, new Set())
     for (const id of trade.giving_ids ?? []) {
