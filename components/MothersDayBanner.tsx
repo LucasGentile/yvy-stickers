@@ -8,13 +8,10 @@ export default function MothersDayBanner() {
   useEffect(() => {
     const now = new Date()
     const isMothersDay = now.getMonth() === 4 && now.getDate() === 10
-    if (!isMothersDay) return
-    const dismissed = sessionStorage.getItem('mothers-day-2026-dismissed')
-    if (!dismissed) setVisible(true)
+    if (isMothersDay) setVisible(true)
   }, [])
 
   function dismiss() {
-    sessionStorage.setItem('mothers-day-2026-dismissed', '1')
     setVisible(false)
   }
 
