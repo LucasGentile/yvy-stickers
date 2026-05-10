@@ -220,14 +220,26 @@ export default function DuplicatesScreen() {
 
       {/* Duplicates list */}
       <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4">
-        <p className="text-sm font-medium text-yvy-text mb-3">
-          {duplicates.length === 0
-            ? 'Nenhuma repetida cadastrada ainda.'
-            : (() => {
-                const totalCopies = duplicates.reduce((sum, d) => sum + d.count, 0)
-                return `${totalCopies} cópia${totalCopies !== 1 ? 's' : ''} repetida${totalCopies !== 1 ? 's' : ''} · ${duplicates.length} figurinha${duplicates.length !== 1 ? 's' : ''} diferente${duplicates.length !== 1 ? 's' : ''}`
-              })()}
-        </p>
+        <div className="mb-3 space-y-0.5">
+          {duplicates.length === 0 ? (
+            <p className="text-sm font-medium text-yvy-text">Nenhuma repetida cadastrada ainda.</p>
+          ) : (() => {
+            const totalCopies = duplicates.reduce((sum, d) => sum + d.count, 0)
+            const totalReserved = Object.values(reservedCounts).reduce((sum, n) => sum + n, 0)
+            return (
+              <>
+                <p className="text-sm font-medium text-yvy-text">
+                  {totalCopies} cópia{totalCopies !== 1 ? 's' : ''} repetida{totalCopies !== 1 ? 's' : ''} · {duplicates.length} figurinha{duplicates.length !== 1 ? 's' : ''} diferente{duplicates.length !== 1 ? 's' : ''}
+                </p>
+                {totalReserved > 0 && (
+                  <p className="text-[11px] text-red-500 font-medium">
+                    {totalReserved} cópia{totalReserved !== 1 ? 's' : ''} reservada{totalReserved !== 1 ? 's' : ''} em trocas pendentes
+                  </p>
+                )}
+              </>
+            )
+          })()}
+        </div>
 
         {duplicates.length > 0 && (
           <div className="divide-y divide-yvy-border">

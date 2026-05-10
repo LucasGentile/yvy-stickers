@@ -116,21 +116,26 @@ function TradeCard({
           {loading === 'cancel' ? 'Cancelando...' : 'Cancelar pedido'}
         </button>
       ) : (
-        <div className="flex gap-2 pt-1">
-          <button
-            onClick={() => handle('reject')}
-            disabled={loading !== null}
-            className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
-          >
-            {loading === 'reject' ? '...' : 'Recusar'}
-          </button>
-          <button
-            onClick={() => handle('accept')}
-            disabled={loading !== null}
-            className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-          >
-            {loading === 'accept' ? 'Aceitando...' : 'Aceitar troca'}
-          </button>
+        <div className="space-y-2">
+          <p className="text-[11px] text-yvy-muted leading-snug">
+            💡 Antes de aceitar, confirme presencialmente com {trade.otherUserName.split(' ')[0]} se as figurinhas estão disponíveis. As figurinhas desta troca já estão reservadas e não aparecem em novas sugestões de troca.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handle('reject')}
+              disabled={loading !== null}
+              className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+            >
+              {loading === 'reject' ? '...' : 'Recusar'}
+            </button>
+            <button
+              onClick={() => handle('accept')}
+              disabled={loading !== null}
+              className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+            >
+              {loading === 'accept' ? 'Aceitando...' : 'Aceitar troca'}
+            </button>
+          </div>
         </div>
       )}
     </div>
