@@ -55,7 +55,8 @@ Selecione suas figurinhas na grade — organizadas por grupos e seleções com a
 - Use _"Marcar todos"_ para selecionar uma seleção inteira de uma vez
 - Use a _barra de busca_ para ir direto ao país desejado
 - Ações em massa têm _desfazer_ disponível por 5 segundos
-- Você também pode carregar suas figurinhas por arquivo .txt (códigos separados por ; ou por linha)
+- Você também pode carregar suas figurinhas por arquivo .txt (códigos separados por ; ou por linha) — selecione o arquivo e clique em _"Importar"_ para confirmar
+- O código _00_ no arquivo é aceito automaticamente como FWC00
 - O app avisa se você tentar sair sem salvar
   💾 Não esqueça de salvar no final!
 
@@ -65,12 +66,16 @@ As figurinhas marcadas aparecem em cores diferentes:
 🟡 _Ponto amarelo_ — recebida em troca nas últimas 48h
 A contagem _"Compradas: X · De trocas: Y"_ aparece acima da grade.
 
+Figurinhas especiais têm destaque visual:
+✨ _Dourado_ — figurinhas cromadas (FWC + #1 de cada seleção)
+🔴 _Vermelho_ — figurinhas Coca-Cola (CC1–CC14)
+
 🔁 _3. Repetidas_
 Informe quais figurinhas você tem duplicadas e quantas. Essas ficam disponíveis pra troca.
 
 - Busque pelo país na barra de pesquisa e toque na figurinha desejada
 - Use _+_ e _−_ diretamente na lista para ajustar quantidades
-- Figurinhas reservadas em pedidos pendentes aparecem com badge _"em troca"_
+- Figurinhas reservadas em pedidos pendentes aparecem com badge _"em troca"_ e o total reservado é exibido em vermelho no topo da lista
 
 🤝 _4. Ranking de Trocas_
 O app monta um ranking de compatibilidade entre você e os outros moradores.
@@ -79,7 +84,9 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Toque em _"Realizar Troca"_ para enviar um pedido formal
 - O pedido fica pendente até que o outro morador aceite
 - Após aceite, ambos têm *10 minutos* para desfazer a troca (requer confirmação dos dois)
-- Um ponto vermelho no menu indica pedidos esperando sua resposta
+- Um _ponto vermelho_ no menu indica pedidos esperando sua resposta
+- Pedidos recebidos mostram quantas figurinhas estão envolvidas e alertam se houver uma troca mais vantajosa com outro morador
+- Antes de aceitar, o app lembra de confirmar presencialmente com o outro morador
 
 🏅 _5. Ranking do Álbum_
 Veja quem está mais perto de completar o álbum — moradores ordenados por número de figurinhas, com medalhas para o top 3.
