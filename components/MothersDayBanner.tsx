@@ -43,7 +43,7 @@ export default function MothersDayBanner() {
             de futebol, mas porque colou cada uma ao lado do filho.
           </p>
           <p className="text-sm text-yvy-text leading-relaxed">
-            Pra mãe que virou a maior grossista de repetidas da família sem querer.
+            Pra mãe que tem mais figurinha repetida que o filho — e ainda não entende como chegou nisso.
           </p>
           <p className="text-sm font-semibold text-yvy-dark pt-1">
             Vocês merecem o álbum completo. ❤️
