@@ -174,15 +174,26 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                     Ele/ela tem para mim — toque para selecionar ({receiving.size}/
                     {match.matchStickers.length})
                   </p>
-                  {receiving.size > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setReceiving(new Set())}
-                      className="text-[10px] text-yvy-muted underline ml-2 shrink-0"
-                    >
-                      Limpar
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2 ml-2 shrink-0">
+                    {receiving.size < match.matchStickers.length && (
+                      <button
+                        type="button"
+                        onClick={() => setReceiving(new Set(match.matchStickers))}
+                        className="text-[10px] text-yvy-accent underline"
+                      >
+                        Todos
+                      </button>
+                    )}
+                    {receiving.size > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setReceiving(new Set())}
+                        className="text-[10px] text-yvy-muted underline"
+                      >
+                        Limpar
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {match.matchStickers.map((id) => (
@@ -204,15 +215,26 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                     Eu tenho para ele/ela — toque para selecionar ({giving.size}/
                     {match.reciprocalStickers.length})
                   </p>
-                  {giving.size > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setGiving(new Set())}
-                      className="text-[10px] text-yvy-muted underline ml-2 shrink-0"
-                    >
-                      Limpar
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2 ml-2 shrink-0">
+                    {giving.size < match.reciprocalStickers.length && (
+                      <button
+                        type="button"
+                        onClick={() => setGiving(new Set(match.reciprocalStickers))}
+                        className="text-[10px] text-yvy-accent underline"
+                      >
+                        Todos
+                      </button>
+                    )}
+                    {giving.size > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setGiving(new Set())}
+                        className="text-[10px] text-yvy-muted underline"
+                      >
+                        Limpar
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {match.reciprocalStickers.map((id) => (
