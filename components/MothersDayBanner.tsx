@@ -54,7 +54,7 @@ export default function MothersDayBanner() {
           onClick={dismiss}
           className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-3 rounded-2xl text-sm transition-colors"
         >
-          Obrigada, já sei 😄
+          ❤️ Fechar
         </button>
       </div>
     </div>
