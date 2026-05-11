@@ -173,6 +173,12 @@ export const ALL_STICKER_IDS: string[] = ALL_STICKER_SECTIONS.flatMap((s) =>
 
 export const STICKER_SET = new Set(ALL_STICKER_IDS)
 
+const STICKER_ORDER = new Map(ALL_STICKER_IDS.map((id, i) => [id, i]))
+
+export function sortByAlbumOrder(ids: string[]): string[] {
+  return [...ids].sort((a, b) => (STICKER_ORDER.get(a) ?? 9999) - (STICKER_ORDER.get(b) ?? 9999))
+}
+
 export const ALL_TEAMS: Team[] = ALL_STICKER_SECTIONS.filter(
   (s): s is StickerGroup => s.type === 'group'
 ).flatMap((s) => s.teams)

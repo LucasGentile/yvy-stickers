@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getAuditLog, AuditEntry } from '@/actions/getAuditLog'
 import { rollbackTrade } from '@/actions/rollbackTrade'
-import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
+import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder } from '@/lib/stickers'
 
 // ─── Event config ─────────────────────────────────────────────────────────────
 
@@ -325,6 +325,9 @@ function TradeAssistant({
   const [checkedGiving, setCheckedGiving] = useState<Set<string>>(new Set())
   const [checkedReceiving, setCheckedReceiving] = useState<Set<string>>(new Set())
 
+  const sortedGiving = sortByAlbumOrder(givingIds)
+  const sortedReceiving = sortByAlbumOrder(receivingIds)
+
   function toggleGiving(id: string) {
     setCheckedGiving((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }
@@ -365,7 +368,7 @@ function TradeAssistant({
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {givingIds.map((id) => (
+                {sortedGiving.map((id) => (
                   <StickerChip
                     key={id}
                     id={id}
@@ -389,7 +392,7 @@ function TradeAssistant({
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {receivingIds.map((id) => (
+                {sortedReceiving.map((id) => (
                   <StickerChip
                     key={id}
                     id={id}
@@ -430,8 +433,8 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
     ? (entry.metadata.tradeId as string | undefined)
     : undefined
 
-  const givingIds = (entry.metadata.givingIds as string[] | undefined) ?? []
-  const receivingIds = (entry.metadata.receivingIds as string[] | undefined) ?? []
+  const givingIds = sortByAlbumOrder((entry.metadata.givingIds as string[] | undefined) ?? [])
+  const receivingIds = sortByAlbumOrder((entry.metadata.receivingIds as string[] | undefined) ?? [])
   const hasTradeStickers = entry.action === 'trade_accepted' && (givingIds.length > 0 || receivingIds.length > 0)
 
   return (

@@ -5,10 +5,11 @@ import type { PendingTrade, RecentTrade } from '@/actions/getPendingTrades'
 import { respondToTrade } from '@/actions/respondToTrade'
 import { rollbackTrade } from '@/actions/rollbackTrade'
 import { getBetterMatchExcludingTrade, type BetterMatchResult } from '@/actions/getBetterMatchExcludingTrade'
-import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
+import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder } from '@/lib/stickers'
 
 function StickerList({ ids, label }: { ids: string[]; label: string }) {
   if (ids.length === 0) return null
+  const sorted = sortByAlbumOrder(ids)
   const chromeCount = ids.filter(isChromeSticker).length
   return (
     <div>
@@ -21,7 +22,7 @@ function StickerList({ ids, label }: { ids: string[]; label: string }) {
         )}
       </p>
       <div className="flex flex-wrap gap-1">
-        {ids.map((id) => (
+        {sorted.map((id) => (
           <span
             key={id}
             className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text"
@@ -46,11 +47,12 @@ function StickerToggle({
   onToggle: (id: string) => void
 }) {
   if (ids.length === 0) return null
+  const sorted = sortByAlbumOrder(ids)
   return (
     <div>
       <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">{label}</p>
       <div className="flex flex-wrap gap-1">
-        {ids.map((id) => {
+        {sorted.map((id) => {
           const isSelected = selected.has(id)
           return (
             <button
