@@ -46,17 +46,27 @@ export default function DuplicatePicker({
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<PickerSection | null>(null)
+  const [sectionOrder, setSectionOrder] = useState<'album' | 'alpha'>('album')
   const ref = useRef<HTMLDivElement>(null)
 
+  const orderedSections = sectionOrder === 'alpha'
+    ? [
+        ...ALL_SECTIONS.filter((s) => !s.isSpecial).sort((a, b) =>
+          a.label.localeCompare(b.label, 'pt-BR')
+        ),
+        ...ALL_SECTIONS.filter((s) => s.isSpecial),
+      ]
+    : ALL_SECTIONS
+
   const filtered = query.trim()
-    ? ALL_SECTIONS.filter(
+    ? orderedSections.filter(
         (s) =>
           s.label.toLowerCase().includes(query.toLowerCase()) ||
           s.key.toLowerCase().includes(query.toLowerCase()) ||
           (s.isSpecial &&
             s.stickers.some((id) => id.toLowerCase().includes(query.toLowerCase())))
       )
-    : ALL_SECTIONS
+    : orderedSections
 
   function selectSection(section: PickerSection) {
     setSelected(section)
@@ -89,23 +99,24 @@ export default function DuplicatePicker({
 
   return (
     <div ref={ref} className="space-y-2">
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-yvy-muted text-sm pointer-events-none">
-          🔍
-        </span>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value)
-            setSelected(null)
-            setOpen(true)
-            onSelect('')
-          }}
-          onFocus={() => setOpen(true)}
-          placeholder="Buscar país ou coleção..."
-          className="w-full rounded-lg border border-yvy-border pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg"
-        />
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-yvy-muted text-sm pointer-events-none">
+            🔍
+          </span>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setSelected(null)
+              setOpen(true)
+              onSelect('')
+            }}
+            onFocus={() => setOpen(true)}
+            placeholder="Buscar país ou coleção..."
+            className="w-full rounded-lg border border-yvy-border pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg"
+          />
         {query && (
           <button
             type="button"
@@ -148,6 +159,25 @@ export default function DuplicatePicker({
             )}
           </div>
         )}
+        </div>
+
+        {/* Section order toggle */}
+        <div className="flex gap-1 shrink-0">
+          {(['album', 'alpha'] as const).map((val) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setSectionOrder(val)}
+              className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${
+                sectionOrder === val
+                  ? 'bg-yvy-dark text-white'
+                  : 'bg-yvy-border text-yvy-muted hover:bg-yvy-dark/20'
+              }`}
+            >
+              {val === 'album' ? '📋' : 'A–Z'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {selected && (
