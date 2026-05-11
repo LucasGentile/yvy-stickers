@@ -57,17 +57,18 @@ function makeDeleteChain(result: unknown = { error: null }) {
   return chain
 }
 
-// A trade accepted 1 minute ago (within 10-min window)
-function makeRecentTrade(overrides: Record<string, unknown> = {}) {
+function makeTrade(overrides: Record<string, unknown> = {}) {
   return {
     id: 'trade-1',
     initiator_id: 'user-a',
     receiver_id: 'user-b',
-    giving_ids: ['MEX1'],
-    receiving_ids: ['BRA1'],
+    giving_ids: ['MEX1', 'MEX2'],
+    receiving_ids: ['BRA1', 'BRA2'],
     status: 'accepted',
-    accepted_at: new Date(Date.now() - 60_000).toISOString(), // 1 min ago
+    accepted_at: new Date(Date.now() - 60_000).toISOString(),
     rollback_requested_by: null,
+    rollback_giving_ids: null,
+    rollback_receiving_ids: null,
     ...overrides,
   }
 }
@@ -96,18 +97,8 @@ describe('rollbackTrade', () => {
     if (!result.success) expect(result.error).toMatch(/não encontrada/i)
   })
 
-  it('returns error when 10-minute window has expired', async () => {
-    const expiredTrade = makeRecentTrade({
-      accepted_at: new Date(Date.now() - 11 * 60_000).toISOString(), // 11 min ago
-    })
-    mockFrom.mockReturnValue(makeSelectChain({ data: expiredTrade, error: null }))
-    const result = await rollbackTrade('trade-1', 'user-a', 'request')
-    expect(result.success).toBe(false)
-    if (!result.success) expect(result.error).toMatch(/prazo/i)
-  })
-
   it('returns error when user is not a party to the trade', async () => {
-    mockFrom.mockReturnValue(makeSelectChain({ data: makeRecentTrade(), error: null }))
+    mockFrom.mockReturnValue(makeSelectChain({ data: makeTrade(), error: null }))
     const result = await rollbackTrade('trade-1', 'user-z', 'request')
     expect(result.success).toBe(false)
     if (!result.success) expect(result.error).toMatch(/não faz parte/i)
@@ -119,7 +110,7 @@ describe('rollbackTrade', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1) return makeSelectChain({ data: makeRecentTrade(), error: null })
+      if (callCount === 1) return makeSelectChain({ data: makeTrade(), error: null })
       return makeUpdateChain({ error: null })
     })
 
@@ -128,7 +119,7 @@ describe('rollbackTrade', () => {
   })
 
   it('request: returns error when rollback already requested', async () => {
-    const trade = makeRecentTrade({ rollback_requested_by: 'user-b' })
+    const trade = makeTrade({ rollback_requested_by: 'user-b' })
     mockFrom.mockReturnValue(makeSelectChain({ data: trade, error: null }))
 
     const result = await rollbackTrade('trade-1', 'user-a', 'request')
@@ -136,10 +127,52 @@ describe('rollbackTrade', () => {
     if (!result.success) expect(result.error).toMatch(/já solicitado/i)
   })
 
+  it('request: stores partial sticker IDs and returns success', async () => {
+    let callCount = 0
+    let updatePayload: Record<string, unknown> | null = null
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) return makeSelectChain({ data: makeTrade(), error: null })
+      const chain: Record<string, ReturnType<typeof vi.fn>> = {}
+      chain.update = vi.fn().mockImplementation((payload) => {
+        updatePayload = payload
+        return chain
+      })
+      chain.eq = vi.fn().mockReturnValue(chain)
+      chain.then = (resolve: (v: unknown) => unknown) =>
+        Promise.resolve({ error: null }).then(resolve)
+      return chain
+    })
+
+    const result = await rollbackTrade('trade-1', 'user-a', 'request', ['MEX1'], ['BRA2'])
+    expect(result.success).toBe(true)
+    expect(updatePayload).toMatchObject({
+      rollback_requested_by: 'user-a',
+      rollback_giving_ids: ['MEX1'],
+      rollback_receiving_ids: ['BRA2'],
+    })
+  })
+
+  it('request: returns error when partial sticker IDs not in trade', async () => {
+    mockFrom.mockReturnValue(makeSelectChain({ data: makeTrade(), error: null }))
+
+    const result = await rollbackTrade('trade-1', 'user-a', 'request', ['INVALID'], [])
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toMatch(/inválidas/i)
+  })
+
+  it('request: returns error when partial selection is empty', async () => {
+    mockFrom.mockReturnValue(makeSelectChain({ data: makeTrade(), error: null }))
+
+    const result = await rollbackTrade('trade-1', 'user-a', 'request', [], [])
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toMatch(/pelo menos uma/i)
+  })
+
   // ─── deny ─────────────────────────────────────────────────────────────────
 
-  it('deny: clears rollback_requested_by and returns success', async () => {
-    const trade = makeRecentTrade({ rollback_requested_by: 'user-a' })
+  it('deny: clears rollback fields and returns success', async () => {
+    const trade = makeTrade({ rollback_requested_by: 'user-a', rollback_giving_ids: ['MEX1'] })
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
@@ -152,7 +185,7 @@ describe('rollbackTrade', () => {
   })
 
   it('deny: returns error when denying own request', async () => {
-    const trade = makeRecentTrade({ rollback_requested_by: 'user-a' })
+    const trade = makeTrade({ rollback_requested_by: 'user-a' })
     mockFrom.mockReturnValue(makeSelectChain({ data: trade, error: null }))
 
     const result = await rollbackTrade('trade-1', 'user-a', 'deny')
@@ -163,7 +196,7 @@ describe('rollbackTrade', () => {
   // ─── confirm ──────────────────────────────────────────────────────────────
 
   it('confirm: returns error when no rollback request exists', async () => {
-    mockFrom.mockReturnValue(makeSelectChain({ data: makeRecentTrade(), error: null }))
+    mockFrom.mockReturnValue(makeSelectChain({ data: makeTrade(), error: null }))
 
     const result = await rollbackTrade('trade-1', 'user-b', 'confirm')
     expect(result.success).toBe(false)
@@ -171,7 +204,7 @@ describe('rollbackTrade', () => {
   })
 
   it('confirm: returns error when trying to confirm own request', async () => {
-    const trade = makeRecentTrade({ rollback_requested_by: 'user-a' })
+    const trade = makeTrade({ rollback_requested_by: 'user-a' })
     mockFrom.mockReturnValue(makeSelectChain({ data: trade, error: null }))
 
     const result = await rollbackTrade('trade-1', 'user-a', 'confirm')
@@ -180,12 +213,11 @@ describe('rollbackTrade', () => {
   })
 
   it('confirm: returns error when atomic update fails (race condition)', async () => {
-    const trade = makeRecentTrade({ rollback_requested_by: 'user-a' })
+    const trade = makeTrade({ rollback_requested_by: 'user-a' })
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: trade, error: null })
-      // Atomic update returns null — another process already changed status
       return makeAtomicUpdateChain({ data: null, error: null })
     })
 
@@ -194,8 +226,8 @@ describe('rollbackTrade', () => {
     if (!result.success) expect(result.error).toMatch(/outro dispositivo/i)
   })
 
-  it('confirm: reverses stickers and returns success', async () => {
-    const trade = makeRecentTrade({ rollback_requested_by: 'user-a' })
+  it('confirm: reverses all stickers for full rollback', async () => {
+    const trade = makeTrade({ rollback_requested_by: 'user-a' })
     let pendingTradesCallCount = 0
 
     mockFrom.mockImplementation((tableName: string) => {
@@ -205,7 +237,6 @@ describe('rollbackTrade', () => {
         return makeAtomicUpdateChain({ data: { id: 'trade-1' }, error: null })
       }
       if (tableName === 'user_duplicates') {
-        // restoreDupe: select returns count=1, then update
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
@@ -218,7 +249,6 @@ describe('rollbackTrade', () => {
       if (tableName === 'user_stickers') {
         return makeDeleteChain({ error: null })
       }
-      // users lookup (fire-and-forget)
       return {
         select: vi.fn().mockReturnThis(),
         in: vi.fn().mockResolvedValue({
@@ -234,8 +264,52 @@ describe('rollbackTrade', () => {
     expect(result.success).toBe(true)
   })
 
+  it('confirm: reverses only partial stickers when partial rollback requested', async () => {
+    const trade = makeTrade({
+      rollback_requested_by: 'user-a',
+      rollback_giving_ids: ['MEX1'],
+      rollback_receiving_ids: [],
+    })
+    let pendingTradesCallCount = 0
+    const restoredIds: string[] = []
+
+    mockFrom.mockImplementation((tableName: string) => {
+      if (tableName === 'pending_trades') {
+        pendingTradesCallCount++
+        if (pendingTradesCallCount === 1) return makeSelectChain({ data: trade, error: null })
+        return makeAtomicUpdateChain({ data: { id: 'trade-1' }, error: null })
+      }
+      if (tableName === 'user_duplicates') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockImplementation((_col, val) => {
+            if (typeof val === 'string' && val !== 'user-a' && val !== 'user-b') restoredIds.push(val)
+            return {
+              select: vi.fn().mockReturnThis(),
+              eq: vi.fn().mockReturnThis(),
+              maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+              insert: vi.fn().mockResolvedValue({ error: null }),
+            }
+          }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+          insert: vi.fn().mockResolvedValue({ error: null }),
+        }
+      }
+      if (tableName === 'user_stickers') {
+        return makeDeleteChain({ error: null })
+      }
+      return {
+        select: vi.fn().mockReturnThis(),
+        in: vi.fn().mockResolvedValue({ data: [] }),
+      }
+    })
+
+    const result = await rollbackTrade('trade-1', 'user-b', 'confirm')
+    expect(result.success).toBe(true)
+  })
+
   it('confirm: restores sticker as new dupe when user had no existing count', async () => {
-    const trade = makeRecentTrade({ rollback_requested_by: 'user-a' })
+    const trade = makeTrade({ rollback_requested_by: 'user-a' })
     let pendingTradesCallCount = 0
 
     mockFrom.mockImplementation((tableName: string) => {
@@ -245,7 +319,6 @@ describe('rollbackTrade', () => {
         return makeAtomicUpdateChain({ data: { id: 'trade-1' }, error: null })
       }
       if (tableName === 'user_duplicates') {
-        // select returns null → should insert
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),

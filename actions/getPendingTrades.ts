@@ -23,9 +23,10 @@ export type RecentTrade = {
   acceptedAt: string
   rollbackRequestedBy: string | null
   isSender: boolean
+  // Subset of myGivingIds/myReceivingIds being reverted. null = all (full revert).
+  rollbackMyGivingIds: string[] | null
+  rollbackMyReceivingIds: string[] | null
 }
-
-const ROLLBACK_WINDOW_MS = 10 * 60 * 1000 // 10 minutes
 
 export async function getPendingTrades(userId: string): Promise<{
   received: PendingTrade[]
@@ -36,8 +37,6 @@ export async function getPendingTrades(userId: string): Promise<{
   if (!userId) return empty
 
   try {
-    const windowStart = new Date(Date.now() - ROLLBACK_WINDOW_MS).toISOString()
-
     const [{ data: pendingTrades, error: pendingError }, { data: acceptedTrades }] =
       await Promise.all([
         supabaseAdmin
@@ -49,17 +48,15 @@ export async function getPendingTrades(userId: string): Promise<{
         (supabaseAdmin as any)
           .from('pending_trades')
           .select(
-            'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by'
+            'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids'
           )
           .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
           .eq('status', 'accepted')
-          .gte('accepted_at', windowStart)
           .order('accepted_at', { ascending: false }),
       ])
 
     if (pendingError) return empty
 
-    // Collect all other user IDs to look up in one query
     const allTrades = [...(pendingTrades ?? []), ...(acceptedTrades ?? [])]
     const otherIds = [
       ...new Set(
@@ -105,6 +102,14 @@ export async function getPendingTrades(userId: string): Promise<{
       const other = userMap[otherId]
       if (!other) continue
 
+      // Translate rollback partial IDs from initiator perspective to current user's perspective
+      const rollbackMyGivingIds: string[] | null = isInitiator
+        ? (trade.rollback_giving_ids ?? null)
+        : (trade.rollback_receiving_ids ?? null)
+      const rollbackMyReceivingIds: string[] | null = isInitiator
+        ? (trade.rollback_receiving_ids ?? null)
+        : (trade.rollback_giving_ids ?? null)
+
       recentlyAccepted.push({
         id: trade.id,
         otherUserId: otherId,
@@ -114,6 +119,8 @@ export async function getPendingTrades(userId: string): Promise<{
         acceptedAt: trade.accepted_at,
         rollbackRequestedBy: trade.rollback_requested_by ?? null,
         isSender: isInitiator,
+        rollbackMyGivingIds,
+        rollbackMyReceivingIds,
       })
     }
 

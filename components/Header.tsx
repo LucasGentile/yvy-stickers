@@ -6,15 +6,19 @@ import { usePathname } from 'next/navigation'
 import { getPendingTrades } from '@/actions/getPendingTrades'
 import { getPendingApprovalCount } from '@/actions/getPendingApprovalCount'
 
-const NAV_ITEMS = [
+const MAIN_NAV = [
   { href: '/stickers', label: 'Minhas Figurinhas' },
-  { href: '/ranking', label: 'Ranking do Álbum' },
-  { href: '/matches', label: 'Ranking de Trocas' },
-  { href: '/panelinhas', label: 'Panelinhas do YVYs' },
-  { href: '/mural', label: 'Mural do YVY' },
   { href: '/duplicates', label: 'Repetidas' },
   { href: '/missing', label: 'Faltantes' },
+  { href: '/matches', label: 'Ranking de Trocas' },
+  { href: '/verificar', label: 'Verificar Figurinha' },
   { href: '/historico', label: 'Histórico' },
+  { href: '/ranking', label: 'Ranking do Álbum' },
+]
+
+const SOCIAL_NAV = [
+  { href: '/panelinhas', label: 'Panelinhas do YVYs' },
+  { href: '/mural', label: 'Mural do YVY' },
 ]
 
 const FONT_SIZES = [
@@ -122,7 +126,7 @@ export default function Header() {
             </div>
 
             <nav className="flex-1 py-2 overflow-y-auto">
-              {NAV_ITEMS.map((item) => {
+              {MAIN_NAV.map((item) => {
                 const active = pathname === item.href
                 const showDot = item.href === '/matches' && pendingCount > 0
                 return (
@@ -142,6 +146,26 @@ export default function Header() {
                       </span>
                     )}
                     {active && !showDot && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
+                  </Link>
+                )
+              })}
+
+              <div className="mx-5 my-1 border-t border-white/10" />
+
+              {SOCIAL_NAV.map((item) => {
+                const active = pathname === item.href
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center px-5 py-3.5 text-sm font-medium transition-colors ${
+                      active
+                        ? 'bg-white/15 text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                    {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
                   </Link>
                 )
               })}

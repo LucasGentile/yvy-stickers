@@ -54,7 +54,7 @@ export default function DuplicatePicker({
           s.label.toLowerCase().includes(query.toLowerCase()) ||
           s.key.toLowerCase().includes(query.toLowerCase()) ||
           (s.isSpecial &&
-            s.stickers[0]?.replace(/\d+$/, '').toLowerCase().includes(query.toLowerCase()))
+            s.stickers.some((id) => id.toLowerCase().includes(query.toLowerCase())))
       )
     : ALL_SECTIONS
 

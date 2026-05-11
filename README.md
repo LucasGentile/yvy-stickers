@@ -83,25 +83,36 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Quem aparece no topo 🏆 é a melhor troca para os _dois lados ao mesmo tempo_
 - Toque em _"Realizar Troca"_ para enviar um pedido formal
 - O pedido fica pendente até que o outro morador aceite
-- Após aceite, ambos têm *10 minutos* para desfazer a troca (requer confirmação dos dois)
+- Após aceite, a troca pode ser desfeita a qualquer momento — basta solicitar e o outro morador confirmar
+- Desfazimento parcial disponível: escolha quais figurinhas específicas reverter, não precisa ser tudo
 - Um _ponto vermelho_ no menu indica pedidos esperando sua resposta
 - Pedidos recebidos mostram quantas figurinhas estão envolvidas e alertam se houver uma troca mais vantajosa com outro morador
 - Antes de aceitar, o app lembra de confirmar presencialmente com o outro morador
 
-🏅 _5. Ranking do Álbum_
+🔍 _5. Verificar Figurinha_
+Consulte rapidamente se uma figurinha está disponível para troca fora do app.
+
+- Digite o código (ex: BRA5, FWC00) e veja na hora se está livre, reservada ou totalmente comprometida em trocas ativas
+- Útil quando alguém te pede uma figurinha pelo WhatsApp ou pessoalmente
+- Mostra quantas repetidas você tem, quantas estão reservadas e quantas estão livres para oferecer
+
+🏅 _6. Ranking do Álbum_
 Veja quem está mais perto de completar o álbum — moradores ordenados por número de figurinhas, com medalhas para o top 3.
 
-🏆 _6. Panelinhas do YVYs_
+🏆 _7. Panelinhas do YVYs_
 Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais inseparáveis — e mais suspeitos de panelinha!
 
-📋 _7. Faltantes_
+📋 _8. Faltantes_
 Veja todas as figurinhas que ainda precisa. Use a busca para filtrar por país ou coleção.
 
-📰 _8. Mural do YVY_
-Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — inclui maior investidor, rei das repetidas, figurinheiro negociante e o investimento coletivo convertido em pizzas. Fins humorísticos. Sem julgamentos (mentira).
+📰 _9. Mural do YVY_
+Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — maior investidor, rei das repetidas, figurinheiro negociante, economizador do YVY, traidor do condomínio e o investimento coletivo convertido em pizzas. Fins humorísticos. Sem julgamentos (mentira).
 
-📜 _9. Histórico_
-Revise suas últimas 50 ações no app, organizadas em páginas de 10 com navegação _"← Anterior"_ e _"Próxima →"_. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico. Use como checklist!
+📜 _10. Histórico_
+Revise suas últimas ações no app, organizadas em páginas de 10. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico. Use como checklist!
+
+- Trocas concluídas mostram figurinhas dadas em *vermelho* e recebidas em *verde* para fácil leitura
+- Toque em _"Abrir assistente de troca"_ em qualquer troca concluída para abrir um guia interativo — marque cada figurinha conforme for separando fisicamente, sem precisar decorar os códigos
 
 ➖➖➖➖➖➖➖➖➖
 
@@ -155,7 +166,7 @@ npm exec -- tsx scripts/admin.ts find-trades "Nome"
 # Recriar entradas de histórico para uma troca aceita
 npm exec -- tsx scripts/admin.ts backfill-trade "<trade-uuid>"
 
-# Desfazer manualmente uma troca aceita (sem limite de 10 min)
+# Desfazer manualmente uma troca aceita via linha de comando
 npm exec -- tsx scripts/admin.ts admin-rollback-trade "<trade-uuid>"
 ```
 
@@ -181,19 +192,20 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 | `/`            | Cadastro / login                              |
 | `/stickers`    | Minhas Figurinhas                             |
 | `/duplicates`  | Repetidas                                     |
+| `/missing`     | Faltantes                                     |
 | `/matches`     | Ranking de Trocas + Pedidos pendentes         |
+| `/verificar`   | Verificar Figurinha (disponibilidade externa) |
+| `/historico`   | Histórico de ações + assistente de troca      |
 | `/ranking`     | Ranking do Álbum                              |
 | `/panelinhas`  | Panelinhas do YVYs                            |
-| `/missing`     | Faltantes                                     |
 | `/mural`       | Mural do YVY (insights humorísticos)          |
-| `/historico`   | Histórico de ações                            |
 | `/admin`       | Aprovações pendentes (visível só para admins) |
 | `/group`       | Redireciona para o grupo do WhatsApp          |
 
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (132 testes, 13 arquivos)
+npm test                  # roda todos os testes (136 testes, 13 arquivos)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```
@@ -223,6 +235,7 @@ supabase db push
 | 008\_admin\_role         | Coluna `is_admin` na tabela `users`                      |
 | 009\_sticker\_count\_rpc | RPC `get_sticker_counts_by_user` (contorna limite PostgREST) |
 | 010\_trade\_rollback     | Colunas `accepted_at` e `rollback_requested_by` em `pending_trades`; status `rolled_back` |
+| 011\_trade\_rollback\_partial | Colunas `rollback_giving_ids` e `rollback_receiving_ids` para desfazimento parcial de trocas |
 
 ### Variáveis de ambiente
 

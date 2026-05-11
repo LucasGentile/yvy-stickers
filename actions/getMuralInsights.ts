@@ -30,13 +30,14 @@ export async function getMuralInsights(): Promise<Insight[]> {
     { data: acceptedTrades },
     { data: pendingTrades },
     { data: auditRows },
+    { data: lookupRows },
   ] = await Promise.all([
     supabaseAdmin.from('users').select('id, name').eq('approved', true),
     (supabaseAdmin as any).rpc('get_sticker_counts_by_user'),
     supabaseAdmin.from('user_duplicates').select('user_id, count').limit(2000),
     supabaseAdmin
       .from('pending_trades')
-      .select('initiator_id, receiver_id')
+      .select('initiator_id, receiver_id, giving_ids, receiving_ids')
       .eq('status', 'accepted'),
     supabaseAdmin
       .from('pending_trades')
@@ -45,6 +46,12 @@ export async function getMuralInsights(): Promise<Insight[]> {
     supabaseAdmin
       .from('audit_log')
       .select('user_id')
+      .gte('created_at', thirtyDaysAgo)
+      .limit(2000),
+    supabaseAdmin
+      .from('audit_log')
+      .select('user_id')
+      .eq('action', 'sticker_lookup')
       .gte('created_at', thirtyDaysAgo)
       .limit(2000),
   ])
@@ -63,11 +70,17 @@ export async function getMuralInsights(): Promise<Insight[]> {
     dupeMap[row.user_id] = (dupeMap[row.user_id] ?? 0) + row.count
   }
 
-  // Trade count per user (accepted)
+  // Trade count and stickers received per user (accepted)
   const tradeMap: Record<string, number> = {}
+  const stickersReceivedMap: Record<string, number> = {}
   for (const t of acceptedTrades ?? []) {
     tradeMap[t.initiator_id] = (tradeMap[t.initiator_id] ?? 0) + 1
     tradeMap[t.receiver_id] = (tradeMap[t.receiver_id] ?? 0) + 1
+    // initiator receives receiving_ids; receiver receives giving_ids
+    stickersReceivedMap[t.initiator_id] =
+      (stickersReceivedMap[t.initiator_id] ?? 0) + (t.receiving_ids?.length ?? 0)
+    stickersReceivedMap[t.receiver_id] =
+      (stickersReceivedMap[t.receiver_id] ?? 0) + (t.giving_ids?.length ?? 0)
   }
   const totalTrades = (acceptedTrades ?? []).length
 
@@ -200,14 +213,37 @@ export async function getMuralInsights(): Promise<Insight[]> {
       .sort(([, a], [, b]) => b - a)[0]
     if (topTraderEntry) {
       const [uid, count] = topTraderEntry
+      const received = stickersReceivedMap[uid] ?? 0
+      const saved = Math.round(received * (PACK_PRICE / PACK_SIZE))
       insights.push({
         id: 'top-trader',
         emoji: '🔄',
         title: 'Figurinheiro Negociante',
-        highlight: `${nameMap[uid]} participou de ${count} troca${count !== 1 ? 's' : ''}`,
-        detail: `Gosta mais de trocar do que de colar. Vai que é o seu negócio mesmo.`,
+        highlight: `${nameMap[uid]} participou de ${count} troca${count !== 1 ? 's' : ''} e recebeu ${received} figurinha${received !== 1 ? 's' : ''} pelo app`,
+        detail: saved > 0
+          ? `Isso equivale a ~R$${saved} em pacotes que não precisou comprar. Networking que se paga!`
+          : `Gosta mais de trocar do que de colar. Vai que é o seu negócio mesmo.`,
         color: 'blue',
       })
+    }
+
+    // ── 7b. Biggest saver ───────────────────────────────────────────────────
+    const topSaverEntry = Object.entries(stickersReceivedMap)
+      .filter(([id]) => nameMap[id])
+      .sort(([, a], [, b]) => b - a)[0]
+    if (topSaverEntry) {
+      const [uid, received] = topSaverEntry
+      const saved = Math.round(received * (PACK_PRICE / PACK_SIZE))
+      if (saved >= 7) {
+        insights.push({
+          id: 'top-saver',
+          emoji: '🤑',
+          title: 'Economizador do YVY',
+          highlight: `${nameMap[uid]} economizou ~R$${saved} trocando figurinhas pelo app`,
+          detail: `${received} figurinhas recebidas em trocas = ${received} pacotes que não precisou comprar. Enquanto outros desembolsavam na banca, esse aqui foi no papo.`,
+          color: 'green',
+        })
+      }
     }
   }
 
@@ -246,7 +282,27 @@ export async function getMuralInsights(): Promise<Insight[]> {
     })
   }
 
-  // ── 10. Collective stats footer ───────────────────────────────────────────
+  // ── 10. Outsider / sticker-lookup traitor ────────────────────────────────
+  const lookupMap: Record<string, number> = {}
+  for (const row of lookupRows ?? []) {
+    lookupMap[row.user_id] = (lookupMap[row.user_id] ?? 0) + 1
+  }
+  const topLookupEntry = Object.entries(lookupMap)
+    .filter(([id]) => nameMap[id])
+    .sort(([, a], [, b]) => b - a)[0]
+  if (topLookupEntry && topLookupEntry[1] >= 3) {
+    const [uid, count] = topLookupEntry
+    insights.push({
+      id: 'outsider',
+      emoji: '🕵️',
+      title: 'Traidor do Condomínio',
+      highlight: `${nameMap[uid]} consultou disponibilidade de figurinhas ${count} vezes esse mês`,
+      detail: `Enquanto o YVY tem trocas de sobra, alguém anda fazendo negócio nas costas com estranhos. O grupo do WhatsApp não tá bom não, hein?`,
+      color: 'red',
+    })
+  }
+
+  // ── 11. Collective stats footer ───────────────────────────────────────────
   const totalStickers = Object.values(stickerMap).reduce((s, v) => s + v, 0)
   const avgCompletion = Math.round(
     activeUsers.reduce((s, u) => s + (stickerMap[u.id] ?? 0), 0) / activeUsers.length

@@ -5,12 +5,6 @@ import { logAction } from './logAction'
 
 export type RollbackResult = { success: true } | { success: false; error: string }
 
-const ROLLBACK_WINDOW_MS = 10 * 60 * 1000 // 10 minutes
-
-function isWithinWindow(acceptedAt: string): boolean {
-  return Date.now() - new Date(acceptedAt).getTime() < ROLLBACK_WINDOW_MS
-}
-
 async function restoreDupe(userId: string, ids: string[]) {
   for (const sid of ids) {
     const { data } = await supabaseAdmin
@@ -38,27 +32,27 @@ async function removeFromCollection(userId: string, ids: string[]) {
   await supabaseAdmin.from('user_stickers').delete().eq('user_id', userId).in('sticker_id', ids)
 }
 
+// partialGivingIds / partialReceivingIds are from the trade's initiator perspective.
+// Pass them (even as []) to request a partial rollback; omit both for a full rollback.
 export async function rollbackTrade(
   tradeId: string,
   userId: string,
-  action: 'request' | 'confirm' | 'deny'
+  action: 'request' | 'confirm' | 'deny',
+  partialGivingIds?: string[],
+  partialReceivingIds?: string[]
 ): Promise<RollbackResult> {
   if (!tradeId || !userId) return { success: false, error: 'Parâmetros inválidos.' }
 
   const { data: trade } = await (supabaseAdmin as any)
     .from('pending_trades')
     .select(
-      'id, initiator_id, receiver_id, giving_ids, receiving_ids, status, accepted_at, rollback_requested_by'
+      'id, initiator_id, receiver_id, giving_ids, receiving_ids, status, accepted_at, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids'
     )
     .eq('id', tradeId)
     .eq('status', 'accepted')
     .maybeSingle()
 
   if (!trade) return { success: false, error: 'Troca não encontrada ou já processada.' }
-
-  if (!trade.accepted_at || !isWithinWindow(trade.accepted_at)) {
-    return { success: false, error: 'Prazo de 10 minutos para desfazer a troca expirou.' }
-  }
 
   const isParty = trade.initiator_id === userId || trade.receiver_id === userId
   if (!isParty) return { success: false, error: 'Você não faz parte desta troca.' }
@@ -67,9 +61,29 @@ export async function rollbackTrade(
     if (trade.rollback_requested_by) {
       return { success: false, error: 'Desfazimento já solicitado.' }
     }
+
+    const isPartial = partialGivingIds !== undefined || partialReceivingIds !== undefined
+    if (isPartial) {
+      const pGiving = partialGivingIds ?? []
+      const pReceiving = partialReceivingIds ?? []
+      if (pGiving.length === 0 && pReceiving.length === 0) {
+        return { success: false, error: 'Selecione pelo menos uma figurinha para desfazer.' }
+      }
+      const invalidGiving = pGiving.filter((id) => !trade.giving_ids.includes(id))
+      const invalidReceiving = pReceiving.filter((id) => !trade.receiving_ids.includes(id))
+      if (invalidGiving.length > 0 || invalidReceiving.length > 0) {
+        return { success: false, error: 'Figurinhas inválidas para esta troca.' }
+      }
+    }
+
+    const updatePayload: Record<string, unknown> = { rollback_requested_by: userId }
+    if (isPartial) {
+      updatePayload.rollback_giving_ids = partialGivingIds ?? []
+      updatePayload.rollback_receiving_ids = partialReceivingIds ?? []
+    }
     const { error } = await (supabaseAdmin as any)
       .from('pending_trades')
-      .update({ rollback_requested_by: userId })
+      .update(updatePayload)
       .eq('id', tradeId)
       .eq('status', 'accepted')
     if (error) return { success: false, error: 'Erro ao solicitar desfazimento.' }
@@ -82,7 +96,7 @@ export async function rollbackTrade(
     }
     const { error } = await (supabaseAdmin as any)
       .from('pending_trades')
-      .update({ rollback_requested_by: null })
+      .update({ rollback_requested_by: null, rollback_giving_ids: null, rollback_receiving_ids: null })
       .eq('id', tradeId)
     if (error) return { success: false, error: 'Erro ao recusar desfazimento.' }
     return { success: true }
@@ -107,17 +121,18 @@ export async function rollbackTrade(
 
   if (!updated) return { success: false, error: 'Troca já foi processada em outro dispositivo.' }
 
-  // Reverse the trade:
-  // Initiator gave giving_ids → restore to their dupes; received receiving_ids → remove from their collection
-  // Receiver gave receiving_ids → restore to their dupes; received giving_ids → remove from their collection
+  // NULL means "revert all"; an explicit array (even empty) limits the scope
+  const givingToRevert: string[] = trade.rollback_giving_ids ?? trade.giving_ids
+  const receivingToRevert: string[] = trade.rollback_receiving_ids ?? trade.receiving_ids
+  const isPartial = trade.rollback_giving_ids !== null || trade.rollback_receiving_ids !== null
+
   await Promise.all([
-    restoreDupe(trade.initiator_id, trade.giving_ids),
-    removeFromCollection(trade.initiator_id, trade.receiving_ids),
-    restoreDupe(trade.receiver_id, trade.receiving_ids),
-    removeFromCollection(trade.receiver_id, trade.giving_ids),
+    restoreDupe(trade.initiator_id, givingToRevert),
+    removeFromCollection(trade.initiator_id, receivingToRevert),
+    restoreDupe(trade.receiver_id, receivingToRevert),
+    removeFromCollection(trade.receiver_id, givingToRevert),
   ])
 
-  // Log for both parties
   ;(async () => {
     const { data: users } = await supabaseAdmin
       .from('users')
@@ -125,8 +140,8 @@ export async function rollbackTrade(
       .in('id', [trade.initiator_id, trade.receiver_id])
     const initiatorName = users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário'
     const receiverName = users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
-    logAction(trade.initiator_id, 'trade_rolled_back', { partnerName: receiverName })
-    logAction(trade.receiver_id, 'trade_rolled_back', { partnerName: initiatorName })
+    logAction(trade.initiator_id, 'trade_rolled_back', { partnerName: receiverName, partial: isPartial })
+    logAction(trade.receiver_id, 'trade_rolled_back', { partnerName: initiatorName, partial: isPartial })
   })()
 
   return { success: true }
