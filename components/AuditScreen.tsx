@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { getAuditLog, AuditEntry } from '@/actions/getAuditLog'
 import { rollbackTrade } from '@/actions/rollbackTrade'
-import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder } from '@/lib/stickers'
+import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
+import { usePrefs } from '@/contexts/PreferencesContext'
 
 // ─── Event config ─────────────────────────────────────────────────────────────
 
@@ -324,9 +325,10 @@ function TradeAssistant({
 }) {
   const [checkedGiving, setCheckedGiving] = useState<Set<string>>(new Set())
   const [checkedReceiving, setCheckedReceiving] = useState<Set<string>>(new Set())
-
-  const sortedGiving = sortByAlbumOrder(givingIds)
-  const sortedReceiving = sortByAlbumOrder(receivingIds)
+  const { stickerOrder } = usePrefs()
+  const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
+  const sortedGiving = sort(givingIds)
+  const sortedReceiving = sort(receivingIds)
 
   function toggleGiving(id: string) {
     setCheckedGiving((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
@@ -424,6 +426,8 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
   if (!cfg) return null
 
   const [assistantOpen, setAssistantOpen] = useState(false)
+  const { stickerOrder } = usePrefs()
+  const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
 
   const label = cfg.label(entry.metadata)
   const detail = cfg.detail(entry.metadata)
@@ -433,8 +437,8 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
     ? (entry.metadata.tradeId as string | undefined)
     : undefined
 
-  const givingIds = sortByAlbumOrder((entry.metadata.givingIds as string[] | undefined) ?? [])
-  const receivingIds = sortByAlbumOrder((entry.metadata.receivingIds as string[] | undefined) ?? [])
+  const givingIds = sort((entry.metadata.givingIds as string[] | undefined) ?? [])
+  const receivingIds = sort((entry.metadata.receivingIds as string[] | undefined) ?? [])
   const hasTradeStickers = entry.action === 'trade_accepted' && (givingIds.length > 0 || receivingIds.length > 0)
 
   return (

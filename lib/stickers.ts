@@ -179,6 +179,17 @@ export function sortByAlbumOrder(ids: string[]): string[] {
   return [...ids].sort((a, b) => (STICKER_ORDER.get(a) ?? 9999) - (STICKER_ORDER.get(b) ?? 9999))
 }
 
+export function sortAlphabetically(ids: string[]): string[] {
+  return [...ids].sort((a, b) => {
+    const ma = a.match(/^([A-Za-z]+)(\d*)$/)
+    const mb = b.match(/^([A-Za-z]+)(\d*)$/)
+    if (!ma || !mb) return a.localeCompare(b)
+    const pc = ma[1].localeCompare(mb[1])
+    if (pc !== 0) return pc
+    return parseInt(ma[2] || '0', 10) - parseInt(mb[2] || '0', 10)
+  })
+}
+
 export const ALL_TEAMS: Team[] = ALL_STICKER_SECTIONS.filter(
   (s): s is StickerGroup => s.type === 'group'
 ).flatMap((s) => s.teams)

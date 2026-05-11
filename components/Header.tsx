@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { getPendingTrades } from '@/actions/getPendingTrades'
 import { getPendingApprovalCount } from '@/actions/getPendingApprovalCount'
+import { usePrefs } from '@/contexts/PreferencesContext'
 
 const MAIN_NAV = [
   { href: '/stickers', label: 'Minhas Figurinhas' },
@@ -34,6 +35,7 @@ export default function Header() {
   const [pendingCount, setPendingCount] = useState(0)
   const [pendingApprovalCount, setPendingApprovalCount] = useState<number | null>(null)
   const pathname = usePathname()
+  const { stickerOrder, setStickerOrder } = usePrefs()
 
   function refreshBadges(uid: string) {
     getPendingTrades(uid)
@@ -214,6 +216,28 @@ export default function Header() {
                     }`}
                   >
                     {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sticker order */}
+            <div className="px-5 py-4 border-t border-white/10 space-y-2">
+              <p className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">
+                Ordem das figurinhas
+              </p>
+              <div className="flex gap-2">
+                {([['album', 'Álbum'], ['alpha', 'A–Z']] as const).map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setStickerOrder(val)}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      stickerOrder === val
+                        ? 'bg-white text-yvy-dark'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {label}
                   </button>
                 ))}
               </div>

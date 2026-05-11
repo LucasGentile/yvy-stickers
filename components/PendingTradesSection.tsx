@@ -5,11 +5,13 @@ import type { PendingTrade, RecentTrade } from '@/actions/getPendingTrades'
 import { respondToTrade } from '@/actions/respondToTrade'
 import { rollbackTrade } from '@/actions/rollbackTrade'
 import { getBetterMatchExcludingTrade, type BetterMatchResult } from '@/actions/getBetterMatchExcludingTrade'
-import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder } from '@/lib/stickers'
+import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
+import { usePrefs } from '@/contexts/PreferencesContext'
 
 function StickerList({ ids, label }: { ids: string[]; label: string }) {
+  const { stickerOrder } = usePrefs()
   if (ids.length === 0) return null
-  const sorted = sortByAlbumOrder(ids)
+  const sorted = stickerOrder === 'album' ? sortByAlbumOrder(ids) : sortAlphabetically(ids)
   const chromeCount = ids.filter(isChromeSticker).length
   return (
     <div>
@@ -46,8 +48,9 @@ function StickerToggle({
   selected: Set<string>
   onToggle: (id: string) => void
 }) {
+  const { stickerOrder } = usePrefs()
   if (ids.length === 0) return null
-  const sorted = sortByAlbumOrder(ids)
+  const sorted = stickerOrder === 'album' ? sortByAlbumOrder(ids) : sortAlphabetically(ids)
   return (
     <div>
       <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">{label}</p>
