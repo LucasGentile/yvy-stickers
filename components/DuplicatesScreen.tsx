@@ -252,7 +252,7 @@ export default function DuplicatesScreen() {
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm font-semibold min-w-0 truncate text-yvy-dark">
                       {isChromeSticker(stickerId) ? (
-                        <><span className="text-amber-400">✨ </span>{stickerId}</>
+                        <span className="font-bold text-amber-500">{stickerId}</span>
                       ) : isCocaColaSticker(stickerId) ? (
                         <span className="font-bold text-red-500">{stickerId}</span>
                       ) : stickerId}

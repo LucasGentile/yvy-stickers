@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ALL_TEAMS, ALL_STICKER_SECTIONS, StickerSpecial } from '@/lib/stickers'
+import { ALL_STICKER_SECTIONS, isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 
 // Unified shape for both country teams and special sections
 type PickerSection = {
@@ -13,22 +13,25 @@ type PickerSection = {
   isSpecial: boolean
 }
 
-const ALL_SECTIONS: PickerSection[] = [
-  ...ALL_TEAMS.map((t) => ({
+// Preserve actual album order: specials appear at their true positions
+const ALL_SECTIONS: PickerSection[] = ALL_STICKER_SECTIONS.flatMap((section): PickerSection[] => {
+  if (section.type === 'special') {
+    return [{
+      key: section.label,
+      label: section.label,
+      icon: section.icon,
+      stickers: section.stickers,
+      isSpecial: true,
+    }]
+  }
+  return section.teams.map((t) => ({
     key: t.code,
     label: t.name,
     flagCode: t.flagCode,
     stickers: t.stickers,
     isSpecial: false,
-  })),
-  ...ALL_STICKER_SECTIONS.filter((s): s is StickerSpecial => s.type === 'special').map((s) => ({
-    key: s.label,
-    label: s.label,
-    icon: s.icon,
-    stickers: s.stickers,
-    isSpecial: true,
-  })),
-]
+  }))
+})
 
 interface Props {
   ownedSet: Set<string>
@@ -206,7 +209,11 @@ export default function DuplicatePicker({
                         : 'bg-yvy-border text-yvy-muted opacity-40 cursor-not-allowed'
                   }`}
                 >
-                  {selected.isSpecial ? id : idx + 1}
+                  {isChromeSticker(id) ? (
+                    <span className="font-bold text-amber-400">{selected.isSpecial ? id : idx + 1}</span>
+                  ) : isCocaColaSticker(id) ? (
+                    <span className="font-bold text-red-400">{id}</span>
+                  ) : selected.isSpecial ? id : idx + 1}
                   {dupeCount && !isSelected && (
                     <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 bg-yvy-gold text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
                       {dupeCount}
