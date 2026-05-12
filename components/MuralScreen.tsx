@@ -58,7 +58,12 @@ export default function MuralScreen() {
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load()
+    const handleVisibility = () => { if (!document.hidden) load(true) }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [load])
 
   if (loading) {
     return (

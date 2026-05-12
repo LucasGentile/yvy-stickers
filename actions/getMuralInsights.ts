@@ -1,5 +1,6 @@
 'use server'
 
+import { unstable_cache } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
 import { formatName } from '@/lib/format'
@@ -21,7 +22,7 @@ function estimatedSpend(stickers: number, dupes: number): number {
   return Math.ceil((stickers + dupes) / PACK_SIZE) * PACK_PRICE
 }
 
-export async function getMuralInsights(): Promise<Insight[]> {
+async function computeMuralInsights(): Promise<Insight[]> {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
   const [
@@ -318,4 +319,14 @@ export async function getMuralInsights(): Promise<Insight[]> {
   })
 
   return insights
+}
+
+const cachedMuralInsights = unstable_cache(
+  computeMuralInsights,
+  ['mural-insights'],
+  { revalidate: 300 } // 5-minute TTL shared across all users
+)
+
+export async function getMuralInsights(): Promise<Insight[]> {
+  return cachedMuralInsights()
 }

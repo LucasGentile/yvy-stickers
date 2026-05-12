@@ -303,6 +303,7 @@ export default function StickersScreen() {
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
                     <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
                     Troca recente (12h)
+                    <span className="font-semibold text-yvy-text">({tradeOrigin.newestIds.length})</span>
                   </span>
                 )}
                 <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
