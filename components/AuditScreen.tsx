@@ -760,9 +760,10 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
 
             <button
               onClick={() => setAssistantOpen(true)}
-              className="text-[11px] text-yvy-accent underline"
+              className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
             >
-              Abrir assistente de troca
+              <span>📋</span>
+              Assistente de troca
             </button>
           </div>
         )}
