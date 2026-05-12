@@ -5,6 +5,8 @@ import { getAuditLog, AuditEntry } from '@/actions/getAuditLog'
 import { rollbackTrade } from '@/actions/rollbackTrade'
 import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
+import { getTradeRollbackInfo } from '@/actions/getTradeRollbackInfo'
+import { formatName } from '@/lib/format'
 
 // ─── Event config ─────────────────────────────────────────────────────────────
 
@@ -221,54 +223,238 @@ function groupByDay(entries: AuditEntry[]): { day: string; entries: AuditEntry[]
   return groups
 }
 
-// ─── Rollback button ──────────────────────────────────────────────────────────
+// ─── Rollback control (history) ──────────────────────────────────────────────
 
-function RollbackButton({
+type RollbackStep = 'closed' | 'loading-info' | 'choose-mode' | 'select-stickers' | 'requesting' | 'requested' | 'waiting' | 'confirm-other'
+
+function RollbackControl({
   tradeId,
   userId,
+  partnerName,
+  givingIds,
+  receivingIds,
 }: {
   tradeId: string
   userId: string
+  partnerName: string
+  givingIds: string[]
+  receivingIds: string[]
 }) {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [step, setStep] = useState<RollbackStep>('closed')
   const [msg, setMsg] = useState<string | null>(null)
+  const [isInitiator, setIsInitiator] = useState(true)
+  const [selectedGiving, setSelectedGiving] = useState<Set<string>>(new Set())
+  const [selectedReceiving, setSelectedReceiving] = useState<Set<string>>(new Set())
+  const [pendingGiving, setPendingGiving] = useState<string[] | null>(null)
+  const [pendingReceiving, setPendingReceiving] = useState<string[] | null>(null)
 
-  if (status === 'done') {
+  const { stickerOrder } = usePrefs()
+  const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
+
+  async function open() {
+    setStep('loading-info')
+    setMsg(null)
+    try {
+      const info = await getTradeRollbackInfo(tradeId, userId)
+      if (!info.found) { setMsg('Troca não encontrada.'); setStep('closed'); return }
+      setIsInitiator(info.isInitiator)
+      if (info.rollbackRequestedBy === userId) {
+        setPendingGiving(info.rollbackMyGivingIds)
+        setPendingReceiving(info.rollbackMyReceivingIds)
+        setStep('waiting')
+      } else if (info.rollbackRequestedBy !== null) {
+        setPendingGiving(info.rollbackMyGivingIds)
+        setPendingReceiving(info.rollbackMyReceivingIds)
+        setStep('confirm-other')
+      } else {
+        setStep('choose-mode')
+      }
+    } catch {
+      setMsg('Erro ao verificar status da troca.')
+      setStep('closed')
+    }
+  }
+
+  async function requestFull() {
+    setStep('requesting')
+    setMsg(null)
+    try {
+      const result = await rollbackTrade(tradeId, userId, 'request')
+      if (result.success) setStep('requested')
+      else { setMsg(result.error); setStep('choose-mode') }
+    } catch { setMsg('Erro inesperado.'); setStep('choose-mode') }
+  }
+
+  async function requestPartial() {
+    const pGiving = Array.from(selectedGiving)
+    const pReceiving = Array.from(selectedReceiving)
+    const tradePGiving = isInitiator ? pGiving : pReceiving
+    const tradePReceiving = isInitiator ? pReceiving : pGiving
+    setStep('requesting')
+    setMsg(null)
+    try {
+      const result = await rollbackTrade(tradeId, userId, 'request', tradePGiving, tradePReceiving)
+      if (result.success) setStep('requested')
+      else { setMsg(result.error); setStep('select-stickers') }
+    } catch { setMsg('Erro inesperado.'); setStep('select-stickers') }
+  }
+
+  async function respond(action: 'confirm' | 'deny') {
+    setStep('requesting')
+    setMsg(null)
+    try {
+      const result = await rollbackTrade(tradeId, userId, action)
+      if (result.success) setStep(action === 'deny' ? 'closed' : 'requested')
+      else { setMsg(result.error); setStep('confirm-other') }
+    } catch { setMsg('Erro inesperado.'); setStep('confirm-other') }
+  }
+
+  const sortedGiving = sort(givingIds)
+  const sortedReceiving = sort(receivingIds)
+  const hasSelection = selectedGiving.size > 0 || selectedReceiving.size > 0
+
+  if (step === 'closed') {
+    return (
+      <div className="mt-1.5 space-y-1">
+        {msg && <p className="text-[11px] text-red-600">{msg}</p>}
+        <button onClick={open} className="text-[11px] text-amber-600 underline">
+          Desfazer troca
+        </button>
+      </div>
+    )
+  }
+
+  if (step === 'loading-info') {
+    return <p className="text-[11px] text-yvy-muted mt-1.5">Verificando...</p>
+  }
+
+  if (step === 'requested') {
     return (
       <p className="text-[11px] text-amber-700 font-medium mt-1.5">
-        Solicitação enviada — aguardando confirmação do outro participante.
+        Solicitação enviada — aguardando confirmação de {partnerName.split(' ')[0]}.
       </p>
     )
   }
 
-  return (
-    <div className="mt-1.5 space-y-1">
-      <p className="text-[11px] text-yvy-muted">Requer confirmação de ambos os participantes.</p>
-      {msg && <p className="text-[11px] text-red-600">{msg}</p>}
-      <button
-        disabled={status === 'loading'}
-        onClick={async () => {
-          setStatus('loading')
-          setMsg(null)
-          try {
-            const result = await rollbackTrade(tradeId, userId, 'request')
-            if (result.success) {
-              setStatus('done')
-            } else {
-              setMsg(result.error)
-              setStatus('idle')
-            }
-          } catch {
-            setMsg('Erro inesperado.')
-            setStatus('idle')
-          }
-        }}
-        className="text-[11px] text-amber-600 underline disabled:opacity-50"
-      >
-        {status === 'loading' ? 'Solicitando...' : 'Desfazer troca'}
-      </button>
-    </div>
-  )
+  if (step === 'waiting') {
+    const isPartial = pendingGiving !== null || pendingReceiving !== null
+    return (
+      <div className="mt-1.5 space-y-1.5">
+        <p className="text-[11px] text-amber-700 font-medium">
+          {isPartial ? 'Desfazimento parcial aguardando confirmação.' : 'Desfazimento aguardando confirmação.'}
+        </p>
+        {isPartial && pendingGiving && pendingGiving.length > 0 && (
+          <p className="text-[11px] text-yvy-muted">Figurinhas que você deu: {sort(pendingGiving).join(', ')}</p>
+        )}
+        {isPartial && pendingReceiving && pendingReceiving.length > 0 && (
+          <p className="text-[11px] text-yvy-muted">Figurinhas que você recebeu: {sort(pendingReceiving).join(', ')}</p>
+        )}
+      </div>
+    )
+  }
+
+  if (step === 'confirm-other') {
+    const isPartial = pendingGiving !== null || pendingReceiving !== null
+    return (
+      <div className="mt-1.5 space-y-2">
+        <p className="text-[11px] text-amber-700 font-medium">
+          {partnerName.split(' ')[0]} quer {isPartial ? 'desfazer parcialmente' : 'desfazer'} esta troca.
+        </p>
+        {isPartial && pendingGiving && pendingGiving.length > 0 && (
+          <p className="text-[11px] text-yvy-muted">Você recuperará: {sort(pendingGiving).join(', ')}</p>
+        )}
+        {isPartial && pendingReceiving && pendingReceiving.length > 0 && (
+          <p className="text-[11px] text-yvy-muted">Você devolverá: {sort(pendingReceiving).join(', ')}</p>
+        )}
+        {msg && <p className="text-[11px] text-red-600">{msg}</p>}
+        <div className="flex gap-2">
+          <button onClick={() => respond('deny')} className="flex-1 border border-yvy-border text-yvy-text font-semibold py-1.5 rounded-lg text-xs transition-colors hover:bg-yvy-bg">
+            Manter troca
+          </button>
+          <button onClick={() => respond('confirm')} className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors">
+            Confirmar desfazimento
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (step === 'choose-mode') {
+    return (
+      <div className="mt-1.5 space-y-2">
+        <p className="text-[11px] text-yvy-muted">Como deseja desfazer?</p>
+        {msg && <p className="text-[11px] text-red-600">{msg}</p>}
+        <div className="flex gap-2">
+          <button onClick={requestFull} className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors">
+            Desfazer tudo
+          </button>
+          <button onClick={() => setStep('select-stickers')} className="flex-1 border border-amber-400 text-amber-700 font-semibold py-1.5 rounded-lg text-xs hover:bg-amber-50 transition-colors">
+            Desfazer parcialmente
+          </button>
+        </div>
+        <button onClick={() => setStep('closed')} className="text-[11px] text-yvy-muted underline">
+          Cancelar
+        </button>
+      </div>
+    )
+  }
+
+  if (step === 'select-stickers') {
+    return (
+      <div className="mt-1.5 space-y-3">
+        <p className="text-[11px] text-yvy-muted">Selecione as figurinhas que deseja desfazer:</p>
+        {sortedGiving.length > 0 && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">Você deu</p>
+            <div className="flex flex-wrap gap-1">
+              {sortedGiving.map((id) => {
+                const sel = selectedGiving.has(id)
+                return (
+                  <button key={id} type="button"
+                    onClick={() => setSelectedGiving((p) => { const n = new Set(p); sel ? n.delete(id) : n.add(id); return n })}
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded-md border transition-colors ${sel ? 'bg-amber-500 border-amber-500 text-white font-semibold' : 'bg-yvy-bg border-yvy-border text-yvy-text hover:border-amber-400'}`}
+                  >
+                    {id}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+        {sortedReceiving.length > 0 && (
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">Você recebeu</p>
+            <div className="flex flex-wrap gap-1">
+              {sortedReceiving.map((id) => {
+                const sel = selectedReceiving.has(id)
+                return (
+                  <button key={id} type="button"
+                    onClick={() => setSelectedReceiving((p) => { const n = new Set(p); sel ? n.delete(id) : n.add(id); return n })}
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded-md border transition-colors ${sel ? 'bg-amber-500 border-amber-500 text-white font-semibold' : 'bg-yvy-bg border-yvy-border text-yvy-text hover:border-amber-400'}`}
+                  >
+                    {id}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+        {msg && <p className="text-[11px] text-red-600">{msg}</p>}
+        <div className="flex gap-2">
+          <button onClick={() => setStep('choose-mode')} className="border border-yvy-border text-yvy-text font-semibold px-3 py-1.5 rounded-lg text-xs hover:bg-yvy-bg transition-colors">
+            ← Voltar
+          </button>
+          <button onClick={requestPartial} disabled={!hasSelection}
+            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50"
+          >
+            {step === 'requesting' ? 'Solicitando...' : 'Solicitar desfazimento'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return null
 }
 
 // ─── Trade assistant ─────────────────────────────────────────────────────────
@@ -443,9 +629,14 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
   const isTrade = TRADE_ACTIONS.has(entry.action)
   const isAccepted = entry.action === 'trade_accepted'
 
-  const label = cfg.label(entry.metadata)
-  const detail = cfg.detail(entry.metadata)
-  const hint = cfg.realLifeHint?.(entry.metadata)
+  // Normalize partnerName in metadata so legacy (pre-formatName) entries display correctly
+  const normalizedMetadata = entry.metadata.partnerName
+    ? { ...entry.metadata, partnerName: formatName(formatName(entry.metadata.partnerName as string)) }
+    : entry.metadata
+
+  const label = cfg.label(normalizedMetadata)
+  const detail = cfg.detail(normalizedMetadata)
+  const hint = cfg.realLifeHint?.(normalizedMetadata)
 
   const tradeId = isAccepted ? (entry.metadata.tradeId as string | undefined) : undefined
 
@@ -511,7 +702,7 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
             <div className="flex items-center gap-1.5">
               <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
               <span className="text-[11px] text-amber-700 font-medium">
-                Combine com {entry.metadata.partnerName as string} para trocar fisicamente
+                Combine com {formatName(entry.metadata.partnerName as string)} para trocar fisicamente
               </span>
             </div>
 
@@ -570,13 +761,21 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
           </div>
         )}
 
-        {/* Rollback button for accepted trades */}
-        {tradeId && <RollbackButton tradeId={tradeId} userId={userId} />}
+        {/* Rollback control for accepted trades */}
+        {tradeId && (
+          <RollbackControl
+            tradeId={tradeId}
+            userId={userId}
+            partnerName={formatName(entry.metadata.partnerName as string)}
+            givingIds={givingIds}
+            receivingIds={receivingIds}
+          />
+        )}
       </div>
 
       {assistantOpen && hasTradeStickers && (
         <TradeAssistant
-          partnerName={entry.metadata.partnerName as string}
+          partnerName={formatName(entry.metadata.partnerName as string)}
           givingIds={givingIds}
           receivingIds={receivingIds}
           onClose={() => setAssistantOpen(false)}

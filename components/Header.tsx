@@ -39,7 +39,12 @@ export default function Header() {
 
   function refreshBadges(uid: string) {
     getPendingTrades(uid)
-      .then((r) => setPendingCount(r.received.length))
+      .then((r) => {
+        const rollbackFromOthers = r.recentlyAccepted.filter(
+          (t) => t.rollbackRequestedBy !== null && t.rollbackRequestedBy !== uid
+        ).length
+        setPendingCount(r.received.length + rollbackFromOthers)
+      })
       .catch(() => {})
     getPendingApprovalCount(uid)
       .then(setPendingApprovalCount)
