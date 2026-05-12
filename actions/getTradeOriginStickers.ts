@@ -4,10 +4,10 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export type TradeOriginResult = {
   fromTradeIds: string[] // all stickers ever received from accepted trades
-  newestIds: string[]   // stickers received in the last 48 hours
+  newestIds: string[]   // stickers received in the last 12 hours
 }
 
-const NEWEST_WINDOW_MS = 48 * 60 * 60 * 1000
+const NEWEST_WINDOW_MS = 12 * 60 * 60 * 1000
 
 export async function getTradeOriginStickers(userId: string): Promise<TradeOriginResult> {
   if (!userId) return { fromTradeIds: [], newestIds: [] }
