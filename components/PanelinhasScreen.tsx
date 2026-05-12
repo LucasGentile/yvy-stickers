@@ -28,10 +28,10 @@ const TIERS: { minCount: number; tier: Tier }[] = [
         'Essa dupla devia ter um álbum compartilhado',
         'Ninguém sabe onde um termina e o outro começa',
       ],
-      cardBg: 'bg-red-50',
-      cardBorder: 'border-red-300',
-      labelColor: 'text-red-600',
-      countColor: 'text-red-500',
+      cardBg: 'bg-amber-50',
+      cardBorder: 'border-amber-400',
+      labelColor: 'text-amber-700',
+      countColor: 'text-amber-600',
     },
   },
   {
@@ -46,10 +46,10 @@ const TIERS: { minCount: number; tier: Tier }[] = [
         'Confia um no outro mais que no pacote de figurinhas',
         'O síndico já suspeita de alguma coisa',
       ],
-      cardBg: 'bg-pink-50',
-      cardBorder: 'border-pink-300',
-      labelColor: 'text-pink-600',
-      countColor: 'text-pink-500',
+      cardBg: 'bg-orange-50',
+      cardBorder: 'border-orange-300',
+      labelColor: 'text-orange-600',
+      countColor: 'text-orange-500',
     },
   },
   {
@@ -64,10 +64,10 @@ const TIERS: { minCount: number; tier: Tier }[] = [
         'Começou bem — vamos ver se vai pra frente',
         'Já passaram da fase de apresentação',
       ],
-      cardBg: 'bg-amber-50',
-      cardBorder: 'border-amber-300',
-      labelColor: 'text-amber-600',
-      countColor: 'text-amber-500',
+      cardBg: 'bg-teal-50',
+      cardBorder: 'border-teal-300',
+      labelColor: 'text-teal-700',
+      countColor: 'text-teal-600',
     },
   },
   {
@@ -82,10 +82,10 @@ const TIERS: { minCount: number; tier: Tier }[] = [
         'Primeiro passo dado — o resto é com eles',
         'Ainda estão se conhecendo pelo álbum',
       ],
-      cardBg: 'bg-purple-50',
-      cardBorder: 'border-purple-200',
-      labelColor: 'text-purple-600',
-      countColor: 'text-purple-500',
+      cardBg: 'bg-blue-50',
+      cardBorder: 'border-blue-200',
+      labelColor: 'text-blue-600',
+      countColor: 'text-blue-500',
     },
   },
 ]
@@ -214,8 +214,8 @@ export default function PanelinhasScreen() {
       </div>
 
       {/* Info banner */}
-      <div className="bg-pink-50 border border-pink-200 rounded-xl px-4 py-3">
-        <p className="text-xs text-pink-800 leading-relaxed">
+      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+        <p className="text-xs text-amber-900 leading-relaxed">
           Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais
           inseparáveis — e mais suspeitos de panelinha!
         </p>
