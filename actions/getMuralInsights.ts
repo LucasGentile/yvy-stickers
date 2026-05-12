@@ -50,7 +50,7 @@ async function computeMuralInsights(): Promise<Insight[]> {
     supabaseAdmin
       .from('audit_log')
       .select('user_id')
-      .eq('action', 'sticker_lookup')
+      .in('action', ['sticker_lookup', 'external_list_check'])
       .gte('created_at', thirtyDaysAgo)
       .limit(2000),
   ])
@@ -295,7 +295,7 @@ async function computeMuralInsights(): Promise<Insight[]> {
       id: 'outsider',
       emoji: '🕵️',
       title: 'Traidor do Condomínio',
-      highlight: `${nameMap[uid]} consultou disponibilidade de figurinhas ${count} vezes esse mês`,
+      highlight: `${nameMap[uid]} verificou figurinhas fora do app ${count} vez${count !== 1 ? 'es' : ''} esse mês`,
       detail: `Enquanto o YVY tem trocas de sobra, alguém anda fazendo negócio nas costas com estranhos. O grupo do WhatsApp não tá bom não, hein?`,
       color: 'red',
     })
