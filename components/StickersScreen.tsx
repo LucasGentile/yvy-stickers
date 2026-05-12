@@ -293,10 +293,16 @@ export default function StickersScreen() {
                   Recebida em troca
                   <span className="font-semibold text-yvy-text">({tradeCount})</span>
                 </span>
+                {[...selected].some((id) => !lastSaved.current.has(id)) && (
+                  <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                    <span className="w-3 h-3 rounded bg-green-400 shrink-0" />
+                    Não salva ainda
+                  </span>
+                )}
                 {tradeOrigin.newestIds.length > 0 && (
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
                     <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
-                    Troca recente (48h)
+                    Troca recente (12h)
                   </span>
                 )}
                 <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
@@ -319,6 +325,7 @@ export default function StickersScreen() {
           }}
           tradeReceived={mode === 'have' && tradeOrigin ? new Set(tradeOrigin.fromTradeIds) : undefined}
           newestFromTrade={mode === 'have' && tradeOrigin ? new Set(tradeOrigin.newestIds) : undefined}
+          staged={mode === 'have' ? new Set([...selected].filter((id) => !lastSaved.current.has(id))) : undefined}
         />
       </div>
 

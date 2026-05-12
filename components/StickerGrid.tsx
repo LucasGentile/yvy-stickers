@@ -9,6 +9,7 @@ interface Props {
   onBulkChange?: (next: Set<string>, message: string) => void
   tradeReceived?: Set<string>
   newestFromTrade?: Set<string>
+  staged?: Set<string>
 }
 
 function TrophySVG() {
@@ -50,13 +51,14 @@ function SectionIcon({ label, icon }: { label: string; icon: string }) {
   return <span className="text-sm">{icon}</span>
 }
 
-function stickerColor(id: string, on: boolean, tradeReceived?: Set<string>): string {
+function stickerColor(id: string, on: boolean, tradeReceived?: Set<string>, staged?: Set<string>): string {
   if (!on) return 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
+  if (staged?.has(id)) return 'bg-green-400 text-white'
   if (tradeReceived?.has(id)) return 'bg-blue-500 text-white'
   return tradeReceived ? 'bg-green-600 text-white' : 'bg-yvy-dark text-white'
 }
 
-function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFromTrade }: Props) {
+function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFromTrade, staged }: Props) {
   function toggle(id: string) {
     const next = new Set(selected)
     if (next.has(id)) {
@@ -154,7 +156,7 @@ function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFr
                           key={id}
                           type="button"
                           onClick={() => toggle(id)}
-                          className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived)}`}
+                          className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
                         >
                           {isChromeSticker(id) ? <span className="font-bold text-amber-400">{idx + 1}</span> : idx + 1}
                           {isNew && (
@@ -178,7 +180,7 @@ function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFr
                     key={id}
                     type="button"
                     onClick={() => toggle(id)}
-                    className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived)}`}
+                    className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
                   >
                     {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
                     {isNew && (
