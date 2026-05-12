@@ -93,6 +93,7 @@ function TradeCard({
   const [loading, setLoading] = useState<'accept' | 'reject' | 'cancel' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [betterMatch, setBetterMatch] = useState<BetterMatchResult | null | undefined>(undefined)
+  const [confirming, setConfirming] = useState<'accept' | 'reject' | 'cancel' | null>(null)
 
   const totalReceiving = trade.myReceivingIds.length
   const totalGiving = trade.myGivingIds.length
@@ -153,34 +154,95 @@ function TradeCard({
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 
       {trade.isSender ? (
-        <button
-          onClick={() => handle('cancel')}
-          disabled={loading !== null}
-          className="text-xs text-yvy-muted underline disabled:opacity-50"
-        >
-          {loading === 'cancel' ? 'Cancelando...' : 'Cancelar pedido'}
-        </button>
+        confirming === 'cancel' ? (
+          <div className="flex items-center gap-2 pt-0.5">
+            <p className="text-xs text-yvy-muted flex-1">Cancelar o pedido?</p>
+            <button
+              onClick={() => setConfirming(null)}
+              disabled={loading !== null}
+              className="text-xs text-yvy-muted underline disabled:opacity-50"
+            >
+              Não
+            </button>
+            <button
+              onClick={() => { setConfirming(null); handle('cancel') }}
+              disabled={loading !== null}
+              className="text-xs font-semibold text-red-600 underline disabled:opacity-50"
+            >
+              {loading === 'cancel' ? 'Cancelando...' : 'Sim, cancelar'}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirming('cancel')}
+            disabled={loading !== null}
+            className="text-xs text-yvy-muted underline disabled:opacity-50"
+          >
+            Cancelar pedido
+          </button>
+        )
       ) : (
         <div className="space-y-2">
           <p className="text-[11px] text-yvy-muted leading-snug">
             💡 Antes de aceitar, confirme presencialmente com {trade.otherUserName.split(' ')[0]} se as figurinhas estão disponíveis. As figurinhas desta troca já estão reservadas e não aparecem em novas sugestões de troca.
           </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handle('reject')}
-              disabled={loading !== null}
-              className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
-            >
-              {loading === 'reject' ? '...' : 'Recusar'}
-            </button>
-            <button
-              onClick={() => handle('accept')}
-              disabled={loading !== null}
-              className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-            >
-              {loading === 'accept' ? 'Aceitando...' : 'Aceitar troca'}
-            </button>
-          </div>
+
+          {confirming === 'reject' ? (
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-yvy-muted flex-1">Recusar esta troca?</p>
+              <button
+                onClick={() => setConfirming(null)}
+                disabled={loading !== null}
+                className="text-xs text-yvy-muted underline disabled:opacity-50"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={() => { setConfirming(null); handle('reject') }}
+                disabled={loading !== null}
+                className="text-xs font-semibold text-red-600 underline disabled:opacity-50"
+              >
+                {loading === 'reject' ? '...' : 'Sim, recusar'}
+              </button>
+            </div>
+          ) : confirming === 'accept' ? (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-yvy-dark">Confirma que verificou presencialmente com {trade.otherUserName.split(' ')[0]}?</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirming(null)}
+                  disabled={loading !== null}
+                  className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+                >
+                  Voltar
+                </button>
+                <button
+                  onClick={() => { setConfirming(null); handle('accept') }}
+                  disabled={loading !== null}
+                  className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+                >
+                  {loading === 'accept' ? 'Aceitando...' : 'Sim, aceitar'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirming('reject')}
+                disabled={loading !== null}
+                className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+              >
+                Recusar
+              </button>
+              <button
+                onClick={() => setConfirming('accept')}
+                disabled={loading !== null}
+                className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                Aceitar troca
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
