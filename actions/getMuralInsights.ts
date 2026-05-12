@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
+import { formatName } from '@/lib/format'
 
 const TOTAL = ALL_STICKER_IDS.length
 const PACK_SIZE = 7
@@ -58,7 +59,7 @@ export async function getMuralInsights(): Promise<Insight[]> {
 
   if (!users || users.length === 0) return []
 
-  const nameMap = Object.fromEntries(users.map((u) => [u.id, u.name as string]))
+  const nameMap = Object.fromEntries(users.map((u) => [u.id, formatName(u.name as string)]))
 
   // Sticker count per user
   const stickerMap: Record<string, number> = {}
@@ -113,7 +114,7 @@ export async function getMuralInsights(): Promise<Insight[]> {
     id: 'top-collector',
     emoji: '📚',
     title: 'Maior Colecionador',
-    highlight: `${topCollector.name} tem ${topCount} figurinhas — ${topPct}% do álbum`,
+    highlight: `${formatName(topCollector.name as string)} tem ${topCount} figurinhas — ${topPct}% do álbum`,
     detail: `Só faltam ${TOTAL - topCount} pra completar. Vai lá trocar logo!`,
     color: 'green',
   })
@@ -128,7 +129,7 @@ export async function getMuralInsights(): Promise<Insight[]> {
       id: 'closest',
       emoji: '🎯',
       title: 'Quase Lá',
-      highlight: `${closest.name} está a apenas ${missing} figurinha${missing !== 1 ? 's' : ''} do álbum completo`,
+      highlight: `${formatName(closest.name as string)} está a apenas ${missing} figurinha${missing !== 1 ? 's' : ''} do álbum completo`,
       detail: 'Se não completar até o fim do campeonato, vai ser difícil de explicar.',
       color: 'teal',
     })
@@ -147,7 +148,7 @@ export async function getMuralInsights(): Promise<Insight[]> {
     id: 'big-spender',
     emoji: '💸',
     title: 'Maior Investidor',
-    highlight: `${bigSpender.name} gastou ~R$${bigSpend} em figurinhas`,
+    highlight: `${formatName(bigSpender.name as string)} gastou ~R$${bigSpend} em figurinhas`,
     detail: `Com esse dinheiro dava pra assinar o streaming da Copa inteira e ainda sobrava troco.`,
     color: 'orange',
   })
@@ -180,7 +181,7 @@ export async function getMuralInsights(): Promise<Insight[]> {
       id: 'dupe-king',
       emoji: '👑',
       title: 'Rei das Repetidas',
-      highlight: `${dupeKing.name} acumulou ${dupeCount} cópias extras de figurinhas`,
+      highlight: `${formatName(dupeKing.name as string)} acumulou ${dupeCount} cópias extras de figurinhas`,
       detail: `Talvez seja hora de abrir uma banca de figurinhas na portaria do YVY.`,
       color: 'purple',
     })

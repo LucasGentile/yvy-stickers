@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
+import { formatName } from '@/lib/format'
 
 export type RankedUser = {
   id: string
@@ -40,7 +41,7 @@ export async function getRanking(): Promise<RankedUser[]> {
       const completionPct = Math.round((ownedCount / total) * 100)
       return {
         id: u.id,
-        name: u.name,
+        name: formatName(u.name),
         apartment: u.apartment,
         tower: u.tower,
         ownedCount,

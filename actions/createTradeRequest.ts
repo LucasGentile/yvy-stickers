@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { logAction } from './logAction'
+import { formatName } from '@/lib/format'
 
 export type CreateTradeResult =
   | { success: true; tradeId: string }
@@ -122,7 +123,7 @@ export async function createTradeRequest(
       .eq('id', receiverId)
       .maybeSingle()
     logAction(initiatorId, 'trade_sent', {
-      partnerName: receiver?.name ?? 'Usuário',
+      partnerName: formatName(receiver?.name ?? 'Usuário'),
       givingCount: givingIds.length,
       receivingCount: receivingIds.length,
     })

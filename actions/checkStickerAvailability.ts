@@ -3,6 +3,7 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { STICKER_SET } from '@/lib/stickers'
 import { logAction } from './logAction'
+import { formatName } from '@/lib/format'
 
 export type StickerAvailabilityResult =
   | { status: 'invalid' }
@@ -65,7 +66,7 @@ export async function checkStickerAvailability(
     ? await supabaseAdmin.from('users').select('id, name').in('id', partnerIds)
     : { data: [] }
 
-  const partnerMap = Object.fromEntries((partners ?? []).map((u) => [u.id, u.name]))
+  const partnerMap = Object.fromEntries((partners ?? []).map((u) => [u.id, formatName(u.name)]))
 
   const pendingTrades = matchingTrades.map((t) => {
     const partnerId = t.initiator_id === userId ? t.receiver_id : t.initiator_id

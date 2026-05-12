@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { logAction } from './logAction'
+import { formatName } from '@/lib/format'
 
 export type RollbackResult = { success: true } | { success: false; error: string }
 
@@ -138,8 +139,8 @@ export async function rollbackTrade(
       .from('users')
       .select('id, name')
       .in('id', [trade.initiator_id, trade.receiver_id])
-    const initiatorName = users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário'
-    const receiverName = users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
+    const initiatorName = formatName(users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário')
+    const receiverName = formatName(users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário')
     logAction(trade.initiator_id, 'trade_rolled_back', { partnerName: receiverName, partial: isPartial })
     logAction(trade.receiver_id, 'trade_rolled_back', { partnerName: initiatorName, partial: isPartial })
   })()

@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
+import { formatName } from '@/lib/format'
 
 export type MatchResult = {
   userId: string
@@ -132,7 +133,7 @@ export async function getMatches(currentUserId: string, excludeTradeIds?: string
       return {
         userId: user.id,
         displayKey: user.display_key,
-        name: user.name,
+        name: formatName(user.name),
         apartment: user.apartment,
         tower: user.tower,
         phone: user.phone,

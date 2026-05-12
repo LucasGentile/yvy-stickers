@@ -1,6 +1,7 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { formatName } from '@/lib/format'
 
 export type Panelinha = {
   rank: number
@@ -36,7 +37,7 @@ export async function getPanelinhas(): Promise<Panelinha[]> {
     .select('id, name')
     .in('id', allUserIds)
 
-  const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, u.name]))
+  const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
 
   return pairs.map((p, i) => ({
     rank: i + 1,

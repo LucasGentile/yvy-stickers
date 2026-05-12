@@ -3,6 +3,7 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { effectuateTrade } from './effectuateTrade'
 import { logAction } from './logAction'
+import { formatName } from '@/lib/format'
 
 export type RespondResult = { success: true } | { success: false; error: string }
 
@@ -76,8 +77,8 @@ export async function respondToTrade(
       .from('users')
       .select('id, name')
       .in('id', [trade.initiator_id, trade.receiver_id])
-    const initiatorName = users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário'
-    const receiverName = users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
+    const initiatorName = formatName(users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário')
+    const receiverName = formatName(users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário')
 
     if (action === 'accept') {
       // Log for both parties so each has a checklist entry in their history

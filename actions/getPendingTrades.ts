@@ -1,6 +1,7 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { formatName } from '@/lib/format'
 
 export type PendingTrade = {
   id: string
@@ -82,7 +83,7 @@ export async function getPendingTrades(userId: string): Promise<{
       const normalized: PendingTrade = {
         id: trade.id,
         otherUserId: otherId,
-        otherUserName: other.name,
+        otherUserName: formatName(other.name),
         otherUserPhone: other.phone,
         myGivingIds: isInitiator ? trade.giving_ids : trade.receiving_ids,
         myReceivingIds: isInitiator ? trade.receiving_ids : trade.giving_ids,
@@ -113,7 +114,7 @@ export async function getPendingTrades(userId: string): Promise<{
       recentlyAccepted.push({
         id: trade.id,
         otherUserId: otherId,
-        otherUserName: other.name,
+        otherUserName: formatName(other.name),
         myGivingIds: isInitiator ? trade.giving_ids : trade.receiving_ids,
         myReceivingIds: isInitiator ? trade.receiving_ids : trade.giving_ids,
         acceptedAt: trade.accepted_at,
