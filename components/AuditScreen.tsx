@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getAuditLog, AuditEntry } from '@/actions/getAuditLog'
+import { getTradeLog } from '@/actions/getTradeLog'
 import { rollbackTrade } from '@/actions/rollbackTrade'
 import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
@@ -29,10 +30,10 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     label: () => 'Álbum salvo',
     detail: (m) => {
       const total = m.total as number
+      if (m.grouped) return `${total} figurinha${total !== 1 ? 's' : ''} no total`
       const added = (m.added as number | undefined) ?? 0
       const removed = (m.removed as number | undefined) ?? 0
       if (m.added === undefined && m.removed === undefined) {
-        // legacy entries that only have total
         return `${total} figurinha${total !== 1 ? 's' : ''} no total`
       }
       const parts: string[] = []
@@ -42,6 +43,7 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
       return `${delta} · ${total} no total`
     },
     realLifeHint: (m) => {
+      if (m.grouped) return ''
       const added = (m.added as number | undefined) ?? 0
       const removed = (m.removed as number | undefined) ?? 0
       const hints: string[] = []
@@ -116,16 +118,20 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-yvy-gold',
     iconBg: 'bg-yvy-gold/10',
     iconColor: 'text-yvy-gold',
-    label: () => 'Repetida atualizada',
-    detail: (m) => `${m.stickerId} · ${m.count} cópia${(m.count as number) !== 1 ? 's' : ''}`,
+    label: (m) => m.grouped ? 'Repetidas atualizadas' : 'Repetida atualizada',
+    detail: (m) => m.grouped
+      ? `${m.updateCount} figurinha${(m.updateCount as number) !== 1 ? 's' : ''}`
+      : `${m.stickerId} · ${m.count} cópia${(m.count as number) !== 1 ? 's' : ''}`,
   },
   duplicate_removed: {
     icon: '−',
     borderColor: 'border-l-yvy-gold',
     iconBg: 'bg-yvy-gold/10',
     iconColor: 'text-yvy-gold',
-    label: () => 'Repetida removida',
-    detail: (m) => `${m.stickerId}`,
+    label: (m) => m.grouped ? 'Repetidas removidas' : 'Repetida removida',
+    detail: (m) => m.grouped
+      ? `${m.updateCount} figurinha${(m.updateCount as number) !== 1 ? 's' : ''}`
+      : `${m.stickerId}`,
   },
   file_import: {
     icon: '📥',
@@ -207,6 +213,10 @@ function absoluteTime(dateStr: string): string {
   const date = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
   const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
   return `${date} ${time}`
+}
+
+function isRecent(dateStr: string): boolean {
+  return Date.now() - new Date(dateStr).getTime() < 12 * 60 * 60 * 1000
 }
 
 function groupByDay(entries: AuditEntry[]): { day: string; entries: AuditEntry[] }[] {
@@ -663,7 +673,7 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
             <span className="text-[9px] text-yvy-muted/40">{absoluteTime(entry.created_at)}</span>
           </div>
         </div>
-        {hint && hint.split('\n').filter(Boolean).map((h, i) => (
+        {hint && isRecent(entry.created_at) && hint.split('\n').filter(Boolean).map((h, i) => (
           <div key={i} className="flex items-start gap-1 pl-5">
             <span className="text-amber-400 text-[10px] shrink-0 mt-px">⚑</span>
             <p className="text-[11px] text-amber-600 leading-snug">{h}</p>
@@ -703,12 +713,14 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
         {/* Colored sticker chips for trade_accepted entries */}
         {hasTradeStickers && (
           <div className="mt-2 space-y-2.5">
-            <div className="flex items-center gap-1.5">
-              <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
-              <span className="text-[11px] text-amber-700 font-medium">
-                Combine com {formatName(entry.metadata.partnerName as string)} para trocar fisicamente
-              </span>
-            </div>
+            {isRecent(entry.created_at) && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
+                <span className="text-[11px] text-amber-700 font-medium">
+                  Combine com {formatName(entry.metadata.partnerName as string)} para trocar fisicamente
+                </span>
+              </div>
+            )}
 
             {givingIds.length > 0 && (
               <div>
@@ -756,7 +768,7 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
         )}
 
         {/* Legacy text hint for entries without sticker ID arrays */}
-        {hint && !hasTradeStickers && (
+        {hint && !hasTradeStickers && isRecent(entry.created_at) && (
           <div className="mt-1.5 flex items-start gap-1.5">
             <span className="text-amber-500 text-[10px] shrink-0 mt-px">⚑</span>
             <p className="text-[11px] text-amber-700 font-medium leading-snug whitespace-pre-line">
@@ -791,30 +803,59 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-const PAGE_SIZE = 10
+const TRADE_PAGE_SIZE = 3
+const ACTIVITY_PAGE_SIZE = 10
+
+function consolidateActivity(entries: AuditEntry[]): AuditEntry[] {
+  const dayCounts = new Map<string, number>()
+  for (const e of entries) {
+    const key = `${e.created_at.slice(0, 10)}:${e.action}`
+    dayCounts.set(key, (dayCounts.get(key) ?? 0) + 1)
+  }
+
+  const seen = new Set<string>()
+  const result: AuditEntry[] = []
+  for (const e of entries) {
+    if (e.action === 'file_import') { result.push(e); continue }
+    const key = `${e.created_at.slice(0, 10)}:${e.action}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const count = dayCounts.get(key) ?? 1
+    if (count > 1 && (e.action === 'duplicate_updated' || e.action === 'duplicate_removed')) {
+      result.push({ ...e, metadata: { grouped: true, updateCount: count } })
+    } else if (count > 1 && e.action === 'stickers_saved') {
+      result.push({ ...e, metadata: { ...e.metadata, grouped: true } })
+    } else {
+      result.push(e)
+    }
+  }
+  return result
+}
 
 export default function AuditScreen() {
-  const [entries, setEntries] = useState<AuditEntry[]>([])
+  const [tradeEntries, setTradeEntries] = useState<AuditEntry[]>([])
+  const [activityEntries, setActivityEntries] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(0)
+  const [tradePage, setTradePage] = useState(0)
+  const [activityPage, setActivityPage] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [userId, setUserId] = useState<string>('')
 
   useEffect(() => {
     const uid = localStorage.getItem('userId') ?? ''
     setUserId(uid)
-    if (!uid) {
-      setLoading(false)
-      return
-    }
-    getAuditLog(uid)
-      .then(setEntries)
+    if (!uid) { setLoading(false); return }
+    Promise.all([
+      getTradeLog(uid),
+      getAuditLog(uid).catch(() => [] as AuditEntry[]),
+    ])
+      .then(([trades, activity]) => {
+        setTradeEntries(trades)
+        setActivityEntries(consolidateActivity(activity))
+      })
       .catch(() => setError('Erro ao carregar histórico.'))
       .finally(() => setLoading(false))
   }, [])
-
-  const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE))
-  const pageEntries = entries.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
 
   if (loading) {
     return (
@@ -824,7 +865,7 @@ export default function AuditScreen() {
     )
   }
 
-  if (!userId && !loading) {
+  if (!userId) {
     return (
       <div className="p-6 text-center text-yvy-muted">
         <p>Você precisa se identificar primeiro.</p>
@@ -843,83 +884,110 @@ export default function AuditScreen() {
     )
   }
 
+  const tradeTotalPages = Math.max(1, Math.ceil(tradeEntries.length / TRADE_PAGE_SIZE))
+  const tradePageEntries = tradeEntries.slice(tradePage * TRADE_PAGE_SIZE, tradePage * TRADE_PAGE_SIZE + TRADE_PAGE_SIZE)
+
+  const activityTotalPages = Math.max(1, Math.ceil(activityEntries.length / ACTIVITY_PAGE_SIZE))
+  const activityPageEntries = activityEntries.slice(activityPage * ACTIVITY_PAGE_SIZE, activityPage * ACTIVITY_PAGE_SIZE + ACTIVITY_PAGE_SIZE)
+
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
-          Histórico
-        </h2>
-        <span className="text-xs text-yvy-muted">Últimas {entries.length} ações</span>
-      </div>
+    <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+        Histórico
+      </h2>
 
-      {/* What this page is for */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-        <p className="text-xs text-amber-800 leading-relaxed">
-          <span className="font-semibold">Para usar como checklist:</span> revise as ações marcadas
-          com <span className="text-amber-500 font-bold">⚑</span> para confirmar que você já as
-          realizou no álbum físico.
-        </p>
-      </div>
-
-      {entries.length === 0 ? (
-        <div className="text-center py-16 text-yvy-muted space-y-2">
-          <p className="text-base">Nenhuma ação registrada ainda.</p>
-          <p className="text-sm">As ações aparecerão aqui à medida que você usar o app.</p>
+      {/* ── Trocas ───────────────────────────────────────────────────── */}
+      <div className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h3 className="text-sm font-bold text-yvy-dark uppercase tracking-wide">Trocas</h3>
+          {tradeEntries.length > 0 && (
+            <span className="text-xs text-yvy-muted">
+              {tradeEntries.length} registro{tradeEntries.length !== 1 ? 's' : ''}
+            </span>
+          )}
         </div>
-      ) : (
-        <div className="space-y-6">
-          {groupByDay(pageEntries).map(({ day, entries: dayEntries }) => {
-            const tradeEntries = dayEntries.filter((e) => TRADE_ACTIONS.has(e.action))
-            const otherEntries = dayEntries.filter((e) => !TRADE_ACTIONS.has(e.action) && EVENT_CONFIG[e.action])
-            return (
-              <div key={day}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted">
-                    {day}
-                  </span>
-                  <div className="flex-1 h-px bg-yvy-border" />
+
+        {tradeEntries.length === 0 ? (
+          <div className="text-center py-8 text-yvy-muted bg-yvy-bg rounded-xl border border-yvy-border">
+            <p className="text-sm">Nenhuma troca registrada ainda.</p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {groupByDay(tradePageEntries).map(({ day, entries: dayEntries }) => (
+                <div key={day}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted">{day}</span>
+                    <div className="flex-1 h-px bg-yvy-border" />
+                  </div>
+                  <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-3 space-y-4">
+                    {dayEntries.map((entry) => (
+                      <EventCard key={entry.id} entry={entry} userId={userId} />
+                    ))}
+                  </div>
                 </div>
+              ))}
+            </div>
 
-                <div className="space-y-3">
-                  {/* Trade entries — prominent cards */}
-                  {tradeEntries.length > 0 && (
-                    <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-3 space-y-4">
-                      {tradeEntries.map((entry) => (
-                        <EventCard key={entry.id} entry={entry} userId={userId} />
-                      ))}
-                    </div>
-                  )}
+            {tradeTotalPages > 1 && (
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  onClick={() => setTradePage((p) => Math.max(0, p - 1))}
+                  disabled={tradePage === 0}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ← Anterior
+                </button>
+                <span className="text-xs text-yvy-muted">{tradePage + 1} / {tradeTotalPages}</span>
+                <button
+                  onClick={() => setTradePage((p) => Math.min(tradeTotalPages - 1, p + 1))}
+                  disabled={tradePage === tradeTotalPages - 1}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Próxima →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
-                  {/* Non-trade entries — compact log */}
-                  {otherEntries.length > 0 && (
-                    <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-2.5 space-y-2 divide-y divide-yvy-border/50">
-                      {otherEntries.map((entry) => (
-                        <div key={entry.id} className="pt-2 first:pt-0">
-                          <EventCard entry={entry} userId={userId} />
-                        </div>
-                      ))}
+      {/* ── Atividade ────────────────────────────────────────────────── */}
+      {activityEntries.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted/70">Atividade</h3>
+
+          <div className="space-y-4">
+            {groupByDay(activityPageEntries).map(({ day, entries: dayEntries }) => (
+              <div key={day}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted/60">{day}</span>
+                  <div className="flex-1 h-px bg-yvy-border/60" />
+                </div>
+                <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-2.5 space-y-2 divide-y divide-yvy-border/50">
+                  {dayEntries.filter((e) => EVENT_CONFIG[e.action]).map((entry) => (
+                    <div key={entry.id} className="pt-2 first:pt-0">
+                      <EventCard entry={entry} userId={userId} />
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
-            )
-          })}
+            ))}
+          </div>
 
-          {totalPages > 1 && (
+          {activityTotalPages > 1 && (
             <div className="flex items-center justify-between pt-1">
               <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
+                onClick={() => setActivityPage((p) => Math.max(0, p - 1))}
+                disabled={activityPage === 0}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 ← Anterior
               </button>
-              <span className="text-xs text-yvy-muted">
-                {page + 1} / {totalPages}
-              </span>
+              <span className="text-xs text-yvy-muted">{activityPage + 1} / {activityTotalPages}</span>
               <button
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page === totalPages - 1}
+                onClick={() => setActivityPage((p) => Math.min(activityTotalPages - 1, p + 1))}
+                disabled={activityPage === activityTotalPages - 1}
                 className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Próxima →

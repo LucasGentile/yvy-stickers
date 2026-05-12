@@ -6,6 +6,10 @@ vi.mock('@/actions/getAuditLog', () => ({
   getAuditLog: vi.fn(),
 }))
 
+vi.mock('@/actions/getTradeLog', () => ({
+  getTradeLog: vi.fn(),
+}))
+
 vi.mock('@/actions/rollbackTrade', () => ({
   rollbackTrade: vi.fn(),
 }))
@@ -16,8 +20,10 @@ vi.mock('@/actions/getTradeRollbackInfo', () => ({
 
 import AuditScreen from '@/components/AuditScreen'
 import { getAuditLog } from '@/actions/getAuditLog'
+import { getTradeLog } from '@/actions/getTradeLog'
 
 const mockGetAuditLog = getAuditLog as ReturnType<typeof vi.fn>
+const mockGetTradeLog = getTradeLog as ReturnType<typeof vi.fn>
 
 // Stub localStorage
 const localStorageMock = (() => {
@@ -38,6 +44,8 @@ describe('AuditScreen', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorageMock.clear()
+    mockGetAuditLog.mockResolvedValue([])
+    mockGetTradeLog.mockResolvedValue([])
   })
 
   it('shows login prompt when no userId in localStorage', async () => {
@@ -47,10 +55,9 @@ describe('AuditScreen', () => {
 
   it('shows empty state when user has no entries', async () => {
     localStorageMock.setItem('userId', 'user-1')
-    mockGetAuditLog.mockResolvedValue([])
 
     render(<AuditScreen />)
-    expect(await screen.findByText(/nenhuma ação/i)).toBeInTheDocument()
+    expect(await screen.findByText(/nenhuma troca/i)).toBeInTheDocument()
   })
 
   it('renders a stickers_saved event', async () => {
@@ -71,7 +78,7 @@ describe('AuditScreen', () => {
 
   it('renders a trade_accepted event with real-life hint', async () => {
     localStorageMock.setItem('userId', 'user-1')
-    mockGetAuditLog.mockResolvedValue([
+    mockGetTradeLog.mockResolvedValue([
       {
         id: 'entry-2',
         action: 'trade_accepted',
@@ -87,7 +94,7 @@ describe('AuditScreen', () => {
 
   it('renders a trade_rejected event', async () => {
     localStorageMock.setItem('userId', 'user-1')
-    mockGetAuditLog.mockResolvedValue([
+    mockGetTradeLog.mockResolvedValue([
       {
         id: 'entry-3',
         action: 'trade_rejected',
@@ -102,7 +109,7 @@ describe('AuditScreen', () => {
 
   it('shows error message on fetch failure', async () => {
     localStorageMock.setItem('userId', 'user-1')
-    mockGetAuditLog.mockRejectedValue(new Error('Network error'))
+    mockGetTradeLog.mockRejectedValue(new Error('Network error'))
 
     render(<AuditScreen />)
     expect(await screen.findByText(/erro ao carregar/i)).toBeInTheDocument()
