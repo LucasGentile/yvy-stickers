@@ -200,6 +200,13 @@ function relativeTime(dateStr: string): string {
   return `há ${days} dias`
 }
 
+function absoluteTime(dateStr: string): string {
+  const d = new Date(dateStr)
+  const date = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return `${date} ${time}`
+}
+
 function groupByDay(entries: AuditEntry[]): { day: string; entries: AuditEntry[] }[] {
   const groups: { day: string; entries: AuditEntry[] }[] = []
   for (const entry of entries) {
@@ -421,6 +428,10 @@ function TradeAssistant({
 
 // ─── Event card ───────────────────────────────────────────────────────────────
 
+const TRADE_ACTIONS = new Set([
+  'trade_accepted', 'trade_sent', 'trade_rejected', 'trade_cancelled', 'trade_rolled_back',
+])
+
 function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
   const cfg = EVENT_CONFIG[entry.action]
   if (!cfg) return null
@@ -429,23 +440,56 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
   const { stickerOrder } = usePrefs()
   const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
 
+  const isTrade = TRADE_ACTIONS.has(entry.action)
+  const isAccepted = entry.action === 'trade_accepted'
+
   const label = cfg.label(entry.metadata)
   const detail = cfg.detail(entry.metadata)
   const hint = cfg.realLifeHint?.(entry.metadata)
 
-  const tradeId = entry.action === 'trade_accepted'
-    ? (entry.metadata.tradeId as string | undefined)
-    : undefined
+  const tradeId = isAccepted ? (entry.metadata.tradeId as string | undefined) : undefined
 
   const givingIds = sort((entry.metadata.givingIds as string[] | undefined) ?? [])
   const receivingIds = sort((entry.metadata.receivingIds as string[] | undefined) ?? [])
-  const hasTradeStickers = entry.action === 'trade_accepted' && (givingIds.length > 0 || receivingIds.length > 0)
+  const hasTradeStickers = isAccepted && (givingIds.length > 0 || receivingIds.length > 0)
 
+  // ── Compact row for non-trade events ──────────────────────────────────────
+  if (!isTrade) {
+    return (
+      <div className="space-y-1 py-0.5">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-sm shrink-0 leading-none">{cfg.icon}</span>
+          <span className="text-xs flex-1 min-w-0 leading-snug">
+            <span className="font-medium text-yvy-dark/60">{label}</span>
+            <span className="text-yvy-muted"> · {detail}</span>
+          </span>
+          <div className="flex flex-col items-end shrink-0 gap-px">
+            <span className="text-[10px] text-yvy-muted/70">{relativeTime(entry.created_at)}</span>
+            <span className="text-[9px] text-yvy-muted/40">{absoluteTime(entry.created_at)}</span>
+          </div>
+        </div>
+        {hint && hint.split('\n').filter(Boolean).map((h, i) => (
+          <div key={i} className="flex items-start gap-1 pl-5">
+            <span className="text-amber-400 text-[10px] shrink-0 mt-px">⚑</span>
+            <p className="text-[11px] text-amber-600 leading-snug">{h}</p>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // ── Prominent card for trade events ───────────────────────────────────────
   return (
-    <div className={`flex gap-3 border-l-[3px] pl-3 py-1 ${cfg.borderColor}`}>
+    <div
+      className={`flex gap-3 pl-3 py-2 rounded-r-md ${
+        isAccepted
+          ? 'border-l-[4px] border-l-[#16a34a] bg-green-50/50'
+          : `border-l-[3px] ${cfg.borderColor}`
+      }`}
+    >
       {/* Icon */}
       <div
-        className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${cfg.iconBg} ${cfg.iconColor}`}
+        className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${cfg.iconBg} ${cfg.iconColor}`}
       >
         {cfg.icon}
       </div>
@@ -454,9 +498,10 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-semibold text-yvy-dark leading-snug">{label}</p>
-          <span className="text-[10px] text-yvy-muted shrink-0 mt-0.5">
-            {relativeTime(entry.created_at)}
-          </span>
+          <div className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5">
+            <span className="text-[10px] text-yvy-muted">{relativeTime(entry.created_at)}</span>
+            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(entry.created_at)}</span>
+          </div>
         </div>
         <p className="text-xs text-yvy-muted mt-0.5">{detail}</p>
 
@@ -526,9 +571,7 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
         )}
 
         {/* Rollback button for accepted trades */}
-        {tradeId && (
-          <RollbackButton tradeId={tradeId} userId={userId} />
-        )}
+        {tradeId && <RollbackButton tradeId={tradeId} userId={userId} />}
       </div>
 
       {assistantOpen && hasTradeStickers && (
@@ -622,21 +665,42 @@ export default function AuditScreen() {
         </div>
       ) : (
         <div className="space-y-6">
-          {groupByDay(pageEntries).map(({ day, entries: dayEntries }) => (
-            <div key={day}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted">
-                  {day}
-                </span>
-                <div className="flex-1 h-px bg-yvy-border" />
+          {groupByDay(pageEntries).map(({ day, entries: dayEntries }) => {
+            const tradeEntries = dayEntries.filter((e) => TRADE_ACTIONS.has(e.action))
+            const otherEntries = dayEntries.filter((e) => !TRADE_ACTIONS.has(e.action) && EVENT_CONFIG[e.action])
+            return (
+              <div key={day}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted">
+                    {day}
+                  </span>
+                  <div className="flex-1 h-px bg-yvy-border" />
+                </div>
+
+                <div className="space-y-3">
+                  {/* Trade entries — prominent cards */}
+                  {tradeEntries.length > 0 && (
+                    <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-3 space-y-4">
+                      {tradeEntries.map((entry) => (
+                        <EventCard key={entry.id} entry={entry} userId={userId} />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Non-trade entries — compact log */}
+                  {otherEntries.length > 0 && (
+                    <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-2.5 space-y-2 divide-y divide-yvy-border/50">
+                      {otherEntries.map((entry) => (
+                        <div key={entry.id} className="pt-2 first:pt-0">
+                          <EventCard entry={entry} userId={userId} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-3 space-y-4">
-                {dayEntries.map((entry) => (
-                  <EventCard key={entry.id} entry={entry} userId={userId} />
-                ))}
-              </div>
-            </div>
-          ))}
+            )
+          })}
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-1">

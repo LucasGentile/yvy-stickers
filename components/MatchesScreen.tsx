@@ -111,17 +111,13 @@ export default function MatchesScreen() {
         </button>
       </div>
 
-      {userId &&
-        (pending.received.length > 0 ||
-          pending.sent.length > 0 ||
-          pending.recentlyAccepted.length > 0) && (
-          <PendingTradesSection
-            received={pending.received}
-            sent={pending.sent}
-            recentlyAccepted={pending.recentlyAccepted}
-            userId={userId}
-            onRefresh={() => loadPending(userId)}
-          />
+      {userId && (pending.received.length > 0 || pending.sent.length > 0) && (
+        <PendingTradesSection
+          received={pending.received}
+          sent={pending.sent}
+          userId={userId}
+          onRefresh={() => loadPending(userId)}
+        />
       )}
 
       {matches.length === 0 ? (

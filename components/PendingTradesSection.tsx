@@ -416,7 +416,7 @@ function RecentTradeCard({
 interface Props {
   received: PendingTrade[]
   sent: PendingTrade[]
-  recentlyAccepted: RecentTrade[]
+  recentlyAccepted?: RecentTrade[]
   userId: string
   onRefresh: () => void
 }
@@ -424,7 +424,7 @@ interface Props {
 export default function PendingTradesSection({
   received,
   sent,
-  recentlyAccepted,
+  recentlyAccepted = [],
   userId,
   onRefresh,
 }: Props) {
