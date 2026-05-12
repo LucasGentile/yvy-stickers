@@ -241,6 +241,7 @@ function RollbackControl({
   receivingIds: string[]
 }) {
   const [step, setStep] = useState<RollbackStep>('closed')
+  const [submitting, setSubmitting] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [isInitiator, setIsInitiator] = useState(true)
   const [selectedGiving, setSelectedGiving] = useState<Set<string>>(new Set())
@@ -276,13 +277,14 @@ function RollbackControl({
   }
 
   async function requestFull() {
-    setStep('requesting')
+    setSubmitting(true)
     setMsg(null)
     try {
       const result = await rollbackTrade(tradeId, userId, 'request')
       if (result.success) setStep('requested')
-      else { setMsg(result.error); setStep('choose-mode') }
-    } catch { setMsg('Erro inesperado.'); setStep('choose-mode') }
+      else { setMsg(result.error) }
+    } catch { setMsg('Erro inesperado.') }
+    finally { setSubmitting(false) }
   }
 
   async function requestPartial() {
@@ -290,23 +292,25 @@ function RollbackControl({
     const pReceiving = Array.from(selectedReceiving)
     const tradePGiving = isInitiator ? pGiving : pReceiving
     const tradePReceiving = isInitiator ? pReceiving : pGiving
-    setStep('requesting')
+    setSubmitting(true)
     setMsg(null)
     try {
       const result = await rollbackTrade(tradeId, userId, 'request', tradePGiving, tradePReceiving)
       if (result.success) setStep('requested')
-      else { setMsg(result.error); setStep('select-stickers') }
-    } catch { setMsg('Erro inesperado.'); setStep('select-stickers') }
+      else { setMsg(result.error) }
+    } catch { setMsg('Erro inesperado.') }
+    finally { setSubmitting(false) }
   }
 
   async function respond(action: 'confirm' | 'deny') {
-    setStep('requesting')
+    setSubmitting(true)
     setMsg(null)
     try {
       const result = await rollbackTrade(tradeId, userId, action)
       if (result.success) setStep(action === 'deny' ? 'closed' : 'requested')
-      else { setMsg(result.error); setStep('confirm-other') }
-    } catch { setMsg('Erro inesperado.'); setStep('confirm-other') }
+      else { setMsg(result.error) }
+    } catch { setMsg('Erro inesperado.') }
+    finally { setSubmitting(false) }
   }
 
   const sortedGiving = sort(givingIds)
@@ -444,10 +448,10 @@ function RollbackControl({
           <button onClick={() => setStep('choose-mode')} className="border border-yvy-border text-yvy-text font-semibold px-3 py-1.5 rounded-lg text-xs hover:bg-yvy-bg transition-colors">
             ← Voltar
           </button>
-          <button onClick={requestPartial} disabled={!hasSelection}
+          <button onClick={requestPartial} disabled={!hasSelection || submitting}
             className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50"
           >
-            {step === 'requesting' ? 'Solicitando...' : 'Solicitar desfazimento'}
+            {submitting ? 'Solicitando...' : 'Solicitar desfazimento'}
           </button>
         </div>
       </div>
