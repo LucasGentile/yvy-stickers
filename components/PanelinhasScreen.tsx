@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getPanelinhas, Panelinha } from '@/actions/getPanelinhas'
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
@@ -161,12 +161,28 @@ function PairCard({ pair }: { pair: Panelinha }) {
 export default function PanelinhasScreen() {
   const [pairs, setPairs] = useState<Panelinha[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const load = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true)
+    else setLoading(true)
+    try {
+      const data = await getPanelinhas()
+      setPairs(data)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }, [])
 
   useEffect(() => {
-    getPanelinhas()
-      .then(setPairs)
-      .finally(() => setLoading(false))
-  }, [])
+    load()
+    const handleVisibility = () => {
+      if (!document.hidden) load(true)
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [load])
 
   if (loading) {
     return (
@@ -179,13 +195,22 @@ export default function PanelinhasScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
       {/* Header */}
-      <div>
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
-          Panelinhas do YVYs
-        </h2>
-        <p className="text-xs text-yvy-muted mt-1 pl-2.5">
-          Os pares que mais trocam figurinhas entre si 🤝
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+            Panelinhas do YVYs
+          </h2>
+          <p className="text-xs text-yvy-muted mt-1 pl-2.5">
+            Os pares que mais trocam figurinhas entre si 🤝
+          </p>
+        </div>
+        <button
+          onClick={() => load(true)}
+          disabled={refreshing}
+          className="text-sm text-yvy-accent underline disabled:opacity-40"
+        >
+          {refreshing ? 'Atualizando...' : 'Atualizar'}
+        </button>
       </div>
 
       {/* Info banner */}

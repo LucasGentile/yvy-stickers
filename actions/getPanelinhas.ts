@@ -1,5 +1,6 @@
 'use server'
 
+import { unstable_cache } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { formatName } from '@/lib/format'
 
@@ -10,7 +11,7 @@ export type Panelinha = {
   tradeCount: number
 }
 
-export async function getPanelinhas(): Promise<Panelinha[]> {
+async function computePanelinhas(): Promise<Panelinha[]> {
   const { data: trades, error } = await supabaseAdmin
     .from('pending_trades')
     .select('initiator_id, receiver_id')
@@ -42,4 +43,10 @@ export async function getPanelinhas(): Promise<Panelinha[]> {
     user2Name: nameMap[p.user2] ?? 'Usuário',
     tradeCount: p.count,
   }))
+}
+
+const cachedPanelinhas = unstable_cache(computePanelinhas, ['panelinhas'], { revalidate: 300 })
+
+export async function getPanelinhas(): Promise<Panelinha[]> {
+  return cachedPanelinhas()
 }
