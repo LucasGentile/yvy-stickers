@@ -100,11 +100,7 @@ describe('importStickerFile', () => {
     })
 
     // MEX1 appears 3 times → 1 in album, 2 duplicates; BRA5 appears 2 times → 1 in album, 1 duplicate
-    const result = await importStickerFile(
-      'u1',
-      ['MEX1', 'BRA5'],
-      { MEX1: 3, BRA5: 2 }
-    )
+    const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 3, BRA5: 2 })
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.newDuplicates).toBe(2)
@@ -117,7 +113,8 @@ describe('importStickerFile', () => {
     mockFrom.mockImplementation(() => {
       callIndex++
       // existing stickers: MEX1 and MEX2
-      if (callIndex === 1) return makeChain({ data: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }] })
+      if (callIndex === 1)
+        return makeChain({ data: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }] })
       if (callIndex === 2) return makeChain({ error: null }) // delete stickers
       if (callIndex === 3) return makeChain({ error: null }) // insert stickers (MEX1, BRA5)
       if (callIndex === 4) return makeChain({ error: null }) // delete dupes
@@ -128,7 +125,7 @@ describe('importStickerFile', () => {
     const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 1, BRA5: 1 })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.addedToAlbum).toBe(1)   // BRA5 is new
+      expect(result.addedToAlbum).toBe(1) // BRA5 is new
       expect(result.removedFromAlbum).toBe(1) // MEX2 removed
     }
   })

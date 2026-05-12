@@ -117,9 +117,7 @@ function RankBadge({ rank }: { rank: number }) {
         🥉
       </span>
     )
-  return (
-    <span className="text-sm font-bold text-yvy-muted w-8 text-center">#{rank}</span>
-  )
+  return <span className="text-sm font-bold text-yvy-muted w-8 text-center">#{rank}</span>
 }
 
 // ─── Pair card ────────────────────────────────────────────────────────────────
@@ -139,23 +137,17 @@ function PairCard({ pair }: { pair: Panelinha }) {
       {/* Names + tier */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-yvy-dark truncate">
-          {pair.user1Name}{' '}
-          <span className="font-normal text-yvy-muted">&</span>{' '}
-          {pair.user2Name}
+          {pair.user1Name} <span className="font-normal text-yvy-muted">&</span> {pair.user2Name}
         </p>
         <p className={`text-xs font-semibold ${tier.labelColor} mt-0.5`}>
           {tier.icon} {tier.label}
         </p>
-        <p className="text-[11px] text-yvy-muted leading-snug mt-0.5 italic">
-          {tier.description}
-        </p>
+        <p className="text-[11px] text-yvy-muted leading-snug mt-0.5 italic">{tier.description}</p>
       </div>
 
       {/* Trade count */}
       <div className="shrink-0 text-right">
-        <p className={`text-xl font-bold leading-none ${tier.countColor}`}>
-          {pair.tradeCount}
-        </p>
+        <p className={`text-xl font-bold leading-none ${tier.countColor}`}>{pair.tradeCount}</p>
         <p className="text-[10px] text-yvy-muted mt-0.5">
           {pair.tradeCount === 1 ? 'troca' : 'trocas'}
         </p>

@@ -196,12 +196,12 @@ export const ALL_TEAMS: Team[] = ALL_STICKER_SECTIONS.filter(
 
 // Chrome (cromadas): all FWC stickers + first sticker (#1) of every country team
 export const CHROME_STICKER_IDS: Set<string> = new Set([
-  ...ALL_STICKER_SECTIONS
-    .filter((s): s is StickerSpecial => s.type === 'special' && s.label !== 'Figurinhas Coca-Cola')
-    .flatMap((s) => s.stickers),
-  ...ALL_STICKER_SECTIONS
-    .filter((s): s is StickerGroup => s.type === 'group')
-    .flatMap((s) => s.teams.map((t) => t.stickers[0])),
+  ...ALL_STICKER_SECTIONS.filter(
+    (s): s is StickerSpecial => s.type === 'special' && s.label !== 'Figurinhas Coca-Cola'
+  ).flatMap((s) => s.stickers),
+  ...ALL_STICKER_SECTIONS.filter((s): s is StickerGroup => s.type === 'group').flatMap((s) =>
+    s.teams.map((t) => t.stickers[0])
+  ),
 ])
 
 export function isChromeSticker(id: string): boolean {

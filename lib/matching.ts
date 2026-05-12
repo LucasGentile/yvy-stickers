@@ -23,7 +23,10 @@ function computeNeeded(mode: string, marked: Set<string>): Set<string> {
   return mode === 'have' ? new Set(ALL_STICKER_IDS.filter((id) => !marked.has(id))) : marked
 }
 
-export async function getMatches(currentUserId: string, excludeTradeIds?: string[]): Promise<MatchResult[]> {
+export async function getMatches(
+  currentUserId: string,
+  excludeTradeIds?: string[]
+): Promise<MatchResult[]> {
   // Fetch current user's mode, stickers, duplicates, and all pending trades in parallel
   const { data: myUser } = await supabase
     .from('users')

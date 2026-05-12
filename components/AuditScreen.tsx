@@ -4,7 +4,12 @@ import { useEffect, useState } from 'react'
 import { getAuditLog, AuditEntry } from '@/actions/getAuditLog'
 import { getTradeLog } from '@/actions/getTradeLog'
 import { rollbackTrade } from '@/actions/rollbackTrade'
-import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
+import {
+  isChromeSticker,
+  isCocaColaSticker,
+  sortByAlbumOrder,
+  sortAlphabetically,
+} from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
 import { getTradeRollbackInfo } from '@/actions/getTradeRollbackInfo'
 import { formatName } from '@/lib/format'
@@ -110,7 +115,7 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-amber-400',
     iconBg: 'bg-amber-50',
     iconColor: 'text-amber-600',
-    label: (m) => m.partial ? 'Troca parcialmente desfeita' : 'Troca desfeita',
+    label: (m) => (m.partial ? 'Troca parcialmente desfeita' : 'Troca desfeita'),
     detail: (m) => `Com ${m.partnerName}`,
   },
   duplicate_updated: {
@@ -118,20 +123,22 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-yvy-gold',
     iconBg: 'bg-yvy-gold/10',
     iconColor: 'text-yvy-gold',
-    label: (m) => m.grouped ? 'Repetidas atualizadas' : 'Repetida atualizada',
-    detail: (m) => m.grouped
-      ? `${m.updateCount} figurinha${(m.updateCount as number) !== 1 ? 's' : ''}`
-      : `${m.stickerId} · ${m.count} cópia${(m.count as number) !== 1 ? 's' : ''}`,
+    label: (m) => (m.grouped ? 'Repetidas atualizadas' : 'Repetida atualizada'),
+    detail: (m) =>
+      m.grouped
+        ? `${m.updateCount} figurinha${(m.updateCount as number) !== 1 ? 's' : ''}`
+        : `${m.stickerId} · ${m.count} cópia${(m.count as number) !== 1 ? 's' : ''}`,
   },
   duplicate_removed: {
     icon: '−',
     borderColor: 'border-l-yvy-gold',
     iconBg: 'bg-yvy-gold/10',
     iconColor: 'text-yvy-gold',
-    label: (m) => m.grouped ? 'Repetidas removidas' : 'Repetida removida',
-    detail: (m) => m.grouped
-      ? `${m.updateCount} figurinha${(m.updateCount as number) !== 1 ? 's' : ''}`
-      : `${m.stickerId}`,
+    label: (m) => (m.grouped ? 'Repetidas removidas' : 'Repetida removida'),
+    detail: (m) =>
+      m.grouped
+        ? `${m.updateCount} figurinha${(m.updateCount as number) !== 1 ? 's' : ''}`
+        : `${m.stickerId}`,
   },
   file_import: {
     icon: '📥',
@@ -143,11 +150,14 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
       const total = m.total as number
       const dupItems = (m.duplicateItems as number) ?? 0
       const dupCopies = (m.duplicateCopies as number) ?? 0
-      const failed = ((m.failedStickers as string[]) ?? []).length +
+      const failed =
+        ((m.failedStickers as string[]) ?? []).length +
         ((m.failedDuplicates as string[]) ?? []).length
       const parts = [`${total} figurinha${total !== 1 ? 's' : ''} no álbum`]
       if (dupItems > 0)
-        parts.push(`${dupItems} repetida${dupItems !== 1 ? 's' : ''} (${dupCopies} cópia${dupCopies !== 1 ? 's' : ''} extra)`)
+        parts.push(
+          `${dupItems} repetida${dupItems !== 1 ? 's' : ''} (${dupCopies} cópia${dupCopies !== 1 ? 's' : ''} extra)`
+        )
       if (failed > 0) parts.push(`${failed} não salvo${failed !== 1 ? 's' : ''}`)
       return parts.join(' · ')
     },
@@ -174,7 +184,8 @@ const EVENT_CONFIG: Record<string, EventConfig> = {
       if (failedDuplicates.length > 0) {
         const MAX = 10
         const shown = failedDuplicates.slice(0, MAX).join(', ')
-        const extra = failedDuplicates.length > MAX ? ` e mais ${failedDuplicates.length - MAX}` : ''
+        const extra =
+          failedDuplicates.length > MAX ? ` e mais ${failedDuplicates.length - MAX}` : ''
         hints.push(`Adicione manualmente às repetidas: ${shown}${extra}`)
       }
       return hints.join('\n')
@@ -235,7 +246,15 @@ function groupByDay(entries: AuditEntry[]): { day: string; entries: AuditEntry[]
 
 // ─── Rollback control (history) ──────────────────────────────────────────────
 
-type RollbackStep = 'closed' | 'loading-info' | 'choose-mode' | 'select-stickers' | 'requesting' | 'requested' | 'waiting' | 'confirm-other'
+type RollbackStep =
+  | 'closed'
+  | 'loading-info'
+  | 'choose-mode'
+  | 'select-stickers'
+  | 'requesting'
+  | 'requested'
+  | 'waiting'
+  | 'confirm-other'
 
 function RollbackControl({
   tradeId,
@@ -267,7 +286,11 @@ function RollbackControl({
     setMsg(null)
     try {
       const info = await getTradeRollbackInfo(tradeId, userId)
-      if (!info.found) { setMsg('Troca não encontrada.'); setStep('closed'); return }
+      if (!info.found) {
+        setMsg('Troca não encontrada.')
+        setStep('closed')
+        return
+      }
       setIsInitiator(info.isInitiator)
       if (info.rollbackRequestedBy === userId) {
         setPendingGiving(info.rollbackMyGivingIds)
@@ -292,9 +315,14 @@ function RollbackControl({
     try {
       const result = await rollbackTrade(tradeId, userId, 'request')
       if (result.success) setStep('requested')
-      else { setMsg(result.error) }
-    } catch { setMsg('Erro inesperado.') }
-    finally { setSubmitting(false) }
+      else {
+        setMsg(result.error)
+      }
+    } catch {
+      setMsg('Erro inesperado.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function requestPartial() {
@@ -307,9 +335,14 @@ function RollbackControl({
     try {
       const result = await rollbackTrade(tradeId, userId, 'request', tradePGiving, tradePReceiving)
       if (result.success) setStep('requested')
-      else { setMsg(result.error) }
-    } catch { setMsg('Erro inesperado.') }
-    finally { setSubmitting(false) }
+      else {
+        setMsg(result.error)
+      }
+    } catch {
+      setMsg('Erro inesperado.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function respond(action: 'confirm' | 'deny') {
@@ -318,9 +351,14 @@ function RollbackControl({
     try {
       const result = await rollbackTrade(tradeId, userId, action)
       if (result.success) setStep(action === 'deny' ? 'closed' : 'requested')
-      else { setMsg(result.error) }
-    } catch { setMsg('Erro inesperado.') }
-    finally { setSubmitting(false) }
+      else {
+        setMsg(result.error)
+      }
+    } catch {
+      setMsg('Erro inesperado.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const sortedGiving = sort(givingIds)
@@ -355,13 +393,19 @@ function RollbackControl({
     return (
       <div className="mt-1.5 space-y-1.5">
         <p className="text-[11px] text-amber-700 font-medium">
-          {isPartial ? 'Desfazimento parcial aguardando confirmação.' : 'Desfazimento aguardando confirmação.'}
+          {isPartial
+            ? 'Desfazimento parcial aguardando confirmação.'
+            : 'Desfazimento aguardando confirmação.'}
         </p>
         {isPartial && pendingGiving && pendingGiving.length > 0 && (
-          <p className="text-[11px] text-yvy-muted">Figurinhas que você deu: {sort(pendingGiving).join(', ')}</p>
+          <p className="text-[11px] text-yvy-muted">
+            Figurinhas que você deu: {sort(pendingGiving).join(', ')}
+          </p>
         )}
         {isPartial && pendingReceiving && pendingReceiving.length > 0 && (
-          <p className="text-[11px] text-yvy-muted">Figurinhas que você recebeu: {sort(pendingReceiving).join(', ')}</p>
+          <p className="text-[11px] text-yvy-muted">
+            Figurinhas que você recebeu: {sort(pendingReceiving).join(', ')}
+          </p>
         )}
       </div>
     )
@@ -372,20 +416,31 @@ function RollbackControl({
     return (
       <div className="mt-1.5 space-y-2">
         <p className="text-[11px] text-amber-700 font-medium">
-          {partnerName.split(' ')[0]} quer {isPartial ? 'desfazer parcialmente' : 'desfazer'} esta troca.
+          {partnerName.split(' ')[0]} quer {isPartial ? 'desfazer parcialmente' : 'desfazer'} esta
+          troca.
         </p>
         {isPartial && pendingGiving && pendingGiving.length > 0 && (
-          <p className="text-[11px] text-yvy-muted">Você recuperará: {sort(pendingGiving).join(', ')}</p>
+          <p className="text-[11px] text-yvy-muted">
+            Você recuperará: {sort(pendingGiving).join(', ')}
+          </p>
         )}
         {isPartial && pendingReceiving && pendingReceiving.length > 0 && (
-          <p className="text-[11px] text-yvy-muted">Você devolverá: {sort(pendingReceiving).join(', ')}</p>
+          <p className="text-[11px] text-yvy-muted">
+            Você devolverá: {sort(pendingReceiving).join(', ')}
+          </p>
         )}
         {msg && <p className="text-[11px] text-red-600">{msg}</p>}
         <div className="flex gap-2">
-          <button onClick={() => respond('deny')} className="flex-1 border border-yvy-border text-yvy-text font-semibold py-1.5 rounded-lg text-xs transition-colors hover:bg-yvy-bg">
+          <button
+            onClick={() => respond('deny')}
+            className="flex-1 border border-yvy-border text-yvy-text font-semibold py-1.5 rounded-lg text-xs transition-colors hover:bg-yvy-bg"
+          >
             Manter troca
           </button>
-          <button onClick={() => respond('confirm')} className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors">
+          <button
+            onClick={() => respond('confirm')}
+            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors"
+          >
             Confirmar desfazimento
           </button>
         </div>
@@ -399,10 +454,16 @@ function RollbackControl({
         <p className="text-[11px] text-yvy-muted">Como deseja desfazer?</p>
         {msg && <p className="text-[11px] text-red-600">{msg}</p>}
         <div className="flex gap-2">
-          <button onClick={requestFull} className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors">
+          <button
+            onClick={requestFull}
+            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors"
+          >
             Desfazer tudo
           </button>
-          <button onClick={() => setStep('select-stickers')} className="flex-1 border border-amber-400 text-amber-700 font-semibold py-1.5 rounded-lg text-xs hover:bg-amber-50 transition-colors">
+          <button
+            onClick={() => setStep('select-stickers')}
+            className="flex-1 border border-amber-400 text-amber-700 font-semibold py-1.5 rounded-lg text-xs hover:bg-amber-50 transition-colors"
+          >
             Desfazer parcialmente
           </button>
         </div>
@@ -419,13 +480,27 @@ function RollbackControl({
         <p className="text-[11px] text-yvy-muted">Selecione as figurinhas que deseja desfazer:</p>
         {sortedGiving.length > 0 && (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">Você deu</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">
+              Você deu
+            </p>
             <div className="flex flex-wrap gap-1">
               {sortedGiving.map((id) => {
                 const sel = selectedGiving.has(id)
                 return (
-                  <button key={id} type="button"
-                    onClick={() => setSelectedGiving((p) => { const n = new Set(p); sel ? n.delete(id) : n.add(id); return n })}
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedGiving((p) => {
+                        const n = new Set(p)
+                        if (sel) {
+                          n.delete(id)
+                        } else {
+                          n.add(id)
+                        }
+                        return n
+                      })
+                    }
                     className={`text-[11px] font-mono px-2 py-0.5 rounded-md border transition-colors ${sel ? 'bg-amber-500 border-amber-500 text-white font-semibold' : 'bg-yvy-bg border-yvy-border text-yvy-text hover:border-amber-400'}`}
                   >
                     {id}
@@ -437,13 +512,27 @@ function RollbackControl({
         )}
         {sortedReceiving.length > 0 && (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">Você recebeu</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">
+              Você recebeu
+            </p>
             <div className="flex flex-wrap gap-1">
               {sortedReceiving.map((id) => {
                 const sel = selectedReceiving.has(id)
                 return (
-                  <button key={id} type="button"
-                    onClick={() => setSelectedReceiving((p) => { const n = new Set(p); sel ? n.delete(id) : n.add(id); return n })}
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedReceiving((p) => {
+                        const n = new Set(p)
+                        if (sel) {
+                          n.delete(id)
+                        } else {
+                          n.add(id)
+                        }
+                        return n
+                      })
+                    }
                     className={`text-[11px] font-mono px-2 py-0.5 rounded-md border transition-colors ${sel ? 'bg-amber-500 border-amber-500 text-white font-semibold' : 'bg-yvy-bg border-yvy-border text-yvy-text hover:border-amber-400'}`}
                   >
                     {id}
@@ -455,10 +544,15 @@ function RollbackControl({
         )}
         {msg && <p className="text-[11px] text-red-600">{msg}</p>}
         <div className="flex gap-2">
-          <button onClick={() => setStep('choose-mode')} className="border border-yvy-border text-yvy-text font-semibold px-3 py-1.5 rounded-lg text-xs hover:bg-yvy-bg transition-colors">
+          <button
+            onClick={() => setStep('choose-mode')}
+            className="border border-yvy-border text-yvy-text font-semibold px-3 py-1.5 rounded-lg text-xs hover:bg-yvy-bg transition-colors"
+          >
             ← Voltar
           </button>
-          <button onClick={requestPartial} disabled={!hasSelection || submitting}
+          <button
+            onClick={requestPartial}
+            disabled={!hasSelection || submitting}
             className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50"
           >
             {submitting ? 'Solicitando...' : 'Solicitar desfazimento'}
@@ -487,15 +581,20 @@ function StickerChip({
   const isChrome = isChromeSticker(id)
   const isCoke = isCocaColaSticker(id)
 
-  const base = 'relative text-sm font-mono font-semibold px-3 py-1.5 rounded-lg border-2 transition-all select-none'
+  const base =
+    'relative text-sm font-mono font-semibold px-3 py-1.5 rounded-lg border-2 transition-all select-none'
   const activeGiving = 'bg-rose-50 border-rose-300 text-rose-700'
   const doneGiving = 'bg-rose-100 border-rose-200 text-rose-300 line-through opacity-50'
   const activeReceiving = 'bg-green-50 border-green-300 text-green-700'
   const doneReceiving = 'bg-green-100 border-green-200 text-green-300 line-through opacity-50'
 
   const colorClass = checked
-    ? variant === 'giving' ? doneGiving : doneReceiving
-    : variant === 'giving' ? activeGiving : activeReceiving
+    ? variant === 'giving'
+      ? doneGiving
+      : doneReceiving
+    : variant === 'giving'
+      ? activeGiving
+      : activeReceiving
 
   const label = isChrome ? `✨${id}` : isCoke ? id : id
 
@@ -504,7 +603,9 @@ function StickerChip({
       <button type="button" onClick={onToggle} className={`${base} ${colorClass}`}>
         {isChrome ? <span className={checked ? '' : 'text-amber-500'}>{label}</span> : label}
         {checked && (
-          <span className={`absolute -top-1.5 -right-1.5 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center ${variant === 'giving' ? 'bg-rose-400' : 'bg-green-500'}`}>
+          <span
+            className={`absolute -top-1.5 -right-1.5 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center ${variant === 'giving' ? 'bg-rose-400' : 'bg-green-500'}`}
+          >
             ✓
           </span>
         )}
@@ -520,7 +621,7 @@ function StickerChip({
 }
 
 function TradeAssistant({
-  partnerName,
+  partnerName: _partnerName,
   givingIds,
   receivingIds,
   onClose,
@@ -538,20 +639,33 @@ function TradeAssistant({
   const sortedReceiving = sort(receivingIds)
 
   function toggleGiving(id: string) {
-    setCheckedGiving((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+    setCheckedGiving((prev) => {
+      const n = new Set(prev)
+      if (n.has(id)) {
+        n.delete(id)
+      } else {
+        n.add(id)
+      }
+      return n
+    })
   }
   function toggleReceiving(id: string) {
-    setCheckedReceiving((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+    setCheckedReceiving((prev) => {
+      const n = new Set(prev)
+      if (n.has(id)) {
+        n.delete(id)
+      } else {
+        n.add(id)
+      }
+      return n
+    })
   }
 
   const allGivingDone = givingIds.length > 0 && checkedGiving.size === givingIds.length
   const allReceivingDone = receivingIds.length > 0 && checkedReceiving.size === receivingIds.length
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
       <div
         className="w-full max-w-lg bg-yvy-surface rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -562,7 +676,9 @@ function TradeAssistant({
             <p className="text-sm font-bold text-yvy-dark">Assistente de troca</p>
             <p className="text-[11px] text-yvy-muted">Toque para marcar cada figurinha separada</p>
           </div>
-          <button onClick={onClose} className="text-yvy-muted text-xl leading-none px-1">✕</button>
+          <button onClick={onClose} className="text-yvy-muted text-xl leading-none px-1">
+            ✕
+          </button>
         </div>
 
         <div className="overflow-y-auto px-5 py-4 space-y-5">
@@ -572,8 +688,12 @@ function TradeAssistant({
                 <p className="text-xs font-bold uppercase tracking-wide text-rose-500">
                   Você vai dar →
                 </p>
-                <p className={`text-[11px] font-medium ${allGivingDone ? 'text-green-600' : 'text-yvy-muted'}`}>
-                  {allGivingDone ? 'Tudo separado ✓' : `${checkedGiving.size}/${givingIds.length} separadas`}
+                <p
+                  className={`text-[11px] font-medium ${allGivingDone ? 'text-green-600' : 'text-yvy-muted'}`}
+                >
+                  {allGivingDone
+                    ? 'Tudo separado ✓'
+                    : `${checkedGiving.size}/${givingIds.length} separadas`}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -596,8 +716,12 @@ function TradeAssistant({
                 <p className="text-xs font-bold uppercase tracking-wide text-green-600">
                   ← Você vai receber
                 </p>
-                <p className={`text-[11px] font-medium ${allReceivingDone ? 'text-green-600' : 'text-yvy-muted'}`}>
-                  {allReceivingDone ? 'Tudo conferido ✓' : `${checkedReceiving.size}/${receivingIds.length} conferidas`}
+                <p
+                  className={`text-[11px] font-medium ${allReceivingDone ? 'text-green-600' : 'text-yvy-muted'}`}
+                >
+                  {allReceivingDone
+                    ? 'Tudo conferido ✓'
+                    : `${checkedReceiving.size}/${receivingIds.length} conferidas`}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -629,7 +753,11 @@ function TradeAssistant({
 // ─── Event card ───────────────────────────────────────────────────────────────
 
 const TRADE_ACTIONS = new Set([
-  'trade_accepted', 'trade_sent', 'trade_rejected', 'trade_cancelled', 'trade_rolled_back',
+  'trade_accepted',
+  'trade_sent',
+  'trade_rejected',
+  'trade_cancelled',
+  'trade_rolled_back',
 ])
 
 function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
@@ -645,7 +773,10 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
 
   // Normalize partnerName in metadata so legacy (pre-formatName) entries display correctly
   const normalizedMetadata = entry.metadata.partnerName
-    ? { ...entry.metadata, partnerName: formatName(formatName(entry.metadata.partnerName as string)) }
+    ? {
+        ...entry.metadata,
+        partnerName: formatName(formatName(entry.metadata.partnerName as string)),
+      }
     : entry.metadata
 
   const label = cfg.label(normalizedMetadata)
@@ -673,12 +804,17 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
             <span className="text-[9px] text-yvy-muted/40">{absoluteTime(entry.created_at)}</span>
           </div>
         </div>
-        {hint && isRecent(entry.created_at) && hint.split('\n').filter(Boolean).map((h, i) => (
-          <div key={i} className="flex items-start gap-1 pl-5">
-            <span className="text-amber-400 text-[10px] shrink-0 mt-px">⚑</span>
-            <p className="text-[11px] text-amber-600 leading-snug">{h}</p>
-          </div>
-        ))}
+        {hint &&
+          isRecent(entry.created_at) &&
+          hint
+            .split('\n')
+            .filter(Boolean)
+            .map((h, i) => (
+              <div key={i} className="flex items-start gap-1 pl-5">
+                <span className="text-amber-400 text-[10px] shrink-0 mt-px">⚑</span>
+                <p className="text-[11px] text-amber-600 leading-snug">{h}</p>
+              </div>
+            ))}
       </div>
     )
   }
@@ -717,7 +853,8 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
               <div className="flex items-center gap-1.5">
                 <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
                 <span className="text-[11px] text-amber-700 font-medium">
-                  Combine com {formatName(entry.metadata.partnerName as string)} para trocar fisicamente
+                  Combine com {formatName(entry.metadata.partnerName as string)} para trocar
+                  fisicamente
                 </span>
               </div>
             )}
@@ -733,7 +870,13 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
                       key={id}
                       className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-700"
                     >
-                      {isChromeSticker(id) ? <span className="font-bold text-amber-500">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
+                      {isChromeSticker(id) ? (
+                        <span className="font-bold text-amber-500">{id}</span>
+                      ) : isCocaColaSticker(id) ? (
+                        <span className="font-bold text-red-500">{id}</span>
+                      ) : (
+                        id
+                      )}
                     </span>
                   ))}
                 </div>
@@ -751,7 +894,13 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
                       key={id}
                       className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-green-50 border border-green-200 text-green-700"
                     >
-                      {isChromeSticker(id) ? <span className="font-bold text-amber-500">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
+                      {isChromeSticker(id) ? (
+                        <span className="font-bold text-amber-500">{id}</span>
+                      ) : isCocaColaSticker(id) ? (
+                        <span className="font-bold text-red-500">{id}</span>
+                      ) : (
+                        id
+                      )}
                     </span>
                   ))}
                 </div>
@@ -817,7 +966,10 @@ function consolidateActivity(entries: AuditEntry[]): AuditEntry[] {
   const seen = new Set<string>()
   const result: AuditEntry[] = []
   for (const e of entries) {
-    if (e.action === 'file_import') { result.push(e); continue }
+    if (e.action === 'file_import') {
+      result.push(e)
+      continue
+    }
     const key = `${e.created_at.slice(0, 10)}:${e.action}`
     if (seen.has(key)) continue
     seen.add(key)
@@ -845,11 +997,11 @@ export default function AuditScreen() {
   useEffect(() => {
     const uid = localStorage.getItem('userId') ?? ''
     setUserId(uid)
-    if (!uid) { setLoading(false); return }
-    Promise.all([
-      getTradeLog(uid),
-      getAuditLog(uid).catch(() => [] as AuditEntry[]),
-    ])
+    if (!uid) {
+      setLoading(false)
+      return
+    }
+    Promise.all([getTradeLog(uid), getAuditLog(uid).catch(() => [] as AuditEntry[])])
       .then(([trades, activity]) => {
         setTradeEntries(trades)
         setActivityEntries(consolidateActivity(activity))
@@ -886,10 +1038,16 @@ export default function AuditScreen() {
   }
 
   const tradeTotalPages = Math.max(1, Math.ceil(tradeEntries.length / TRADE_PAGE_SIZE))
-  const tradePageEntries = tradeEntries.slice(tradePage * TRADE_PAGE_SIZE, tradePage * TRADE_PAGE_SIZE + TRADE_PAGE_SIZE)
+  const tradePageEntries = tradeEntries.slice(
+    tradePage * TRADE_PAGE_SIZE,
+    tradePage * TRADE_PAGE_SIZE + TRADE_PAGE_SIZE
+  )
 
   const activityTotalPages = Math.max(1, Math.ceil(activityEntries.length / ACTIVITY_PAGE_SIZE))
-  const activityPageEntries = activityEntries.slice(activityPage * ACTIVITY_PAGE_SIZE, activityPage * ACTIVITY_PAGE_SIZE + ACTIVITY_PAGE_SIZE)
+  const activityPageEntries = activityEntries.slice(
+    activityPage * ACTIVITY_PAGE_SIZE,
+    activityPage * ACTIVITY_PAGE_SIZE + ACTIVITY_PAGE_SIZE
+  )
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
@@ -918,7 +1076,9 @@ export default function AuditScreen() {
               {groupByDay(tradePageEntries).map(({ day, entries: dayEntries }) => (
                 <div key={day}>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted">{day}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted">
+                      {day}
+                    </span>
                     <div className="flex-1 h-px bg-yvy-border" />
                   </div>
                   <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-3 space-y-4">
@@ -939,7 +1099,9 @@ export default function AuditScreen() {
                 >
                   ← Anterior
                 </button>
-                <span className="text-xs text-yvy-muted">{tradePage + 1} / {tradeTotalPages}</span>
+                <span className="text-xs text-yvy-muted">
+                  {tradePage + 1} / {tradeTotalPages}
+                </span>
                 <button
                   onClick={() => setTradePage((p) => Math.min(tradeTotalPages - 1, p + 1))}
                   disabled={tradePage === tradeTotalPages - 1}
@@ -956,21 +1118,27 @@ export default function AuditScreen() {
       {/* ── Atividade ────────────────────────────────────────────────── */}
       {activityEntries.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted/70">Atividade</h3>
+          <h3 className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted/70">
+            Atividade
+          </h3>
 
           <div className="space-y-4">
             {groupByDay(activityPageEntries).map(({ day, entries: dayEntries }) => (
               <div key={day}>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted/60">{day}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-yvy-muted/60">
+                    {day}
+                  </span>
                   <div className="flex-1 h-px bg-yvy-border/60" />
                 </div>
                 <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-2.5 space-y-2 divide-y divide-yvy-border/50">
-                  {dayEntries.filter((e) => EVENT_CONFIG[e.action]).map((entry) => (
-                    <div key={entry.id} className="pt-2 first:pt-0">
-                      <EventCard entry={entry} userId={userId} />
-                    </div>
-                  ))}
+                  {dayEntries
+                    .filter((e) => EVENT_CONFIG[e.action])
+                    .map((entry) => (
+                      <div key={entry.id} className="pt-2 first:pt-0">
+                        <EventCard entry={entry} userId={userId} />
+                      </div>
+                    ))}
                 </div>
               </div>
             ))}
@@ -985,7 +1153,9 @@ export default function AuditScreen() {
               >
                 ← Anterior
               </button>
-              <span className="text-xs text-yvy-muted">{activityPage + 1} / {activityTotalPages}</span>
+              <span className="text-xs text-yvy-muted">
+                {activityPage + 1} / {activityTotalPages}
+              </span>
               <button
                 onClick={() => setActivityPage((p) => Math.min(activityTotalPages - 1, p + 1))}
                 disabled={activityPage === activityTotalPages - 1}

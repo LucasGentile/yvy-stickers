@@ -152,7 +152,9 @@ export default function Header() {
                         {pendingCount > 9 ? '9+' : pendingCount}
                       </span>
                     )}
-                    {active && !showDot && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />}
+                    {active && !showDot && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                    )}
                   </Link>
                 )
               })}
@@ -232,7 +234,12 @@ export default function Header() {
                 Ordem das figurinhas
               </p>
               <div className="flex gap-2">
-                {([['album', 'Álbum'], ['alpha', 'A–Z']] as const).map(([val, label]) => (
+                {(
+                  [
+                    ['album', 'Álbum'],
+                    ['alpha', 'A–Z'],
+                  ] as const
+                ).map(([val, label]) => (
                   <button
                     key={val}
                     onClick={() => setStickerOrder(val)}

@@ -117,8 +117,14 @@ async function debugUser(nameFragment: string) {
     .select('id, name, apartment, tower, input_mode, approved')
     .ilike('name', `%${nameFragment}%`)
 
-  if (error) { console.error(error.message); process.exit(1) }
-  if (!users?.length) { console.log(`No users matching "${nameFragment}"`); return }
+  if (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
+  if (!users?.length) {
+    console.log(`No users matching "${nameFragment}"`)
+    return
+  }
 
   const { data: rpcData, error: rpcErr } = await supabase.rpc('get_sticker_counts_by_user')
   if (rpcErr) console.warn('RPC error:', rpcErr.message)
@@ -134,7 +140,10 @@ async function debugUser(nameFragment: string) {
       .select('sticker_id, count')
       .eq('user_id', u.id)
 
-    const totalDupeCopies = (dupes ?? []).reduce((s: number, r: Record<string, unknown>) => s + (r.count as number), 0)
+    const totalDupeCopies = (dupes ?? []).reduce(
+      (s: number, r: Record<string, unknown>) => s + (r.count as number),
+      0
+    )
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rpcRow = (rpcData ?? []).find((r: any) => r.user_id === u.id)
 
@@ -143,7 +152,9 @@ async function debugUser(nameFragment: string) {
     console.log(`  approved:   ${u.approved}`)
     console.log(`  input_mode: ${u.input_mode}`)
     console.log(`  user_stickers rows (direct COUNT): ${count ?? 0}`)
-    console.log(`  user_stickers rows (via RPC):      ${rpcRow ? rpcRow.sticker_count : 'NOT IN RPC RESULT'}`)
+    console.log(
+      `  user_stickers rows (via RPC):      ${rpcRow ? rpcRow.sticker_count : 'NOT IN RPC RESULT'}`
+    )
     console.log(`  user_duplicates rows: ${(dupes ?? []).length} (${totalDupeCopies} extra copies)`)
   }
 }
@@ -155,8 +166,14 @@ async function backfillTrade(tradeId: string) {
     .eq('id', tradeId)
     .single()
 
-  if (error || !trade) { console.error('Trade not found:', error?.message); process.exit(1) }
-  if (trade.status !== 'accepted') { console.error(`Trade status is "${trade.status}", not accepted`); process.exit(1) }
+  if (error || !trade) {
+    console.error('Trade not found:', error?.message)
+    process.exit(1)
+  }
+  if (trade.status !== 'accepted') {
+    console.error(`Trade status is "${trade.status}", not accepted`)
+    process.exit(1)
+  }
 
   const { data: users } = await supabase
     .from('users')
@@ -205,7 +222,10 @@ async function findTrades(nameFragment: string) {
     .select('id, name')
     .ilike('name', `%${nameFragment}%`)
 
-  if (!users?.length) { console.log(`No users matching "${nameFragment}"`); return }
+  if (!users?.length) {
+    console.log(`No users matching "${nameFragment}"`)
+    return
+  }
 
   const ids = users.map((u) => u.id)
   const nameById = Object.fromEntries(users.map((u) => [u.id, u.name]))
@@ -238,8 +258,14 @@ async function adminRollbackTrade(tradeId: string) {
     .eq('id', tradeId)
     .maybeSingle()
 
-  if (error || !trade) { console.error('Trade not found:', error?.message); process.exit(1) }
-  if (trade.status !== 'accepted') { console.error(`Trade status is "${trade.status}", not "accepted" — nothing to roll back`); process.exit(1) }
+  if (error || !trade) {
+    console.error('Trade not found:', error?.message)
+    process.exit(1)
+  }
+  if (trade.status !== 'accepted') {
+    console.error(`Trade status is "${trade.status}", not "accepted" — nothing to roll back`)
+    process.exit(1)
+  }
 
   const { data: users } = await supabase
     .from('users')
@@ -263,18 +289,36 @@ async function adminRollbackTrade(tradeId: string) {
     .select('id')
     .maybeSingle()
 
-  if (!updated) { console.error('Trade already changed status during rollback — aborting'); process.exit(1) }
+  if (!updated) {
+    console.error('Trade already changed status during rollback — aborting')
+    process.exit(1)
+  }
 
   // Restore duplicates for both parties
   async function restoreDupe(userId: string, ids: string[]) {
     for (const sid of ids) {
-      const { data } = await supabase.from('user_duplicates').select('count').eq('user_id', userId).eq('sticker_id', sid).maybeSingle()
+      const { data } = await supabase
+        .from('user_duplicates')
+        .select('count')
+        .eq('user_id', userId)
+        .eq('sticker_id', sid)
+        .maybeSingle()
       if (data) {
-        await supabase.from('user_duplicates').update({ count: data.count + 1 }).eq('user_id', userId).eq('sticker_id', sid)
-        console.log(`  ↩ restored dupe ${sid} for ${users?.find((u) => u.id === userId)?.name ?? userId} (count ${data.count} → ${data.count + 1})`)
+        await supabase
+          .from('user_duplicates')
+          .update({ count: data.count + 1 })
+          .eq('user_id', userId)
+          .eq('sticker_id', sid)
+        console.log(
+          `  ↩ restored dupe ${sid} for ${users?.find((u) => u.id === userId)?.name ?? userId} (count ${data.count} → ${data.count + 1})`
+        )
       } else {
-        await supabase.from('user_duplicates').insert({ user_id: userId, sticker_id: sid, count: 1 })
-        console.log(`  ↩ re-inserted dupe ${sid} for ${users?.find((u) => u.id === userId)?.name ?? userId} (count 1)`)
+        await supabase
+          .from('user_duplicates')
+          .insert({ user_id: userId, sticker_id: sid, count: 1 })
+        console.log(
+          `  ↩ re-inserted dupe ${sid} for ${users?.find((u) => u.id === userId)?.name ?? userId} (count 1)`
+        )
       }
     }
   }
@@ -283,7 +327,9 @@ async function adminRollbackTrade(tradeId: string) {
   async function removeFromCollection(userId: string, ids: string[]) {
     if (!ids.length) return
     await supabase.from('user_stickers').delete().eq('user_id', userId).in('sticker_id', ids)
-    console.log(`  ↩ removed from collection of ${users?.find((u) => u.id === userId)?.name ?? userId}: ${ids.join(', ')}`)
+    console.log(
+      `  ↩ removed from collection of ${users?.find((u) => u.id === userId)?.name ?? userId}: ${ids.join(', ')}`
+    )
   }
 
   // Initiator gave giving_ids → restore; received receiving_ids → remove from collection

@@ -7,14 +7,49 @@ const COLOR_MAP: Record<
   Insight['color'],
   { card: string; border: string; title: string; emoji: string }
 > = {
-  red:    { card: 'bg-red-50',    border: 'border-red-200',    title: 'text-red-700',    emoji: 'bg-red-100' },
-  orange: { card: 'bg-orange-50', border: 'border-orange-200', title: 'text-orange-700', emoji: 'bg-orange-100' },
-  amber:  { card: 'bg-amber-50',  border: 'border-amber-200',  title: 'text-amber-700',  emoji: 'bg-amber-100' },
-  green:  { card: 'bg-green-50',  border: 'border-green-200',  title: 'text-green-700',  emoji: 'bg-green-100' },
-  blue:   { card: 'bg-blue-50',   border: 'border-blue-200',   title: 'text-blue-700',   emoji: 'bg-blue-100' },
-  purple: { card: 'bg-purple-50', border: 'border-purple-200', title: 'text-purple-700', emoji: 'bg-purple-100' },
-  pink:   { card: 'bg-pink-50',   border: 'border-pink-200',   title: 'text-pink-700',   emoji: 'bg-pink-100' },
-  teal:   { card: 'bg-teal-50',   border: 'border-teal-200',   title: 'text-teal-700',   emoji: 'bg-teal-100' },
+  red: { card: 'bg-red-50', border: 'border-red-200', title: 'text-red-700', emoji: 'bg-red-100' },
+  orange: {
+    card: 'bg-orange-50',
+    border: 'border-orange-200',
+    title: 'text-orange-700',
+    emoji: 'bg-orange-100',
+  },
+  amber: {
+    card: 'bg-amber-50',
+    border: 'border-amber-200',
+    title: 'text-amber-700',
+    emoji: 'bg-amber-100',
+  },
+  green: {
+    card: 'bg-green-50',
+    border: 'border-green-200',
+    title: 'text-green-700',
+    emoji: 'bg-green-100',
+  },
+  blue: {
+    card: 'bg-blue-50',
+    border: 'border-blue-200',
+    title: 'text-blue-700',
+    emoji: 'bg-blue-100',
+  },
+  purple: {
+    card: 'bg-purple-50',
+    border: 'border-purple-200',
+    title: 'text-purple-700',
+    emoji: 'bg-purple-100',
+  },
+  pink: {
+    card: 'bg-pink-50',
+    border: 'border-pink-200',
+    title: 'text-pink-700',
+    emoji: 'bg-pink-100',
+  },
+  teal: {
+    card: 'bg-teal-50',
+    border: 'border-teal-200',
+    title: 'text-teal-700',
+    emoji: 'bg-teal-100',
+  },
 }
 
 function InsightCard({ insight }: { insight: Insight }) {
@@ -22,21 +57,19 @@ function InsightCard({ insight }: { insight: Insight }) {
   return (
     <div className={`rounded-2xl border ${c.card} ${c.border} p-4 shadow-sm space-y-2`}>
       <div className="flex items-start gap-3">
-        <div className={`shrink-0 w-10 h-10 rounded-full ${c.emoji} flex items-center justify-center text-xl`}>
+        <div
+          className={`shrink-0 w-10 h-10 rounded-full ${c.emoji} flex items-center justify-center text-xl`}
+        >
           {insight.emoji}
         </div>
         <div className="flex-1 min-w-0">
           <p className={`text-[11px] font-bold uppercase tracking-widest ${c.title} mb-0.5`}>
             {insight.title}
           </p>
-          <p className="text-sm font-bold text-yvy-dark leading-snug">
-            {insight.highlight}
-          </p>
+          <p className="text-sm font-bold text-yvy-dark leading-snug">{insight.highlight}</p>
         </div>
       </div>
-      <p className="text-xs text-yvy-muted leading-relaxed pl-[52px] italic">
-        {insight.detail}
-      </p>
+      <p className="text-xs text-yvy-muted leading-relaxed pl-[52px] italic">{insight.detail}</p>
     </div>
   )
 }
@@ -60,7 +93,9 @@ export default function MuralScreen() {
 
   useEffect(() => {
     load()
-    const handleVisibility = () => { if (!document.hidden) load(true) }
+    const handleVisibility = () => {
+      if (!document.hidden) load(true)
+    }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [load])
@@ -97,9 +132,9 @@ export default function MuralScreen() {
       {/* Disclaimer banner */}
       <div className="bg-yvy-surface border border-yvy-border rounded-xl px-4 py-3">
         <p className="text-xs text-yvy-muted leading-relaxed">
-          <span className="font-semibold text-yvy-dark">Aviso importante:</span> os fatos abaixo
-          são gerados automaticamente com fins humorísticos. Se você apareceu aqui é porque se
-          destacou — de alguma forma. 😬
+          <span className="font-semibold text-yvy-dark">Aviso importante:</span> os fatos abaixo são
+          gerados automaticamente com fins humorísticos. Se você apareceu aqui é porque se destacou
+          — de alguma forma. 😬
         </p>
       </div>
 

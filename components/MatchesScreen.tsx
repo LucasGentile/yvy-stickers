@@ -111,20 +111,23 @@ export default function MatchesScreen() {
         </button>
       </div>
 
-      {userId && (() => {
-        const rollbackRequests = pending.recentlyAccepted.filter((t) => t.rollbackRequestedBy !== null)
-        const hasPending = pending.received.length > 0 || pending.sent.length > 0
-        if (!hasPending && rollbackRequests.length === 0) return null
-        return (
-          <PendingTradesSection
-            received={pending.received}
-            sent={pending.sent}
-            recentlyAccepted={rollbackRequests}
-            userId={userId}
-            onRefresh={() => loadPending(userId)}
-          />
-        )
-      })()}
+      {userId &&
+        (() => {
+          const rollbackRequests = pending.recentlyAccepted.filter(
+            (t) => t.rollbackRequestedBy !== null
+          )
+          const hasPending = pending.received.length > 0 || pending.sent.length > 0
+          if (!hasPending && rollbackRequests.length === 0) return null
+          return (
+            <PendingTradesSection
+              received={pending.received}
+              sent={pending.sent}
+              recentlyAccepted={rollbackRequests}
+              userId={userId}
+              onRefresh={() => loadPending(userId)}
+            />
+          )
+        })()}
 
       {matches.length === 0 ? (
         <div className="text-center py-16 text-yvy-muted">
@@ -142,7 +145,12 @@ export default function MatchesScreen() {
 
           <div className="space-y-3">
             {matches.map((m, i) => (
-              <MatchCard key={m.userId} match={m} rank={i + 1} onTradeCreated={() => userId && refreshMatches(userId)} />
+              <MatchCard
+                key={m.userId}
+                match={m}
+                rank={i + 1}
+                onTradeCreated={() => userId && refreshMatches(userId)}
+              />
             ))}
           </div>
         </>

@@ -107,13 +107,20 @@ export default function RankingScreen() {
     if (opts?.silent) setRefreshing(true)
     return getRanking()
       .then(setRanking)
-      .catch(() => { if (!opts?.silent) setError('Erro ao carregar o ranking. Tente novamente.') })
-      .finally(() => { setLoading(false); setRefreshing(false) })
+      .catch(() => {
+        if (!opts?.silent) setError('Erro ao carregar o ranking. Tente novamente.')
+      })
+      .finally(() => {
+        setLoading(false)
+        setRefreshing(false)
+      })
   }, [])
 
   useEffect(() => {
     load()
-    const handleVisibility = () => { if (!document.hidden) load({ silent: true }) }
+    const handleVisibility = () => {
+      if (!document.hidden) load({ silent: true })
+    }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [load])

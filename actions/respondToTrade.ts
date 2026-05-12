@@ -42,6 +42,7 @@ export async function respondToTrade(
   const updatePayload: Record<string, unknown> = { status: newStatus }
   if (action === 'accept') updatePayload.accepted_at = new Date().toISOString()
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: updated } = await (supabaseAdmin as any)
     .from('pending_trades')
     .update(updatePayload)
@@ -63,10 +64,7 @@ export async function respondToTrade(
     )
     if (!tradeResult.success) {
       // Revert status so the user can retry
-      await supabaseAdmin
-        .from('pending_trades')
-        .update({ status: 'pending' })
-        .eq('id', tradeId)
+      await supabaseAdmin.from('pending_trades').update({ status: 'pending' }).eq('id', tradeId)
       return { success: false, error: tradeResult.error }
     }
   }
@@ -77,8 +75,12 @@ export async function respondToTrade(
       .from('users')
       .select('id, name')
       .in('id', [trade.initiator_id, trade.receiver_id])
-    const initiatorName = formatName(users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário')
-    const receiverName = formatName(users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário')
+    const initiatorName = formatName(
+      users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário'
+    )
+    const receiverName = formatName(
+      users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
+    )
 
     if (action === 'accept') {
       // Log for both parties so each has a checklist entry in their history

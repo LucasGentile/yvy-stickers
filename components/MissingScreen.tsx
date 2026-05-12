@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
-import { ALL_STICKER_IDS, ALL_STICKER_SECTIONS, StickerGroup, isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
+import {
+  ALL_STICKER_IDS,
+  ALL_STICKER_SECTIONS,
+  StickerGroup,
+  isChromeSticker,
+  isCocaColaSticker,
+} from '@/lib/stickers'
 
 export default function MissingScreen() {
   const [missingSet, setMissingSet] = useState<Set<string>>(new Set())
@@ -235,7 +241,11 @@ export default function MissingScreen() {
                                   : 'bg-yvy-bg text-yvy-border'
                               }`}
                             >
-                              {missing && isChromeSticker(id) ? <span className="font-bold text-amber-500">{idx + 1}</span> : idx + 1}
+                              {missing && isChromeSticker(id) ? (
+                                <span className="font-bold text-amber-500">{idx + 1}</span>
+                              ) : (
+                                idx + 1
+                              )}
                             </span>
                           )
                         })}
@@ -272,7 +282,13 @@ export default function MissingScreen() {
                             : 'bg-yvy-bg text-yvy-border'
                         }`}
                       >
-                        {missing && isChromeSticker(id) ? <span className="font-bold text-amber-500">{id}</span> : missing && isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
+                        {missing && isChromeSticker(id) ? (
+                          <span className="font-bold text-amber-500">{id}</span>
+                        ) : missing && isCocaColaSticker(id) ? (
+                          <span className="font-bold text-red-500">{id}</span>
+                        ) : (
+                          id
+                        )}
                       </span>
                     )
                   })}

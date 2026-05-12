@@ -16,13 +16,15 @@ type PickerSection = {
 // Preserve actual album order: specials appear at their true positions
 const ALL_SECTIONS: PickerSection[] = ALL_STICKER_SECTIONS.flatMap((section): PickerSection[] => {
   if (section.type === 'special') {
-    return [{
-      key: section.label,
-      label: section.label,
-      icon: section.icon,
-      stickers: section.stickers,
-      isSpecial: true,
-    }]
+    return [
+      {
+        key: section.label,
+        label: section.label,
+        icon: section.icon,
+        stickers: section.stickers,
+        isSpecial: true,
+      },
+    ]
   }
   return section.teams.map((t) => ({
     key: t.code,
@@ -56,8 +58,7 @@ export default function DuplicatePicker({
         (s) =>
           s.label.toLowerCase().includes(query.toLowerCase()) ||
           s.key.toLowerCase().includes(query.toLowerCase()) ||
-          (s.isSpecial &&
-            s.stickers.some((id) => id.toLowerCase().includes(query.toLowerCase())))
+          (s.isSpecial && s.stickers.some((id) => id.toLowerCase().includes(query.toLowerCase())))
       )
     : ALL_SECTIONS
 
@@ -93,22 +94,22 @@ export default function DuplicatePicker({
   return (
     <div ref={ref} className="space-y-2">
       <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-yvy-muted text-sm pointer-events-none">
-            🔍
-          </span>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value)
-              setSelected(null)
-              setOpen(true)
-              onSelect('')
-            }}
-            onFocus={() => setOpen(true)}
-            placeholder="Buscar país ou coleção..."
-            className="w-full rounded-lg border border-yvy-border pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg"
-          />
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-yvy-muted text-sm pointer-events-none">
+          🔍
+        </span>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setSelected(null)
+            setOpen(true)
+            onSelect('')
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder="Buscar país ou coleção..."
+          className="w-full rounded-lg border border-yvy-border pl-8 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg"
+        />
         {query && (
           <button
             type="button"
@@ -180,10 +181,16 @@ export default function DuplicatePicker({
                   }`}
                 >
                   {isChromeSticker(id) ? (
-                    <span className="font-bold text-amber-400">{selected.isSpecial ? id : idx + 1}</span>
+                    <span className="font-bold text-amber-400">
+                      {selected.isSpecial ? id : idx + 1}
+                    </span>
                   ) : isCocaColaSticker(id) ? (
                     <span className="font-bold text-red-400">{id}</span>
-                  ) : selected.isSpecial ? id : idx + 1}
+                  ) : selected.isSpecial ? (
+                    id
+                  ) : (
+                    idx + 1
+                  )}
                   {dupeCount && !isSelected && (
                     <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 bg-yvy-gold text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
                       {dupeCount}

@@ -35,6 +35,7 @@ async function computeMuralInsights(): Promise<Insight[]> {
     { data: lookupRows },
   ] = await Promise.all([
     supabaseAdmin.from('users').select('id, name').eq('approved', true),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabaseAdmin as any).rpc('get_sticker_counts_by_user'),
     supabaseAdmin.from('user_duplicates').select('user_id, count').limit(2000),
     supabaseAdmin
@@ -45,11 +46,7 @@ async function computeMuralInsights(): Promise<Insight[]> {
       .from('pending_trades')
       .select('initiator_id, receiver_id')
       .eq('status', 'pending'),
-    supabaseAdmin
-      .from('audit_log')
-      .select('user_id')
-      .gte('created_at', thirtyDaysAgo)
-      .limit(2000),
+    supabaseAdmin.from('audit_log').select('user_id').gte('created_at', thirtyDaysAgo).limit(2000),
     supabaseAdmin
       .from('audit_log')
       .select('user_id')
@@ -163,19 +160,17 @@ async function computeMuralInsights(): Promise<Insight[]> {
     emoji: '🍕',
     title: 'Investimento Coletivo do YVY',
     highlight: `O condomínio gastou coletivamente ~R$${totalSpend} em figurinhas`,
-    detail: pizzas > 0
-      ? `Dava pra pedir ${pizzas} pizzas grandes pra todo mundo — uma por ${Math.ceil(users.length / pizzas)} morador. Prioridades, né?`
-      : `Dava pra pagar ${ubers} corridas de Uber. Figurinha é caro, hein!`,
+    detail:
+      pizzas > 0
+        ? `Dava pra pedir ${pizzas} pizzas grandes pra todo mundo — uma por ${Math.ceil(users.length / pizzas)} morador. Prioridades, né?`
+        : `Dava pra pagar ${ubers} corridas de Uber. Figurinha é caro, hein!`,
     color: 'amber',
   })
 
   // ── 5. Duplicate king ─────────────────────────────────────────────────────
   const dupeKing = activeUsers
     .filter((u) => (dupeMap[u.id] ?? 0) > 0)
-    .reduce(
-      (a, b) => ((dupeMap[a?.id] ?? 0) >= (dupeMap[b.id] ?? 0) ? a : b),
-      activeUsers[0]
-    )
+    .reduce((a, b) => ((dupeMap[a?.id] ?? 0) >= (dupeMap[b.id] ?? 0) ? a : b), activeUsers[0])
   if (dupeKing && (dupeMap[dupeKing.id] ?? 0) > 0) {
     const dupeCount = dupeMap[dupeKing.id]
     insights.push({
@@ -222,9 +217,10 @@ async function computeMuralInsights(): Promise<Insight[]> {
         emoji: '🔄',
         title: 'Figurinheiro Negociante',
         highlight: `${nameMap[uid]} participou de ${count} troca${count !== 1 ? 's' : ''} e recebeu ${received} figurinha${received !== 1 ? 's' : ''} pelo app`,
-        detail: saved > 0
-          ? `Isso equivale a ~R$${saved} em pacotes que não precisou comprar. Networking que se paga!`
-          : `Gosta mais de trocar do que de colar. Vai que é o seu negócio mesmo.`,
+        detail:
+          saved > 0
+            ? `Isso equivale a ~R$${saved} em pacotes que não precisou comprar. Networking que se paga!`
+            : `Gosta mais de trocar do que de colar. Vai que é o seu negócio mesmo.`,
         color: 'blue',
       })
     }
@@ -277,9 +273,10 @@ async function computeMuralInsights(): Promise<Insight[]> {
       emoji: '📱',
       title: 'Viciado no App',
       highlight: `${nameMap[uid]} registrou ${count} ações no app esse mês`,
-      detail: hoursPerAction <= 2
-        ? `Uma ação a cada ${hoursPerAction}h. Esse app virou o segundo emprego.`
-        : `Isso dá uma ação a cada ${hoursPerAction} horas. Tem vida fora das figurinhas?`,
+      detail:
+        hoursPerAction <= 2
+          ? `Uma ação a cada ${hoursPerAction}h. Esse app virou o segundo emprego.`
+          : `Isso dá uma ação a cada ${hoursPerAction} horas. Tem vida fora das figurinhas?`,
       color: 'pink',
     })
   }

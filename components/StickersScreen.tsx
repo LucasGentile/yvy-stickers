@@ -130,8 +130,12 @@ export default function StickersScreen() {
       parts.push(`${result.newDuplicates} repetidas (${result.totalDuplicateCopies} cópias extras)`)
     const failures = [...result.failedStickers, ...result.failedDuplicates]
     if (failures.length > 0)
-      parts.push(`${failures.length} não salvos: ${failures.slice(0, 5).join(', ')}${failures.length > 5 ? ` e mais ${failures.length - 5}` : ''}`)
-    setSaveMsg(failures.length > 0 ? `Importado com erros — ${parts.join(' · ')}` : `✓ ${parts.join(' · ')}`)
+      parts.push(
+        `${failures.length} não salvos: ${failures.slice(0, 5).join(', ')}${failures.length > 5 ? ` e mais ${failures.length - 5}` : ''}`
+      )
+    setSaveMsg(
+      failures.length > 0 ? `Importado com erros — ${parts.join(' · ')}` : `✓ ${parts.join(' · ')}`
+    )
   }
 
   const handleSave = useCallback(async () => {
@@ -276,46 +280,50 @@ export default function StickersScreen() {
           </div>
         </div>
 
-        {mode === 'have' && tradeOrigin && (() => {
-          const tradeSet = new Set(tradeOrigin.fromTradeIds)
-          const tradeCount = [...selected].filter((id) => tradeSet.has(id)).length
-          const boughtCount = selected.size - tradeCount
-          return (
-            <>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
-                <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                  <span className="w-3 h-3 rounded bg-green-600 shrink-0" />
-                  Comprada/colada
-                  <span className="font-semibold text-yvy-text">({boughtCount})</span>
-                </span>
-                <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                  <span className="w-3 h-3 rounded bg-blue-500 shrink-0" />
-                  Recebida em troca
-                  <span className="font-semibold text-yvy-text">({tradeCount})</span>
-                </span>
-                {[...selected].some((id) => !lastSaved.current.has(id)) && (
+        {mode === 'have' &&
+          tradeOrigin &&
+          (() => {
+            const tradeSet = new Set(tradeOrigin.fromTradeIds)
+            const tradeCount = [...selected].filter((id) => tradeSet.has(id)).length
+            const boughtCount = selected.size - tradeCount
+            return (
+              <>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-3 rounded bg-green-400 shrink-0" />
-                    Não salva ainda
+                    <span className="w-3 h-3 rounded bg-green-600 shrink-0" />
+                    Comprada/colada
+                    <span className="font-semibold text-yvy-text">({boughtCount})</span>
                   </span>
-                )}
-                {tradeOrigin.newestIds.length > 0 && (
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
-                    Troca recente (12h)
-                    <span className="font-semibold text-yvy-text">({tradeOrigin.newestIds.length})</span>
+                    <span className="w-3 h-3 rounded bg-blue-500 shrink-0" />
+                    Recebida em troca
+                    <span className="font-semibold text-yvy-text">({tradeCount})</span>
                   </span>
-                )}
-                <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                  <span className="w-3 h-3 rounded bg-yvy-bg border border-yvy-border shrink-0 flex items-center justify-center">
-                    <span className="text-[7px] font-bold text-amber-500 leading-none">1</span>
+                  {[...selected].some((id) => !lastSaved.current.has(id)) && (
+                    <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                      <span className="w-3 h-3 rounded bg-green-400 shrink-0" />
+                      Não salva ainda
+                    </span>
+                  )}
+                  {tradeOrigin.newestIds.length > 0 && (
+                    <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
+                      Troca recente (12h)
+                      <span className="font-semibold text-yvy-text">
+                        ({tradeOrigin.newestIds.length})
+                      </span>
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                    <span className="w-3 h-3 rounded bg-yvy-bg border border-yvy-border shrink-0 flex items-center justify-center">
+                      <span className="text-[7px] font-bold text-amber-500 leading-none">1</span>
+                    </span>
+                    Cromada
                   </span>
-                  Cromada
-                </span>
-              </div>
-            </>
-          )
-        })()}
+                </div>
+              </>
+            )
+          })()}
 
         <StickerGrid
           selected={selected}
@@ -324,9 +332,17 @@ export default function StickersScreen() {
             showToast(message, new Set(selected))
             setSelected(next)
           }}
-          tradeReceived={mode === 'have' && tradeOrigin ? new Set(tradeOrigin.fromTradeIds) : undefined}
-          newestFromTrade={mode === 'have' && tradeOrigin ? new Set(tradeOrigin.newestIds) : undefined}
-          staged={mode === 'have' ? new Set([...selected].filter((id) => !lastSaved.current.has(id))) : undefined}
+          tradeReceived={
+            mode === 'have' && tradeOrigin ? new Set(tradeOrigin.fromTradeIds) : undefined
+          }
+          newestFromTrade={
+            mode === 'have' && tradeOrigin ? new Set(tradeOrigin.newestIds) : undefined
+          }
+          staged={
+            mode === 'have'
+              ? new Set([...selected].filter((id) => !lastSaved.current.has(id)))
+              : undefined
+          }
         />
       </div>
 

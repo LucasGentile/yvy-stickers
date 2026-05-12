@@ -44,6 +44,7 @@ export async function rollbackTrade(
 ): Promise<RollbackResult> {
   if (!tradeId || !userId) return { success: false, error: 'Parâmetros inválidos.' }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: trade } = await (supabaseAdmin as any)
     .from('pending_trades')
     .select(
@@ -82,6 +83,7 @@ export async function rollbackTrade(
       updatePayload.rollback_giving_ids = partialGivingIds ?? []
       updatePayload.rollback_receiving_ids = partialReceivingIds ?? []
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabaseAdmin as any)
       .from('pending_trades')
       .update(updatePayload)
@@ -95,9 +97,14 @@ export async function rollbackTrade(
     if (trade.rollback_requested_by === userId) {
       return { success: false, error: 'Você não pode negar sua própria solicitação.' }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabaseAdmin as any)
       .from('pending_trades')
-      .update({ rollback_requested_by: null, rollback_giving_ids: null, rollback_receiving_ids: null })
+      .update({
+        rollback_requested_by: null,
+        rollback_giving_ids: null,
+        rollback_receiving_ids: null,
+      })
       .eq('id', tradeId)
     if (error) return { success: false, error: 'Erro ao recusar desfazimento.' }
     return { success: true }
@@ -112,6 +119,7 @@ export async function rollbackTrade(
   }
 
   // Atomic transition to rolled_back
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: updated } = await (supabaseAdmin as any)
     .from('pending_trades')
     .update({ status: 'rolled_back' })
@@ -133,16 +141,25 @@ export async function rollbackTrade(
     restoreDupe(trade.receiver_id, receivingToRevert),
     removeFromCollection(trade.receiver_id, givingToRevert),
   ])
-
   ;(async () => {
     const { data: users } = await supabaseAdmin
       .from('users')
       .select('id, name')
       .in('id', [trade.initiator_id, trade.receiver_id])
-    const initiatorName = formatName(users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário')
-    const receiverName = formatName(users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário')
-    logAction(trade.initiator_id, 'trade_rolled_back', { partnerName: receiverName, partial: isPartial })
-    logAction(trade.receiver_id, 'trade_rolled_back', { partnerName: initiatorName, partial: isPartial })
+    const initiatorName = formatName(
+      users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário'
+    )
+    const receiverName = formatName(
+      users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
+    )
+    logAction(trade.initiator_id, 'trade_rolled_back', {
+      partnerName: receiverName,
+      partial: isPartial,
+    })
+    logAction(trade.receiver_id, 'trade_rolled_back', {
+      partnerName: initiatorName,
+      partial: isPartial,
+    })
   })()
 
   return { success: true }

@@ -283,7 +283,8 @@ describe('rollbackTrade', () => {
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockImplementation((_col, val) => {
-            if (typeof val === 'string' && val !== 'user-a' && val !== 'user-b') restoredIds.push(val)
+            if (typeof val === 'string' && val !== 'user-a' && val !== 'user-b')
+              restoredIds.push(val)
             return {
               select: vi.fn().mockReturnThis(),
               eq: vi.fn().mockReturnThis(),

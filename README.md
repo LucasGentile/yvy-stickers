@@ -62,12 +62,13 @@ Selecione suas figurinhas na grade — organizadas por grupos e seleções com a
 
 As figurinhas marcadas aparecem em cores diferentes:
 🟢 _Verde_ — comprada/colada no álbum físico
+🟩 _Verde claro_ — selecionada mas ainda não salva
 🔵 _Azul_ — recebida via troca no app
-🟡 _Ponto amarelo_ — recebida em troca nas últimas 48h
+🟡 _Ponto amarelo_ — recebida em troca nas últimas 12h
 A contagem _"Compradas: X · De trocas: Y"_ aparece acima da grade.
 
 Figurinhas especiais têm destaque visual:
-✨ _Dourado_ — figurinhas cromadas (FWC + #1 de cada seleção)
+🟡 _Dourado_ — figurinhas cromadas (FWC + #1 de cada seleção)
 🔴 _Vermelho_ — figurinhas Coca-Cola (CC1–CC14)
 
 🔁 _3. Repetidas_
@@ -76,6 +77,7 @@ Informe quais figurinhas você tem duplicadas e quantas. Essas ficam disponívei
 - Busque pelo país na barra de pesquisa e toque na figurinha desejada
 - Use _+_ e _−_ diretamente na lista para ajustar quantidades
 - Figurinhas reservadas em pedidos pendentes aparecem com badge _"em troca"_ e o total reservado é exibido em vermelho no topo da lista
+- Ordene a lista por ordem do álbum ou A–Z com o toggle no topo
 
 🤝 _4. Ranking de Trocas_
 O app monta um ranking de compatibilidade entre você e os outros moradores.
@@ -106,13 +108,15 @@ Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais 
 Veja todas as figurinhas que ainda precisa. Use a busca para filtrar por país ou coleção.
 
 📰 _9. Mural do YVY_
-Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — maior investidor, rei das repetidas, figurinheiro negociante, economizador do YVY, traidor do condomínio e o investimento coletivo convertido em pizzas. Fins humorísticos. Sem julgamentos (mentira).
+Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — maior investidor, rei das repetidas, figurinheiro negociante, economizador do YVY, traidor do condomínio e o investimento coletivo convertido em pizzas. Cache de 5 minutos para não sobrecarregar o banco, atualizado ao abrir o app. Fins humorísticos. Sem julgamentos (mentira).
 
 📜 _10. Histórico_
-Revise suas últimas ações no app, organizadas em páginas de 10. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico. Use como checklist!
+Seção de trocas (paginada em 3/página) e seção de atividade geral do app. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico.
 
-- Trocas concluídas mostram figurinhas dadas em *vermelho* e recebidas em *verde* para fácil leitura
+- Trocas concluídas mostram figurinhas dadas em _vermelho_ e recebidas em _verde_ para fácil leitura
 - Toque em _"Abrir assistente de troca"_ em qualquer troca concluída para abrir um guia interativo — marque cada figurinha conforme for separando fisicamente, sem precisar decorar os códigos
+- O pin ⚑ aparece apenas para ações das últimas 12h, evitando alertas desnecessários sobre eventos antigos
+- Múltiplas ações do mesmo tipo no mesmo dia são consolidadas em uma única entrada
 
 ➖➖➖➖➖➖➖➖➖
 
@@ -187,25 +191,25 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 
 ### Telas e rotas
 
-| Rota           | Tela                                          |
-| -------------- | --------------------------------------------- |
-| `/`            | Cadastro / login                              |
-| `/stickers`    | Minhas Figurinhas                             |
-| `/duplicates`  | Repetidas                                     |
-| `/missing`     | Faltantes                                     |
-| `/matches`     | Ranking de Trocas + Pedidos pendentes         |
-| `/verificar`   | Verificar Figurinha (disponibilidade externa) |
-| `/historico`   | Histórico de ações + assistente de troca      |
-| `/ranking`     | Ranking do Álbum                              |
-| `/panelinhas`  | Panelinhas do YVYs                            |
-| `/mural`       | Mural do YVY (insights humorísticos)          |
-| `/admin`       | Aprovações pendentes (visível só para admins) |
-| `/group`       | Redireciona para o grupo do WhatsApp          |
+| Rota          | Tela                                          |
+| ------------- | --------------------------------------------- |
+| `/`           | Cadastro / login                              |
+| `/stickers`   | Minhas Figurinhas                             |
+| `/duplicates` | Repetidas                                     |
+| `/missing`    | Faltantes                                     |
+| `/matches`    | Ranking de Trocas + Pedidos pendentes         |
+| `/verificar`  | Verificar Figurinha (disponibilidade externa) |
+| `/historico`  | Histórico de ações + assistente de troca      |
+| `/ranking`    | Ranking do Álbum                              |
+| `/panelinhas` | Panelinhas do YVYs                            |
+| `/mural`      | Mural do YVY (insights humorísticos)          |
+| `/admin`      | Aprovações pendentes (visível só para admins) |
+| `/group`      | Redireciona para o grupo do WhatsApp          |
 
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (136 testes, 13 arquivos)
+npm test                  # roda todos os testes (136 testes, 13 suítes)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```
@@ -228,14 +232,14 @@ Arquivos em `supabase/migrations/` — rodar após cada novo arquivo:
 supabase db push
 ```
 
-| Migração                 | Descrição                                                |
-| ------------------------ | -------------------------------------------------------- |
-| 001–006                  | Schema inicial (usuários, figurinhas, repetidas, trocas) |
-| 007\_audit\_log          | Tabela `audit_log` para o Histórico de ações             |
-| 008\_admin\_role         | Coluna `is_admin` na tabela `users`                      |
-| 009\_sticker\_count\_rpc | RPC `get_sticker_counts_by_user` (contorna limite PostgREST) |
-| 010\_trade\_rollback     | Colunas `accepted_at` e `rollback_requested_by` em `pending_trades`; status `rolled_back` |
-| 011\_trade\_rollback\_partial | Colunas `rollback_giving_ids` e `rollback_receiving_ids` para desfazimento parcial de trocas |
+| Migração                   | Descrição                                                                                    |
+| -------------------------- | -------------------------------------------------------------------------------------------- |
+| 001–006                    | Schema inicial (usuários, figurinhas, repetidas, trocas)                                     |
+| 007_audit_log              | Tabela `audit_log` para o Histórico de ações                                                 |
+| 008_admin_role             | Coluna `is_admin` na tabela `users`                                                          |
+| 009_sticker_count_rpc      | RPC `get_sticker_counts_by_user` (contorna limite PostgREST)                                 |
+| 010_trade_rollback         | Colunas `accepted_at` e `rollback_requested_by` em `pending_trades`; status `rolled_back`    |
+| 011_trade_rollback_partial | Colunas `rollback_giving_ids` e `rollback_receiving_ids` para desfazimento parcial de trocas |
 
 ### Variáveis de ambiente
 

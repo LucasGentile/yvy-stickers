@@ -51,14 +51,26 @@ function SectionIcon({ label, icon }: { label: string; icon: string }) {
   return <span className="text-sm">{icon}</span>
 }
 
-function stickerColor(id: string, on: boolean, tradeReceived?: Set<string>, staged?: Set<string>): string {
+function stickerColor(
+  id: string,
+  on: boolean,
+  tradeReceived?: Set<string>,
+  staged?: Set<string>
+): string {
   if (!on) return 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
   if (staged?.has(id)) return 'bg-green-400 text-white'
   if (tradeReceived?.has(id)) return 'bg-blue-500 text-white'
   return tradeReceived ? 'bg-green-600 text-white' : 'bg-yvy-dark text-white'
 }
 
-function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFromTrade, staged }: Props) {
+function StickerGrid({
+  selected,
+  onChange,
+  onBulkChange,
+  tradeReceived,
+  newestFromTrade,
+  staged,
+}: Props) {
   function toggle(id: string) {
     const next = new Set(selected)
     if (next.has(id)) {
@@ -85,114 +97,129 @@ function StickerGrid({ selected, onChange, onBulkChange, tradeReceived, newestFr
   return (
     <div className="space-y-5">
       {ALL_STICKER_SECTIONS.map((section) => {
-        const sectionStickers = section.type === 'group'
-          ? section.teams.flatMap((t) => t.stickers)
-          : section.stickers
+        const sectionStickers =
+          section.type === 'group' ? section.teams.flatMap((t) => t.stickers) : section.stickers
         const sectionOwned = sectionStickers.filter((id) => selected.has(id)).length
         const sectionTotal = sectionStickers.length
         const sectionPct = Math.round((sectionOwned / sectionTotal) * 100)
         const sectionComplete = sectionOwned === sectionTotal
         return (
-        <div key={section.label}>
-          {/* Section header */}
-          <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-yvy-border">
-            {'icon' in section ? (
-              <SectionIcon label={section.label} icon={section.icon} />
-            ) : (
-              <span className="text-base">🌍</span>
-            )}
-            {section.label !== 'Figurinhas Coca-Cola' && (
-              <span className="text-xs font-bold text-yvy-dark uppercase tracking-wide">
-                {section.label}
+          <div key={section.label}>
+            {/* Section header */}
+            <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-yvy-border">
+              {'icon' in section ? (
+                <SectionIcon label={section.label} icon={section.icon} />
+              ) : (
+                <span className="text-base">🌍</span>
+              )}
+              {section.label !== 'Figurinhas Coca-Cola' && (
+                <span className="text-xs font-bold text-yvy-dark uppercase tracking-wide">
+                  {section.label}
+                </span>
+              )}
+              <span
+                className={`ml-auto text-[10px] font-semibold ${sectionComplete ? 'text-green-600' : 'text-yvy-muted'}`}
+              >
+                {sectionOwned}/{sectionTotal} · {sectionPct}%
               </span>
-            )}
-            <span className={`ml-auto text-[10px] font-semibold ${sectionComplete ? 'text-green-600' : 'text-yvy-muted'}`}>
-              {sectionOwned}/{sectionTotal} · {sectionPct}%
-            </span>
-          </div>
+            </div>
 
-          {section.type === 'group' ? (
-            <div className="space-y-2">
-              {section.teams.map((team) => {
-                const ownedCount = team.stickers.filter((id) => selected.has(id)).length
-                const total = team.stickers.length
-                const pct = Math.round((ownedCount / total) * 100)
-                const complete = ownedCount === total
-                return (
-                <div key={team.code} id={`country-${team.code}`} className="scroll-mt-20">
-                  {/* Country row header */}
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <img
-                      src={`https://flagcdn.com/w20/${team.flagCode}.png`}
-                      width={20}
-                      height={15}
-                      alt={team.name}
-                      className="rounded-sm shrink-0"
-                    />
-                    <span className="text-xs font-medium text-yvy-text">{team.name}</span>
-                    <span className="text-[10px] text-yvy-muted font-mono">{team.code}</span>
-                    <span className={`text-[10px] font-semibold ${complete ? 'text-green-600' : 'text-yvy-muted'}`}>
-                      {ownedCount}/{total} · {pct}%
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => toggleTeam(team)}
-                      className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded transition-colors shrink-0 ${
-                        complete
-                          ? 'bg-yvy-dark text-white'
-                          : 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
-                      }`}
-                    >
-                      {complete ? 'Desmarcar' : 'Marcar todos'}
-                    </button>
-                  </div>
-                  {/* Sticker chips — show number only (1–20) */}
-                  <div className="flex flex-wrap gap-1">
-                    {team.stickers.map((id, idx) => {
-                      const on = selected.has(id)
-                      const isNew = on && newestFromTrade?.has(id)
-                      return (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => toggle(id)}
-                          className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
+            {section.type === 'group' ? (
+              <div className="space-y-2">
+                {section.teams.map((team) => {
+                  const ownedCount = team.stickers.filter((id) => selected.has(id)).length
+                  const total = team.stickers.length
+                  const pct = Math.round((ownedCount / total) * 100)
+                  const complete = ownedCount === total
+                  return (
+                    <div key={team.code} id={`country-${team.code}`} className="scroll-mt-20">
+                      {/* Country row header */}
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <img
+                          src={`https://flagcdn.com/w20/${team.flagCode}.png`}
+                          width={20}
+                          height={15}
+                          alt={team.name}
+                          className="rounded-sm shrink-0"
+                        />
+                        <span className="text-xs font-medium text-yvy-text">{team.name}</span>
+                        <span className="text-[10px] text-yvy-muted font-mono">{team.code}</span>
+                        <span
+                          className={`text-[10px] font-semibold ${complete ? 'text-green-600' : 'text-yvy-muted'}`}
                         >
-                          {isChromeSticker(id) ? <span className="font-bold text-amber-400">{idx + 1}</span> : idx + 1}
-                          {isNew && (
-                            <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
-                          )}
+                          {ownedCount}/{total} · {pct}%
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleTeam(team)}
+                          className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded transition-colors shrink-0 ${
+                            complete
+                              ? 'bg-yvy-dark text-white'
+                              : 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
+                          }`}
+                        >
+                          {complete ? 'Desmarcar' : 'Marcar todos'}
                         </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )})}
-            </div>
-          ) : (
-            /* Special section — show full sticker code */
-            <div className="flex flex-wrap gap-1">
-              {section.stickers.map((id) => {
-                const on = selected.has(id)
-                const isNew = on && newestFromTrade?.has(id)
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => toggle(id)}
-                    className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
-                  >
-                    {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
-                    {isNew && (
-                      <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )})}
+                      </div>
+                      {/* Sticker chips — show number only (1–20) */}
+                      <div className="flex flex-wrap gap-1">
+                        {team.stickers.map((id, idx) => {
+                          const on = selected.has(id)
+                          const isNew = on && newestFromTrade?.has(id)
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              onClick={() => toggle(id)}
+                              className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
+                            >
+                              {isChromeSticker(id) ? (
+                                <span className="font-bold text-amber-400">{idx + 1}</span>
+                              ) : (
+                                idx + 1
+                              )}
+                              {isNew && (
+                                <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              /* Special section — show full sticker code */
+              <div className="flex flex-wrap gap-1">
+                {section.stickers.map((id) => {
+                  const on = selected.has(id)
+                  const isNew = on && newestFromTrade?.has(id)
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => toggle(id)}
+                      className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
+                    >
+                      {isChromeSticker(id) ? (
+                        <span className="font-bold text-amber-400">{id}</span>
+                      ) : isCocaColaSticker(id) ? (
+                        <span className="font-bold text-red-500">{id}</span>
+                      ) : (
+                        id
+                      )}
+                      {isNew && (
+                        <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

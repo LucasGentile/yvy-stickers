@@ -4,8 +4,16 @@ import { useState, useEffect } from 'react'
 import type { PendingTrade, RecentTrade } from '@/actions/getPendingTrades'
 import { respondToTrade } from '@/actions/respondToTrade'
 import { rollbackTrade } from '@/actions/rollbackTrade'
-import { getBetterMatchExcludingTrade, type BetterMatchResult } from '@/actions/getBetterMatchExcludingTrade'
-import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
+import {
+  getBetterMatchExcludingTrade,
+  type BetterMatchResult,
+} from '@/actions/getBetterMatchExcludingTrade'
+import {
+  isChromeSticker,
+  isCocaColaSticker,
+  sortByAlbumOrder,
+  sortAlphabetically,
+} from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
 
 function StickerList({ ids, label }: { ids: string[]; label: string }) {
@@ -29,7 +37,13 @@ function StickerList({ ids, label }: { ids: string[]; label: string }) {
             key={id}
             className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text"
           >
-            {isChromeSticker(id) ? <span className="font-bold text-amber-500">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
+            {isChromeSticker(id) ? (
+              <span className="font-bold text-amber-500">{id}</span>
+            ) : isCocaColaSticker(id) ? (
+              <span className="font-bold text-red-500">{id}</span>
+            ) : (
+              id
+            )}
           </span>
         ))}
       </div>
@@ -53,7 +67,9 @@ function StickerToggle({
   const sorted = stickerOrder === 'album' ? sortByAlbumOrder(ids) : sortAlphabetically(ids)
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">
+        {label}
+      </p>
       <div className="flex flex-wrap gap-1">
         {sorted.map((id) => {
           const isSelected = selected.has(id)
@@ -72,7 +88,9 @@ function StickerToggle({
                 <span className={isSelected ? 'text-white' : 'text-amber-500'}>{id}</span>
               ) : isCocaColaSticker(id) ? (
                 <span className={isSelected ? 'text-white' : 'text-red-500'}>{id}</span>
-              ) : id}
+              ) : (
+                id
+              )}
             </button>
           )
         })}
@@ -146,7 +164,9 @@ function TradeCard({
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
           <span className="text-amber-500 text-sm shrink-0 mt-px">⚠️</span>
           <p className="text-[11px] text-amber-800 leading-snug">
-            <strong className="capitalize">{betterMatch.name.split(' ')[0]}</strong> tem uma troca mais equilibrada disponível para você no ranking ({betterMatch.mutualScore} figurinhas mútuas). Considere antes de aceitar.
+            <strong className="capitalize">{betterMatch.name.split(' ')[0]}</strong> tem uma troca
+            mais equilibrada disponível para você no ranking ({betterMatch.mutualScore} figurinhas
+            mútuas). Considere antes de aceitar.
           </p>
         </div>
       )}
@@ -165,7 +185,10 @@ function TradeCard({
               Não
             </button>
             <button
-              onClick={() => { setConfirming(null); handle('cancel') }}
+              onClick={() => {
+                setConfirming(null)
+                handle('cancel')
+              }}
               disabled={loading !== null}
               className="text-xs font-semibold text-red-600 underline disabled:opacity-50"
             >
@@ -184,7 +207,9 @@ function TradeCard({
       ) : (
         <div className="space-y-2">
           <p className="text-[11px] text-yvy-muted leading-snug">
-            💡 Antes de aceitar, confirme presencialmente com {trade.otherUserName.split(' ')[0]} se as figurinhas estão disponíveis. As figurinhas desta troca já estão reservadas e não aparecem em novas sugestões de troca.
+            💡 Antes de aceitar, confirme presencialmente com {trade.otherUserName.split(' ')[0]} se
+            as figurinhas estão disponíveis. As figurinhas desta troca já estão reservadas e não
+            aparecem em novas sugestões de troca.
           </p>
 
           {confirming === 'reject' ? (
@@ -198,7 +223,10 @@ function TradeCard({
                 Voltar
               </button>
               <button
-                onClick={() => { setConfirming(null); handle('reject') }}
+                onClick={() => {
+                  setConfirming(null)
+                  handle('reject')
+                }}
                 disabled={loading !== null}
                 className="text-xs font-semibold text-red-600 underline disabled:opacity-50"
               >
@@ -207,7 +235,9 @@ function TradeCard({
             </div>
           ) : confirming === 'accept' ? (
             <div className="space-y-2">
-              <p className="text-xs font-medium text-yvy-dark">Confirma que verificou presencialmente com {trade.otherUserName.split(' ')[0]}?</p>
+              <p className="text-xs font-medium text-yvy-dark">
+                Confirma que verificou presencialmente com {trade.otherUserName.split(' ')[0]}?
+              </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setConfirming(null)}
@@ -217,7 +247,10 @@ function TradeCard({
                   Voltar
                 </button>
                 <button
-                  onClick={() => { setConfirming(null); handle('accept') }}
+                  onClick={() => {
+                    setConfirming(null)
+                    handle('accept')
+                  }}
                   disabled={loading !== null}
                   className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
                 >
@@ -291,7 +324,11 @@ function RecentTradeCard({
     })
   }
 
-  async function handle(action: 'request' | 'confirm' | 'deny', pGiving?: string[], pReceiving?: string[]) {
+  async function handle(
+    action: 'request' | 'confirm' | 'deny',
+    pGiving?: string[],
+    pReceiving?: string[]
+  ) {
     setLoading(action)
     setMsg(null)
     try {
@@ -352,7 +389,10 @@ function RecentTradeCard({
                 <StickerList ids={trade.rollbackMyGivingIds} label="Das figurinhas que você deu" />
               )}
               {trade.rollbackMyReceivingIds && trade.rollbackMyReceivingIds.length > 0 && (
-                <StickerList ids={trade.rollbackMyReceivingIds} label="Das figurinhas que você recebeu" />
+                <StickerList
+                  ids={trade.rollbackMyReceivingIds}
+                  label="Das figurinhas que você recebeu"
+                />
               )}
             </div>
           )}

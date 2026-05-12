@@ -18,9 +18,12 @@ export async function getTradeRollbackInfo(
 ): Promise<TradeRollbackInfo> {
   if (!tradeId || !userId) return { found: false }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: trade } = await (supabaseAdmin as any)
     .from('pending_trades')
-    .select('initiator_id, receiver_id, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids')
+    .select(
+      'initiator_id, receiver_id, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids'
+    )
     .eq('id', tradeId)
     .eq('status', 'accepted')
     .maybeSingle()

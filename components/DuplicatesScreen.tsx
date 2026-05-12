@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
-import { ALL_STICKER_IDS, isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
+import {
+  ALL_STICKER_IDS,
+  isChromeSticker,
+  isCocaColaSticker,
+  sortByAlbumOrder,
+  sortAlphabetically,
+} from '@/lib/stickers'
 import { getDuplicates, DuplicateEntry } from '@/actions/getDuplicates'
 import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
 import { upsertDuplicate } from '@/actions/upsertDuplicate'
@@ -224,114 +230,126 @@ export default function DuplicatesScreen() {
         <div className="mb-3 space-y-0.5">
           {duplicates.length === 0 ? (
             <p className="text-sm font-medium text-yvy-text">Nenhuma repetida cadastrada ainda.</p>
-          ) : (() => {
-            const totalCopies = duplicates.reduce((sum, d) => sum + d.count, 0)
-            const totalReserved = Object.values(reservedCounts).reduce((sum, n) => sum + n, 0)
-            return (
-              <div className="flex items-start justify-between gap-2">
-                <div className="space-y-0.5">
-                  <p className="text-sm font-medium text-yvy-text">
-                    {totalCopies} cópia{totalCopies !== 1 ? 's' : ''} repetida{totalCopies !== 1 ? 's' : ''} · {duplicates.length} figurinha{duplicates.length !== 1 ? 's' : ''} diferente{duplicates.length !== 1 ? 's' : ''}
-                  </p>
-                  {totalReserved > 0 && (
-                    <p className="text-[11px] text-red-500 font-medium">
-                      {totalReserved} cópia{totalReserved !== 1 ? 's' : ''} reservada{totalReserved !== 1 ? 's' : ''} em trocas pendentes
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  {(['album', 'alpha'] as const).map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setListOrder(val)}
-                      className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-colors ${
-                        listOrder === val
-                          ? 'bg-yvy-dark text-white'
-                          : 'bg-yvy-border text-yvy-muted hover:bg-yvy-dark/20'
-                      }`}
-                    >
-                      {val === 'album' ? 'Álbum' : 'A–Z'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )
-          })()}
-        </div>
-
-        {duplicates.length > 0 && (() => {
-          const sortedIds = listOrder === 'album'
-            ? sortByAlbumOrder(duplicates.map((d) => d.stickerId))
-            : sortAlphabetically(duplicates.map((d) => d.stickerId))
-          const dupeMap = Object.fromEntries(duplicates.map((d) => [d.stickerId, d.count]))
-          return (
-          <div className="divide-y divide-yvy-border">
-            {sortedIds.map((stickerId) => {
-              const count = dupeMap[stickerId]
-              if (count === undefined) return null
-              const busy = savingId === stickerId
-              const reserved = reservedCounts[stickerId] ?? 0
-              const available = count - reserved
+          ) : (
+            (() => {
+              const totalCopies = duplicates.reduce((sum, d) => sum + d.count, 0)
+              const totalReserved = Object.values(reservedCounts).reduce((sum, n) => sum + n, 0)
               return (
-                <div key={stickerId} className="flex items-center justify-between py-2.5 gap-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-semibold min-w-0 truncate text-yvy-dark">
-                      {isChromeSticker(stickerId) ? (
-                        <span className="font-bold text-amber-500">{stickerId}</span>
-                      ) : isCocaColaSticker(stickerId) ? (
-                        <span className="font-bold text-red-500">{stickerId}</span>
-                      ) : stickerId}
-                    </span>
-                    {reserved > 0 && (
-                      <span className="shrink-0 text-[10px] font-semibold text-red-500 border border-red-200 bg-red-50 rounded px-1.5 py-0.5 leading-none">
-                        {reserved} em troca
-                      </span>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium text-yvy-text">
+                      {totalCopies} cópia{totalCopies !== 1 ? 's' : ''} repetida
+                      {totalCopies !== 1 ? 's' : ''} · {duplicates.length} figurinha
+                      {duplicates.length !== 1 ? 's' : ''} diferente
+                      {duplicates.length !== 1 ? 's' : ''}
+                    </p>
+                    {totalReserved > 0 && (
+                      <p className="text-[11px] text-red-500 font-medium">
+                        {totalReserved} cópia{totalReserved !== 1 ? 's' : ''} reservada
+                        {totalReserved !== 1 ? 's' : ''} em trocas pendentes
+                      </p>
                     )}
                   </div>
-
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      disabled={busy || count <= reserved}
-                      onClick={() => handleDecrement(stickerId, count)}
-                      className="w-8 h-8 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-base font-bold leading-none flex items-center justify-center disabled:opacity-40 hover:bg-yvy-border transition-colors"
-                    >
-                      −
-                    </button>
-                    <div className="w-12 text-center">
-                      {busy ? (
-                        <span className="text-sm font-semibold text-yvy-dark">·</span>
-                      ) : reserved > 0 ? (
-                        <div className="flex flex-col items-center leading-none">
-                          <span className="text-sm font-bold text-yvy-dark">{available}</span>
-                          <span className="text-[9px] text-red-400 font-medium">+{reserved}</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm font-semibold text-yvy-dark">{count}</span>
-                      )}
-                    </div>
-                    <button
-                      disabled={busy}
-                      onClick={() => handleIncrement(stickerId, count)}
-                      className="w-8 h-8 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-base font-bold leading-none flex items-center justify-center disabled:opacity-40 hover:bg-yvy-border transition-colors"
-                    >
-                      +
-                    </button>
-                    <button
-                      disabled={busy || reserved > 0}
-                      onClick={() => handleRemove(stickerId, count)}
-                      className="w-8 h-8 rounded-lg border border-red-200 text-red-500 text-sm font-bold flex items-center justify-center disabled:opacity-40 hover:bg-red-50 transition-colors ml-1"
-                      title="Remover"
-                    >
-                      ✕
-                    </button>
+                  <div className="flex gap-1 shrink-0">
+                    {(['album', 'alpha'] as const).map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setListOrder(val)}
+                        className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-colors ${
+                          listOrder === val
+                            ? 'bg-yvy-dark text-white'
+                            : 'bg-yvy-border text-yvy-muted hover:bg-yvy-dark/20'
+                        }`}
+                      >
+                        {val === 'album' ? 'Álbum' : 'A–Z'}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )
-            })}
-          </div>
-          )
-        })()}
+            })()
+          )}
+        </div>
+
+        {duplicates.length > 0 &&
+          (() => {
+            const sortedIds =
+              listOrder === 'album'
+                ? sortByAlbumOrder(duplicates.map((d) => d.stickerId))
+                : sortAlphabetically(duplicates.map((d) => d.stickerId))
+            const dupeMap = Object.fromEntries(duplicates.map((d) => [d.stickerId, d.count]))
+            return (
+              <div className="divide-y divide-yvy-border">
+                {sortedIds.map((stickerId) => {
+                  const count = dupeMap[stickerId]
+                  if (count === undefined) return null
+                  const busy = savingId === stickerId
+                  const reserved = reservedCounts[stickerId] ?? 0
+                  const available = count - reserved
+                  return (
+                    <div key={stickerId} className="flex items-center justify-between py-2.5 gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm font-semibold min-w-0 truncate text-yvy-dark">
+                          {isChromeSticker(stickerId) ? (
+                            <span className="font-bold text-amber-500">{stickerId}</span>
+                          ) : isCocaColaSticker(stickerId) ? (
+                            <span className="font-bold text-red-500">{stickerId}</span>
+                          ) : (
+                            stickerId
+                          )}
+                        </span>
+                        {reserved > 0 && (
+                          <span className="shrink-0 text-[10px] font-semibold text-red-500 border border-red-200 bg-red-50 rounded px-1.5 py-0.5 leading-none">
+                            {reserved} em troca
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          disabled={busy || count <= reserved}
+                          onClick={() => handleDecrement(stickerId, count)}
+                          className="w-8 h-8 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-base font-bold leading-none flex items-center justify-center disabled:opacity-40 hover:bg-yvy-border transition-colors"
+                        >
+                          −
+                        </button>
+                        <div className="w-12 text-center">
+                          {busy ? (
+                            <span className="text-sm font-semibold text-yvy-dark">·</span>
+                          ) : reserved > 0 ? (
+                            <div className="flex flex-col items-center leading-none">
+                              <span className="text-sm font-bold text-yvy-dark">{available}</span>
+                              <span className="text-[9px] text-red-400 font-medium">
+                                +{reserved}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-sm font-semibold text-yvy-dark">{count}</span>
+                          )}
+                        </div>
+                        <button
+                          disabled={busy}
+                          onClick={() => handleIncrement(stickerId, count)}
+                          className="w-8 h-8 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-base font-bold leading-none flex items-center justify-center disabled:opacity-40 hover:bg-yvy-border transition-colors"
+                        >
+                          +
+                        </button>
+                        <button
+                          disabled={busy || reserved > 0}
+                          onClick={() => handleRemove(stickerId, count)}
+                          className="w-8 h-8 rounded-lg border border-red-200 text-red-500 text-sm font-bold flex items-center justify-center disabled:opacity-40 hover:bg-red-50 transition-colors ml-1"
+                          title="Remover"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
       </div>
 
       {/* Undo toast */}

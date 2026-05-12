@@ -46,6 +46,7 @@ export async function getPendingTrades(userId: string): Promise<{
           .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
           .eq('status', 'pending')
           .order('created_at', { ascending: false }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (supabaseAdmin as any)
           .from('pending_trades')
           .select(

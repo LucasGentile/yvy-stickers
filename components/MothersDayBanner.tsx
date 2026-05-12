@@ -35,15 +35,16 @@ export default function MothersDayBanner() {
         <div className="space-y-2 text-center">
           <h2 className="text-xl font-bold text-yvy-dark">Feliz Dia das Mães!</h2>
           <p className="text-sm text-yvy-text leading-relaxed">
-            Pra mãe que foi ao mercado buscar{' '}
-            <em>"só aquelas duas que faltam"</em> e voltou com 12 pacotinhos.
+            Pra mãe que foi ao mercado buscar <em>"só aquelas duas que faltam"</em> e voltou com 12
+            pacotinhos.
           </p>
           <p className="text-sm text-yvy-text leading-relaxed">
-            Pra mãe que sabe de cor quantas figurinhas faltam de cada seleção — não porque gosta
-            de futebol, mas porque colou cada uma ao lado do filho.
+            Pra mãe que sabe de cor quantas figurinhas faltam de cada seleção — não porque gosta de
+            futebol, mas porque colou cada uma ao lado do filho.
           </p>
           <p className="text-sm text-yvy-text leading-relaxed">
-            Pra mãe que tem mais figurinha repetida que o filho — e ainda não entende como chegou nisso.
+            Pra mãe que tem mais figurinha repetida que o filho — e ainda não entende como chegou
+            nisso.
           </p>
           <p className="text-sm font-semibold text-yvy-dark pt-1">
             Vocês merecem o álbum completo. ❤️

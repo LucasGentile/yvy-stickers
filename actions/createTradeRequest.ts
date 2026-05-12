@@ -42,8 +42,7 @@ export async function createTradeRequest(
     // Count how many copies of each sticker are already committed to pending trades
     const reservedCounts: Record<string, number> = {}
     for (const trade of existingTrades ?? []) {
-      const myGiving =
-        trade.initiator_id === initiatorId ? trade.giving_ids : trade.receiving_ids
+      const myGiving = trade.initiator_id === initiatorId ? trade.giving_ids : trade.receiving_ids
       for (const id of myGiving ?? []) reservedCounts[id] = (reservedCounts[id] ?? 0) + 1
     }
 
@@ -80,8 +79,7 @@ export async function createTradeRequest(
 
     const receiverReserved: Record<string, number> = {}
     for (const trade of receiverTrades ?? []) {
-      const theirGiving =
-        trade.initiator_id === receiverId ? trade.giving_ids : trade.receiving_ids
+      const theirGiving = trade.initiator_id === receiverId ? trade.giving_ids : trade.receiving_ids
       for (const id of theirGiving ?? []) receiverReserved[id] = (receiverReserved[id] ?? 0) + 1
     }
 

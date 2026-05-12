@@ -24,12 +24,26 @@ function StickerChip({
           : 'bg-yvy-bg text-yvy-text border-yvy-border hover:border-yvy-dark'
       }`}
     >
-      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
+      {isChromeSticker(id) ? (
+        <span className="font-bold text-amber-400">{id}</span>
+      ) : isCocaColaSticker(id) ? (
+        <span className="font-bold text-red-500">{id}</span>
+      ) : (
+        id
+      )}
     </button>
   )
 }
 
-function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; onClose: () => void; onTradeCreated?: () => void }) {
+function DetailModal({
+  match,
+  onClose,
+  onTradeCreated,
+}: {
+  match: MatchResult
+  onClose: () => void
+  onTradeCreated?: () => void
+}) {
   const [receiving, setReceiving] = useState<Set<string>>(new Set())
   const [giving, setGiving] = useState<Set<string>>(new Set())
   const [confirming, setConfirming] = useState(false)
@@ -113,7 +127,13 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                       key={id}
                       className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white"
                     >
-                      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
+                      {isChromeSticker(id) ? (
+                        <span className="font-bold text-amber-400">{id}</span>
+                      ) : isCocaColaSticker(id) ? (
+                        <span className="font-bold text-red-500">{id}</span>
+                      ) : (
+                        id
+                      )}
                     </span>
                   ))}
                 </div>
@@ -131,7 +151,13 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
                       key={id}
                       className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text"
                     >
-                      {isChromeSticker(id) ? <span className="font-bold text-amber-400">{id}</span> : isCocaColaSticker(id) ? <span className="font-bold text-red-500">{id}</span> : id}
+                      {isChromeSticker(id) ? (
+                        <span className="font-bold text-amber-400">{id}</span>
+                      ) : isCocaColaSticker(id) ? (
+                        <span className="font-bold text-red-500">{id}</span>
+                      ) : (
+                        id
+                      )}
                     </span>
                   ))}
                 </div>
@@ -279,7 +305,15 @@ function DetailModal({ match, onClose, onTradeCreated }: { match: MatchResult; o
   )
 }
 
-export default function MatchCard({ match, rank, onTradeCreated }: { match: MatchResult; rank: number; onTradeCreated?: () => void }) {
+export default function MatchCard({
+  match,
+  rank,
+  onTradeCreated,
+}: {
+  match: MatchResult
+  rank: number
+  onTradeCreated?: () => void
+}) {
   const isMutual = match.mutualScore > 0
   const [showDetail, setShowDetail] = useState(false)
 
@@ -423,7 +457,13 @@ export default function MatchCard({ match, rank, onTradeCreated }: { match: Matc
         </div>
       </div>
 
-      {showDetail && <DetailModal match={match} onClose={() => setShowDetail(false)} onTradeCreated={onTradeCreated} />}
+      {showDetail && (
+        <DetailModal
+          match={match}
+          onClose={() => setShowDetail(false)}
+          onTradeCreated={onTradeCreated}
+        />
+      )}
     </>
   )
 }

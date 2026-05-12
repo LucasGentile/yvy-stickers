@@ -58,6 +58,7 @@ describe('getAuditLog', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockResolvedValue({ data: null, error: null }),
     })
@@ -76,14 +77,15 @@ describe('getAuditLog', () => {
       },
       {
         id: 'b',
-        action: 'trade_sent',
-        metadata: { partnerName: 'Ana' },
+        action: 'duplicate_updated',
+        metadata: { stickerId: 'BRA1', count: 2 },
         created_at: '2026-05-07T10:00:00Z',
       },
     ]
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockResolvedValue({ data: entries, error: null }),
     })
@@ -99,6 +101,7 @@ describe('getAuditLog', () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: eqMock,
+      not: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockResolvedValue({ data: [], error: null }),
     })
@@ -107,16 +110,17 @@ describe('getAuditLog', () => {
     expect(eqMock).toHaveBeenCalledWith('user_id', 'user-xyz')
   })
 
-  it('limits to 50 entries', async () => {
+  it('limits to 100 entries', async () => {
     const limitMock = vi.fn().mockResolvedValue({ data: [], error: null })
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: limitMock,
     })
 
     await getAuditLog('user-1')
-    expect(limitMock).toHaveBeenCalledWith(50)
+    expect(limitMock).toHaveBeenCalledWith(100)
   })
 })

@@ -39,10 +39,8 @@ function makeSelectChain(result: { data: unknown; error: unknown }) {
     maybeSingle: vi.fn().mockResolvedValue(result),
     order: vi.fn().mockResolvedValue(result),
     // Thenable: allows `await chain.select().eq()` without a terminal method
-    then: (
-      resolve: (v: unknown) => unknown,
-      reject?: (e: unknown) => unknown
-    ): Promise<unknown> => Promise.resolve(result).then(resolve, reject),
+    then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown): Promise<unknown> =>
+      Promise.resolve(result).then(resolve, reject),
   }
   return chain
 }
@@ -96,7 +94,13 @@ describe('createTradeRequest', () => {
       if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
       if (callCount === 4) return makeSelectChain({ data: [], error: null }) // receiver: user_duplicates
       if (callCount === 5) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null }) // fire-and-forget name lookup
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Iniciador' },
+          { id: 'user-b', name: 'Receptor' },
+        ],
+        error: null,
+      }) // fire-and-forget name lookup
     })
 
     const result = await createTradeRequest('user-a', 'user-b', ['MEX1'], ['BRA1'])
@@ -125,7 +129,13 @@ describe('createTradeRequest', () => {
       if (callCount === 1) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
       if (callCount === 2) return makeSelectChain({ data: [], error: null }) // receiver: user_duplicates
       if (callCount === 3) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Iniciador' },
+          { id: 'user-b', name: 'Receptor' },
+        ],
+        error: null,
+      })
     })
 
     const result = await createTradeRequest('user-a', 'user-b', [], ['BRA1'])
@@ -199,7 +209,13 @@ describe('createTradeRequest', () => {
           error: null,
         }) // receiver: user_duplicates — BRA1 count=2, 1 free copy
       if (callCount === 3) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'A' }, { id: 'user-b', name: 'B' }], error: null })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'A' },
+          { id: 'user-b', name: 'B' },
+        ],
+        error: null,
+      })
     })
 
     const result = await createTradeRequest('user-a', 'user-b', [], ['BRA1'])
@@ -221,7 +237,13 @@ describe('createTradeRequest', () => {
           error: null,
         }) // user_duplicates: MEX1 has count=2 → 1 free copy remaining
       if (callCount === 3) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'A' }, { id: 'user-b', name: 'B' }], error: null })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'A' },
+          { id: 'user-b', name: 'B' },
+        ],
+        error: null,
+      })
     })
 
     const result = await createTradeRequest('user-a', 'user-b', ['MEX1'], [])
@@ -463,7 +485,13 @@ describe('respondToTrade', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null }) // read trade
       if (callCount === 2) return makeAtomicUpdateChain({ data: { id: 'trade-1' }, error: null }) // atomic accept
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null }) // fire-and-forget name lookup
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Iniciador' },
+          { id: 'user-b', name: 'Receptor' },
+        ],
+        error: null,
+      }) // fire-and-forget name lookup
     })
     mockEffectuate.mockResolvedValue({ success: true })
 
@@ -508,7 +536,13 @@ describe('respondToTrade', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
       if (callCount === 2) return makeAtomicUpdateChain({ data: { id: 'trade-1' }, error: null })
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Iniciador' },
+          { id: 'user-b', name: 'Receptor' },
+        ],
+        error: null,
+      })
     })
 
     const result = await respondToTrade('trade-1', 'user-b', 'reject')
@@ -530,7 +564,13 @@ describe('respondToTrade', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
       if (callCount === 2) return makeAtomicUpdateChain({ data: { id: 'trade-1' }, error: null })
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'Iniciador' }, { id: 'user-b', name: 'Receptor' }], error: null })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Iniciador' },
+          { id: 'user-b', name: 'Receptor' },
+        ],
+        error: null,
+      })
     })
 
     const result = await respondToTrade('trade-1', 'user-a', 'cancel')

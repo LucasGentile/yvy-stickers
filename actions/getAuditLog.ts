@@ -14,7 +14,11 @@ export async function getAuditLog(userId: string): Promise<AuditEntry[]> {
     .from('audit_log')
     .select('id, action, metadata, created_at')
     .eq('user_id', userId)
-    .not('action', 'in', '(trade_accepted,trade_sent,trade_rejected,trade_cancelled,trade_rolled_back)')
+    .not(
+      'action',
+      'in',
+      '(trade_accepted,trade_sent,trade_rejected,trade_cancelled,trade_rolled_back)'
+    )
     .order('created_at', { ascending: false })
     .limit(100)
 

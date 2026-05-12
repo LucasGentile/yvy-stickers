@@ -32,10 +32,7 @@ export async function getPanelinhas(): Promise<Panelinha[]> {
 
   // Fetch all involved user names in one query
   const allUserIds = [...new Set(pairs.flatMap((p) => [p.user1, p.user2]))]
-  const { data: users } = await supabaseAdmin
-    .from('users')
-    .select('id, name')
-    .in('id', allUserIds)
+  const { data: users } = await supabaseAdmin.from('users').select('id, name').in('id', allUserIds)
 
   const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
 
