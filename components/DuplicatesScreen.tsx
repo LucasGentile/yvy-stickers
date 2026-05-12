@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
-import { ALL_STICKER_IDS, isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
+import { ALL_STICKER_IDS, isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { getDuplicates, DuplicateEntry } from '@/actions/getDuplicates'
 import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
 import { upsertDuplicate } from '@/actions/upsertDuplicate'
@@ -21,6 +21,7 @@ export default function DuplicatesScreen() {
   const [saving, setSaving] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
+  const [listOrder, setListOrder] = useState<'album' | 'alpha'>('album')
   const [toast, setToast] = useState<{ message: string; onUndo: () => Promise<void> } | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -227,23 +228,48 @@ export default function DuplicatesScreen() {
             const totalCopies = duplicates.reduce((sum, d) => sum + d.count, 0)
             const totalReserved = Object.values(reservedCounts).reduce((sum, n) => sum + n, 0)
             return (
-              <>
-                <p className="text-sm font-medium text-yvy-text">
-                  {totalCopies} cópia{totalCopies !== 1 ? 's' : ''} repetida{totalCopies !== 1 ? 's' : ''} · {duplicates.length} figurinha{duplicates.length !== 1 ? 's' : ''} diferente{duplicates.length !== 1 ? 's' : ''}
-                </p>
-                {totalReserved > 0 && (
-                  <p className="text-[11px] text-red-500 font-medium">
-                    {totalReserved} cópia{totalReserved !== 1 ? 's' : ''} reservada{totalReserved !== 1 ? 's' : ''} em trocas pendentes
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-medium text-yvy-text">
+                    {totalCopies} cópia{totalCopies !== 1 ? 's' : ''} repetida{totalCopies !== 1 ? 's' : ''} · {duplicates.length} figurinha{duplicates.length !== 1 ? 's' : ''} diferente{duplicates.length !== 1 ? 's' : ''}
                   </p>
-                )}
-              </>
+                  {totalReserved > 0 && (
+                    <p className="text-[11px] text-red-500 font-medium">
+                      {totalReserved} cópia{totalReserved !== 1 ? 's' : ''} reservada{totalReserved !== 1 ? 's' : ''} em trocas pendentes
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  {(['album', 'alpha'] as const).map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setListOrder(val)}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-colors ${
+                        listOrder === val
+                          ? 'bg-yvy-dark text-white'
+                          : 'bg-yvy-border text-yvy-muted hover:bg-yvy-dark/20'
+                      }`}
+                    >
+                      {val === 'album' ? 'Álbum' : 'A–Z'}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )
           })()}
         </div>
 
-        {duplicates.length > 0 && (
+        {duplicates.length > 0 && (() => {
+          const sortedIds = listOrder === 'album'
+            ? sortByAlbumOrder(duplicates.map((d) => d.stickerId))
+            : sortAlphabetically(duplicates.map((d) => d.stickerId))
+          const dupeMap = Object.fromEntries(duplicates.map((d) => [d.stickerId, d.count]))
+          return (
           <div className="divide-y divide-yvy-border">
-            {duplicates.map(({ stickerId, count }) => {
+            {sortedIds.map((stickerId) => {
+              const count = dupeMap[stickerId]
+              if (count === undefined) return null
               const busy = savingId === stickerId
               const reserved = reservedCounts[stickerId] ?? 0
               const available = count - reserved
@@ -304,7 +330,8 @@ export default function DuplicatesScreen() {
               )
             })}
           </div>
-        )}
+          )
+        })()}
       </div>
 
       {/* Undo toast */}
