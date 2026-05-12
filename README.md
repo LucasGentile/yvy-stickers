@@ -79,6 +79,16 @@ Informe quais figurinhas você tem duplicadas e quantas. Essas ficam disponívei
 - Figurinhas reservadas em pedidos pendentes aparecem com badge _"em troca"_ e o total reservado é exibido em vermelho no topo da lista
 - Ordene a lista por ordem do álbum ou A–Z com o toggle no topo
 
+_Exportar lista_
+Toque em _"Exportar"_ ao lado dos botões de ordenação para compartilhar suas repetidas:
+
+- _Copiar_ — copia para o clipboard (pronto para colar no WhatsApp)
+- _Baixar .txt_ — salva um arquivo com uma figurinha por linha (`BRA1 x2`)
+- Opção de incluir ou não as figurinhas reservadas; quando incluídas, aparece a quantidade livre e a reservada separadas
+
+_O que preciso desta lista?_
+Recebeu uma lista de figurinhas de alguém fora do app? Cole os códigos ou envie um arquivo .txt para ver na hora quais você precisa e quais já tem. Mesmo formato do importador: códigos separados por `;` ou por linha, `00` vira `FWC00` automaticamente.
+
 🤝 _4. Ranking de Trocas_
 O app monta um ranking de compatibilidade entre você e os outros moradores.
 
@@ -102,13 +112,15 @@ Consulte rapidamente se uma figurinha está disponível para troca fora do app.
 Veja quem está mais perto de completar o álbum — moradores ordenados por número de figurinhas, com medalhas para o top 3.
 
 🏆 _7. Panelinhas do YVYs_
-Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais inseparáveis — e mais suspeitos de panelinha!
+Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais inseparáveis — e mais suspeitos de panelinha! Atualiza automaticamente ao abrir o app.
 
 📋 _8. Faltantes_
 Veja todas as figurinhas que ainda precisa. Use a busca para filtrar por país ou coleção.
 
 📰 _9. Mural do YVY_
 Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — maior investidor, rei das repetidas, figurinheiro negociante, economizador do YVY, traidor do condomínio e o investimento coletivo convertido em pizzas. Cache de 5 minutos para não sobrecarregar o banco, atualizado ao abrir o app. Fins humorísticos. Sem julgamentos (mentira).
+
+O insight _Traidor do Condomínio_ conta tanto consultas individuais (Verificar Figurinha) quanto verificações de listas externas (O que preciso desta lista?).
 
 📜 _10. Histórico_
 Seção de trocas (paginada em 3/página) e seção de atividade geral do app. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico.
