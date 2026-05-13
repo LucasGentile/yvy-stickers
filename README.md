@@ -95,6 +95,7 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Quem aparece no topo 🏆 é a melhor troca para os _dois lados ao mesmo tempo_
 - Toque em _"Realizar Troca"_ para enviar um pedido formal
 - O pedido fica pendente até que o outro morador aceite
+- Ao aceitar, é possível selecionar apenas um subconjunto das figurinhas — útil quando nem todas estão disponíveis no momento; figurinhas indisponíveis aparecem riscadas automaticamente
 - Após aceite, a troca pode ser desfeita a qualquer momento — basta solicitar e o outro morador confirmar
 - Desfazimento parcial disponível: escolha quais figurinhas específicas reverter, não precisa ser tudo
 - Um _ponto vermelho_ no menu indica pedidos esperando sua resposta
@@ -221,7 +222,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (136 testes, 13 suítes)
+npm test                  # roda todos os testes (137 testes, 13 suítes)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```
