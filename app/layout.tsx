@@ -3,6 +3,7 @@ import { Geist, Josefin_Sans, Bebas_Neue } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/Header'
 import MothersDayBanner from '@/components/MothersDayBanner'
+import PrankBanner from '@/components/PrankBanner'
 import Providers from './providers'
 
 const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <Header />
           <MothersDayBanner />
+          <PrankBanner />
           <main className="flex-1 pt-14">{children}</main>
         </Providers>
       </body>
