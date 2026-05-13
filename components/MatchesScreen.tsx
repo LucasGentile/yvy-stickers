@@ -59,14 +59,14 @@ export default function MatchesScreen() {
         /* pending trades failing silently — matches still show */
       })
 
-    // Refresh pending trades when the tab regains focus — cheap and keeps trade
-    // status up to date without polling (user may have acted on another device).
+    // Refresh full match list when the tab regains focus — another user may have
+    // completed a trade while this user was away, making some stickers stale.
     const handleVisibility = () => {
-      if (!document.hidden) loadPending(uid)
+      if (!document.hidden) refreshMatches(uid)
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
-  }, [])
+  }, [refreshMatches])
 
   if (loading) {
     return (
