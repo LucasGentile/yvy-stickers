@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 
 export default function PrankBanner() {
   const [step, setStep] = useState<0 | 1 | 2>(0)
@@ -77,12 +76,11 @@ export default function PrankBanner() {
           </div>
 
           <div className="rounded-2xl overflow-hidden">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/prank-faixa.jpg"
               alt="Faixa da torcida: TIME DE FESTEIROS E VAGABUNDOS"
-              width={400}
-              height={200}
-              className="w-full h-auto object-cover"
+              className="w-full h-auto"
             />
           </div>
 
