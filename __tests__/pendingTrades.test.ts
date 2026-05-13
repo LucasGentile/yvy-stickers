@@ -90,9 +90,11 @@ describe('createTradeRequest', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: [], error: null }) // initiator: pending_trades
-      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // initiator: user_duplicates
+      if (callCount === 2)
+        return makeSelectChain({ data: [{ sticker_id: 'MEX1', count: 1 }], error: null }) // initiator: user_duplicates
       if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
-      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // receiver: user_duplicates
+      if (callCount === 4)
+        return makeSelectChain({ data: [{ sticker_id: 'BRA1', count: 1 }], error: null }) // receiver: user_duplicates
       if (callCount === 5) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
       return makeSelectChain({
         data: [
@@ -127,7 +129,8 @@ describe('createTradeRequest', () => {
       callCount++
       // No givingIds → skip initiator check; receiver check runs first
       if (callCount === 1) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
-      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // receiver: user_duplicates
+      if (callCount === 2)
+        return makeSelectChain({ data: [{ sticker_id: 'BRA1', count: 1 }], error: null }) // receiver: user_duplicates
       if (callCount === 3) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
       return makeSelectChain({
         data: [

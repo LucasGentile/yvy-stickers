@@ -49,10 +49,10 @@ export async function createTradeRequest(
     const dupeCount: Record<string, number> = {}
     for (const d of dupes ?? []) dupeCount[d.sticker_id] = d.count
 
-    // Block only if sticker is reserved AND has no free copies left
+    // Block if no free copies left (either fully reserved or already traded away)
     const conflicts = givingIds.filter((id) => {
-      const reserved = reservedCounts[id] ?? 0
-      return reserved > 0 && reserved >= (dupeCount[id] ?? 0)
+      const available = (dupeCount[id] ?? 0) - (reservedCounts[id] ?? 0)
+      return available <= 0
     })
     if (conflicts.length > 0) {
       return {
@@ -87,8 +87,8 @@ export async function createTradeRequest(
     for (const d of receiverDupes ?? []) receiverDupeCount[d.sticker_id] = d.count
 
     const receiverConflicts = receivingIds.filter((id) => {
-      const reserved = receiverReserved[id] ?? 0
-      return reserved > 0 && reserved >= (receiverDupeCount[id] ?? 0)
+      const available = (receiverDupeCount[id] ?? 0) - (receiverReserved[id] ?? 0)
+      return available <= 0
     })
     if (receiverConflicts.length > 0) {
       return {
