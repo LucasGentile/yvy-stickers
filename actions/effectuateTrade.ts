@@ -51,18 +51,68 @@ export async function effectuateTrade(
     }
   }
 
+  async function incrementDuplicate(userId: string, sid: string) {
+    const { data } = await supabaseAdmin
+      .from('user_duplicates')
+      .select('count')
+      .eq('user_id', userId)
+      .eq('sticker_id', sid)
+      .maybeSingle()
+    if (data) {
+      await supabaseAdmin
+        .from('user_duplicates')
+        .update({ count: data.count + 1 })
+        .eq('user_id', userId)
+        .eq('sticker_id', sid)
+    } else {
+      await supabaseAdmin
+        .from('user_duplicates')
+        .insert({ user_id: userId, sticker_id: sid, count: 1 })
+    }
+  }
+
   async function addToCollection(userId: string, mode: string, ids: string[]) {
     if (ids.length === 0) return
+
+    // Check which received stickers the user already owns so we can route
+    // them to user_duplicates instead of silently no-op-ing the upsert.
+    const { data: existing } = await supabaseAdmin
+      .from('user_stickers')
+      .select('sticker_id')
+      .eq('user_id', userId)
+      .in('sticker_id', ids)
+    const existingSet = new Set((existing ?? []).map((r) => r.sticker_id))
+
     if (mode === 'have') {
-      await supabaseAdmin.from('user_stickers').upsert(
-        ids.map((sid) => ({ user_id: userId, sticker_id: sid })),
-        {
-          onConflict: 'user_id,sticker_id',
-        }
-      )
+      const newIds = ids.filter((id) => !existingSet.has(id))
+      const alreadyOwnedIds = ids.filter((id) => existingSet.has(id))
+
+      if (newIds.length > 0) {
+        await supabaseAdmin.from('user_stickers').upsert(
+          newIds.map((sid) => ({ user_id: userId, sticker_id: sid })),
+          { onConflict: 'user_id,sticker_id' }
+        )
+      }
+      for (const sid of alreadyOwnedIds) {
+        await incrementDuplicate(userId, sid)
+      }
     } else {
-      // "need" mode: user marks what they need → remove received stickers (no longer needed)
-      await supabaseAdmin.from('user_stickers').delete().eq('user_id', userId).in('sticker_id', ids)
+      // "need" mode: user_stickers contains stickers they still need (don't have)
+      // Received stickers that are still in the need list → remove (now obtained)
+      // Received stickers already absent from need list → already owned → duplicate
+      const stillNeededIds = ids.filter((id) => existingSet.has(id))
+      const alreadyOwnedIds = ids.filter((id) => !existingSet.has(id))
+
+      if (stillNeededIds.length > 0) {
+        await supabaseAdmin
+          .from('user_stickers')
+          .delete()
+          .eq('user_id', userId)
+          .in('sticker_id', stillNeededIds)
+      }
+      for (const sid of alreadyOwnedIds) {
+        await incrementDuplicate(userId, sid)
+      }
     }
   }
 

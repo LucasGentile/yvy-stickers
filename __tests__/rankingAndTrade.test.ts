@@ -194,11 +194,87 @@ describe('effectuateTrade', () => {
     // Calls:
     // 0. users query (in)
     // 1. decrementDupes u1 giving MEX1 — select+maybeSingle
-    // 2. update count (count=2 → 1) — needs chained .eq().eq()
-    // 3. addToCollection u1 receiving BRA5 — upsert
-    // 4. decrementDupes u2 giving BRA5 — select+maybeSingle (count=1 → delete)
-    // 5. delete — needs chained .eq().eq()
-    // 6. addToCollection u2 receiving MEX1 — upsert
+    // 2. update count (count=2 → 1)
+    // 3. addToCollection u1 — select user_stickers (BRA5 not owned → returns [])
+    // 4. addToCollection u1 — upsert BRA5 into user_stickers
+    // 5. decrementDupes u2 giving BRA5 — select+maybeSingle (count=1 → delete)
+    // 6. delete
+    // 7. addToCollection u2 — select user_stickers (MEX1 not owned → returns [])
+    // 8. addToCollection u2 — upsert MEX1 into user_stickers
+    let callIndex = 0
+
+    function makeMultiEqChain(result: unknown) {
+      const chain = {
+        delete: vi.fn(),
+        update: vi.fn(),
+        eq: vi.fn(),
+        then: (
+          resolve: (v: unknown) => unknown,
+          reject?: (e: unknown) => unknown
+        ): Promise<unknown> => Promise.resolve(result).then(resolve, reject),
+      }
+      chain.delete.mockReturnValue(chain)
+      chain.update.mockReturnValue(chain)
+      chain.eq.mockReturnValue(chain)
+      return chain
+    }
+
+    function makeSelectEqInChain(data: unknown[]) {
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockResolvedValue({ data }),
+      }
+    }
+
+    mockAdminFrom.mockImplementation(() => {
+      const call = callIndex++
+
+      if (call === 0) {
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({
+            data: [
+              { id: 'u1', input_mode: 'have' },
+              { id: 'u2', input_mode: 'have' },
+            ],
+          }),
+        }
+      }
+      if (call === 1) {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({ data: { count: 2 } }),
+        }
+      }
+      if (call === 2) return makeMultiEqChain({ error: null }) // update chain
+      if (call === 3) return makeSelectEqInChain([]) // user_stickers: BRA5 not owned
+      if (call === 4) return { upsert: vi.fn().mockResolvedValue({ error: null }) } // upsert BRA5
+      if (call === 5) {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({ data: { count: 1 } }),
+        }
+      }
+      if (call === 6) return makeMultiEqChain({ error: null }) // delete chain
+      if (call === 7) return makeSelectEqInChain([]) // user_stickers: MEX1 not owned
+      return { upsert: vi.fn().mockResolvedValue({ error: null }) } // upsert MEX1
+    })
+
+    const result = await effectuateTrade('u1', 'u2', ['MEX1'], ['BRA5'])
+    expect(result.success).toBe(true)
+  })
+
+  it('routes received sticker to user_duplicates when receiver already owns it', async () => {
+    // u1 receives BRA5 but already has it in user_stickers → should go to user_duplicates
+    // Calls:
+    // 0. users query
+    // 1. addToCollection u1 — select user_stickers (BRA5 already owned → returns [BRA5])
+    // 2. incrementDuplicate u1 — select user_duplicates for BRA5 (count=1 → update to 2)
+    // 3. incrementDuplicate u1 — update user_duplicates count
+    // 4. decrementDupes u2 giving BRA5 — not found (data=null)
     let callIndex = 0
 
     function makeMultiEqChain(result: unknown) {
@@ -232,26 +308,34 @@ describe('effectuateTrade', () => {
         }
       }
       if (call === 1) {
+        // addToCollection: user_stickers check — BRA5 already owned
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          maybeSingle: vi.fn().mockResolvedValue({ data: { count: 2 } }),
+          in: vi.fn().mockResolvedValue({ data: [{ sticker_id: 'BRA5' }] }),
         }
       }
-      if (call === 2) return makeMultiEqChain({ error: null }) // update chain
-      if (call === 3) return { upsert: vi.fn().mockResolvedValue({ error: null }) }
-      if (call === 4) {
+      if (call === 2) {
+        // incrementDuplicate: select user_duplicates — BRA5 exists with count=1
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
           maybeSingle: vi.fn().mockResolvedValue({ data: { count: 1 } }),
         }
       }
-      if (call === 5) return makeMultiEqChain({ error: null }) // delete chain
-      return { upsert: vi.fn().mockResolvedValue({ error: null }) }
+      if (call === 3) return makeMultiEqChain({ error: null }) // update count 1→2
+      if (call === 4) {
+        // decrementDupes u2 — not found
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          maybeSingle: vi.fn().mockResolvedValue({ data: null }),
+        }
+      }
+      return makeMultiEqChain({ error: null })
     })
 
-    const result = await effectuateTrade('u1', 'u2', ['MEX1'], ['BRA5'])
+    const result = await effectuateTrade('u1', 'u2', [], ['BRA5'])
     expect(result.success).toBe(true)
   })
 
@@ -261,8 +345,9 @@ describe('effectuateTrade', () => {
     // u2: gives BRA5 → decrementDupes; receives nothing (givingIds=[])
     // Calls:
     // 0. users query
-    // 1. addToCollection u1 receiving BRA5 (need → .delete().eq().in())
-    // 2. decrementDupes u2 giving BRA5 — select+maybeSingle (data=null → skip)
+    // 1. addToCollection u1 — select user_stickers (BRA5 still in need list → returns [BRA5])
+    // 2. addToCollection u1 — delete BRA5 from user_stickers (no longer needed)
+    // 3. decrementDupes u2 giving BRA5 — select+maybeSingle (data=null → skip)
     // (no call for addToCollection u2 since receivingIds=[] → length===0 → early return)
     let callIndex = 0
     const deleteMock = vi.fn()
@@ -293,11 +378,20 @@ describe('effectuateTrade', () => {
       }
 
       if (call === 1) {
-        // addToCollection u1 (need mode → delete)
-        return makeNeedDeleteChain()
+        // addToCollection u1: select user_stickers — BRA5 is in need list
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({ data: [{ sticker_id: 'BRA5' }] }),
+        }
       }
 
       if (call === 2) {
+        // addToCollection u1: delete BRA5 from user_stickers (need mode)
+        return makeNeedDeleteChain()
+      }
+
+      if (call === 3) {
         // decrementDupes u2 giving BRA5 — not found, skips
         return {
           select: vi.fn().mockReturnThis(),
