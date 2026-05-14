@@ -15,18 +15,6 @@ export async function findAdvancedTrade(
 ): Promise<FindAdvancedTradeResult> {
   if (!userId) return { found: false, error: 'Usuário inválido.' }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: existing } = await (supabaseAdmin as any)
-    .from('advanced_trades')
-    .select('id')
-    .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
-    .eq('status', 'pending')
-    .limit(1)
-
-  if (existing && existing.length > 0) {
-    return { found: false, error: 'Você já tem uma troca avançada pendente.' }
-  }
-
   const proposal = selectedProposal ?? await findBestAdvancedTrade(userId)
   if (!proposal) return { found: false }
 

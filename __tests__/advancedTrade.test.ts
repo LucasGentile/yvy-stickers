@@ -97,22 +97,8 @@ describe('findAdvancedTrade', () => {
     expect(result.found).toBe(false)
   })
 
-  it('returns error when user already has a pending advanced trade', async () => {
-    mockFrom.mockReturnValue(makeSelectChain({ data: [{ id: 'existing-trade' }] }))
-    const result = await findAdvancedTrade('user-a')
-    expect(result.found).toBe(false)
-    if (!result.found) expect(result.error).toMatch(/pendente/i)
-  })
-
   it('returns found: false when no cycle found', async () => {
-    let callCount = 0
-    mockFrom.mockImplementation(() => {
-      callCount++
-      if (callCount === 1) return makeSelectChain({ data: [] })
-      return makeSelectChain({ data: [] })
-    })
     mockFindBest.mockResolvedValue(null)
-
     const result = await findAdvancedTrade('user-a')
     expect(result.found).toBe(false)
   })
@@ -121,8 +107,7 @@ describe('findAdvancedTrade', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1) return makeSelectChain({ data: [] }) // no existing
-      if (callCount === 2) return makeInsertChain({ data: { id: 'new-trade-id' }, error: null }) // insert
+      if (callCount === 1) return makeInsertChain({ data: { id: 'new-trade-id' }, error: null }) // insert
       return makeSelectChain({ data: [{ id: 'user-a', name: 'Ana' }, { id: 'user-b', name: 'Bob' }, { id: 'user-c', name: 'Carol' }] }) // names lookup
     })
     mockFindBest.mockResolvedValue({
