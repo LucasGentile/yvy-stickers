@@ -309,6 +309,7 @@ export default function AdvancedTradeScreen() {
   const [userId, setUserId] = useState<string | null>(null)
   const [trades, setTrades] = useState<AdvancedTradeView[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [searching, setSearching] = useState(false)
   const [confirmingIdx, setConfirmingIdx] = useState<number | null>(null)
   const [previews, setPreviews] = useState<AdvancedTradePreview[]>([])
@@ -339,6 +340,24 @@ export default function AdvancedTradeScreen() {
     setUserId(uid)
     loadTrades(uid).finally(() => setLoading(false))
   }, [loadTrades])
+
+  async function handleRefresh() {
+    if (!userId) return
+    setRefreshing(true)
+    setSearchMsg(null)
+    try {
+      await loadTrades(userId)
+      const fresh = await previewAdvancedTrade(userId)
+      if (fresh.found) {
+        setPreviews(fresh.previews)
+      } else {
+        setPreviews([])
+      }
+    } catch { /* silently ignore */ }
+    finally {
+      setRefreshing(false)
+    }
+  }
 
   async function handleSearch() {
     if (!userId) return
@@ -418,12 +437,33 @@ export default function AdvancedTradeScreen() {
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-20 pb-8 space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-yvy-dark">Troca Avançada</h2>
-        <p className="text-xs text-yvy-muted mt-1">
-          Troca triangular entre 3 moradores. O sistema encontra automaticamente a melhor
-          combinação onde todos se beneficiam, mesmo quando uma troca direta não é possível.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold text-yvy-dark">Troca Avançada</h2>
+          <p className="text-xs text-yvy-muted mt-1">
+            Troca triangular entre 3 moradores. O sistema encontra automaticamente a melhor
+            combinação onde todos se beneficiam, mesmo quando uma troca direta não é possível.
+          </p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="shrink-0 mt-0.5 w-8 h-8 rounded-full flex items-center justify-center text-yvy-muted hover:bg-yvy-bg hover:text-yvy-dark transition-colors disabled:opacity-50"
+          aria-label="Atualizar"
+        >
+          <svg
+            className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+          </svg>
+        </button>
       </div>
 
       {/* Pending trades */}
