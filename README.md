@@ -71,6 +71,8 @@ Figurinhas especiais têm destaque visual:
 🟡 _Dourado_ — figurinhas cromadas (FWC + #1 de cada seleção)
 🔴 _Vermelho_ — figurinhas Coca-Cola (CC1–CC14)
 
+- Segure (pressione por 500ms) qualquer figurinha marcada (verde ou azul) para abrir um painel rápido de repetida — ajuste a quantidade e salve sem sair da tela
+
 🔁 _3. Repetidas_
 Informe quais figurinhas você tem duplicadas e quantas. Essas ficam disponíveis pra troca.
 
