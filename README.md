@@ -145,6 +145,15 @@ Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — ma
 
 O insight _Traidor do Condomínio_ conta tanto consultas individuais (Verificar Figurinha) quanto verificações de listas externas (O que preciso desta lista?).
 
+👤 _10. Meu Perfil_
+Seus dados pessoais e estatísticas do álbum em um só lugar.
+
+- Progresso do álbum: total de figurinhas, percentual e quantas faltam
+- Estimativa de gasto em pacotes e quanto você economizou trocando pelo app
+- Histórico de trocas: quantas fez, quantas figurinhas deu e recebeu, e quem é seu melhor parceiro de trocas
+- Repetidas: total de cópias extras, figurinha mais e menos duplicada, país com mais e menos repetidas
+- Destaques de coleção: seleção mais e menos completa com barra de progresso
+
 📜 _11. Histórico_
 Seção de trocas (paginada em 3/página) e seção de atividade geral do app. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico.
 
@@ -237,6 +246,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 | `/verificar`  | Verificar Figurinha (disponibilidade externa) |
 | `/historico`  | Histórico de ações + assistente de troca      |
 | `/ranking`    | Ranking do Álbum                              |
+| `/perfil`     | Meu Perfil (estatísticas pessoais)            |
 | `/panelinhas` | Panelinhas do YVYs                            |
 | `/mural`      | Mural do YVY (insights humorísticos)          |
 | `/admin`      | Aprovações pendentes (visível só para admins) |
