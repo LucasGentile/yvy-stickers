@@ -28,6 +28,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
 
   const isTrade = TRADE_ACTIONS.has(entry.action)
   const isAccepted = entry.action === 'trade_accepted'
+  const isAdvancedExecuted = entry.action === 'advanced_trade_executed'
 
   const normalizedMetadata = entry.metadata.partnerName
     ? {
@@ -44,7 +45,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
 
   const givingIds = sort((entry.metadata.givingIds as string[] | undefined) ?? [])
   const receivingIds = sort((entry.metadata.receivingIds as string[] | undefined) ?? [])
-  const hasTradeStickers = isAccepted && (givingIds.length > 0 || receivingIds.length > 0)
+  const hasTradeStickers = (isAccepted || isAdvancedExecuted) && (givingIds.length > 0 || receivingIds.length > 0)
 
   if (!isTrade) {
     const importAlbumIds = entry.action === 'file_import'
@@ -101,7 +102,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
   return (
     <div
       className={`flex gap-3 pl-3 py-2 rounded-r-md ${
-        isAccepted
+        isAccepted || isAdvancedExecuted
           ? 'border-l-[4px] border-l-[#16a34a] bg-green-50/50'
           : `border-l-[3px] ${cfg.borderColor}`
       }`}
@@ -124,7 +125,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
 
         {hasTradeStickers && (
           <div className="mt-2 space-y-2.5">
-            {isRecent(entry.created_at) && (
+            {isRecent(entry.created_at) && isAccepted && (
               <div className="flex items-center gap-1.5">
                 <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
                 <span className="text-[11px] text-amber-700 font-medium">
@@ -132,10 +133,18 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
                 </span>
               </div>
             )}
+            {isRecent(entry.created_at) && isAdvancedExecuted && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
+                <span className="text-[11px] text-amber-700 font-medium">
+                  Combine com {((entry.metadata.partners as string[]) ?? []).join(' e ')} para trocar fisicamente
+                </span>
+              </div>
+            )}
             {givingIds.length > 0 && (
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500 mb-1.5">
-                  Você dá →
+                  Você dá para {isAdvancedExecuted ? (entry.metadata.giveToName as string) : ''} →
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {givingIds.map((id) => (
@@ -147,7 +156,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
             {receivingIds.length > 0 && (
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-green-600 mb-1.5">
-                  ← Você recebe
+                  ← Você recebe de {isAdvancedExecuted ? (entry.metadata.receiveFromName as string) : ''}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {receivingIds.map((id) => (

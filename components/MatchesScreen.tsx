@@ -25,6 +25,7 @@ export default function MatchesScreen() {
   const loadPending = useCallback(async (uid: string) => {
     const result = await getPendingTrades(uid)
     setPending(result)
+    window.dispatchEvent(new Event('trade-action'))
   }, [])
 
   const refreshMatches = useCallback(async (uid: string) => {
@@ -33,6 +34,7 @@ export default function MatchesScreen() {
       const [fresh, freshPending] = await Promise.all([getMatches(uid), getPendingTrades(uid)])
       setMatches(fresh)
       setPending(freshPending)
+      window.dispatchEvent(new Event('trade-action'))
     } catch {
       /* silently ignore refresh errors */
     } finally {
@@ -137,7 +139,7 @@ export default function MatchesScreen() {
               sent={pending.sent}
               recentlyAccepted={rollbackRequests}
               userId={userId}
-              onRefresh={() => loadPending(userId)}
+              onRefresh={() => refreshMatches(userId)}
             />
           )
         })()}

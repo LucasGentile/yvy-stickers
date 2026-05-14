@@ -92,10 +92,12 @@ describe('createTradeRequest', () => {
       if (callCount === 1) return makeSelectChain({ data: [], error: null }) // initiator: pending_trades
       if (callCount === 2)
         return makeSelectChain({ data: [{ sticker_id: 'MEX1', count: 1 }], error: null }) // initiator: user_duplicates
-      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
-      if (callCount === 4)
+      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // initiator: advanced_trades
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
+      if (callCount === 5)
         return makeSelectChain({ data: [{ sticker_id: 'BRA1', count: 1 }], error: null }) // receiver: user_duplicates
-      if (callCount === 5) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
+      if (callCount === 6) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
+      if (callCount === 7) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'Iniciador' },
@@ -116,6 +118,7 @@ describe('createTradeRequest', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: [], error: null }) // pending_trades
       if (callCount === 2) return makeSelectChain({ data: [], error: null }) // user_duplicates
+      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // advanced_trades
       return makeInsertChain({ data: null, error: { message: 'db error' } })
     })
 
@@ -131,7 +134,8 @@ describe('createTradeRequest', () => {
       if (callCount === 1) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
       if (callCount === 2)
         return makeSelectChain({ data: [{ sticker_id: 'BRA1', count: 1 }], error: null }) // receiver: user_duplicates
-      if (callCount === 3) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
+      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
+      if (callCount === 4) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'Iniciador' },
@@ -159,6 +163,7 @@ describe('createTradeRequest', () => {
           data: [{ sticker_id: 'MEX1', count: 1 }],
           error: null,
         }) // user_duplicates: MEX1 has count=1 → fully reserved
+      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // advanced_trades
       return makeInsertChain({ data: null, error: null })
     })
 
@@ -185,6 +190,7 @@ describe('createTradeRequest', () => {
           data: [{ sticker_id: 'BRA1', count: 1 }],
           error: null,
         }) // receiver: user_duplicates — BRA1 count=1, fully reserved
+      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
       return makeInsertChain({ data: null, error: null })
     })
 
@@ -211,7 +217,8 @@ describe('createTradeRequest', () => {
           data: [{ sticker_id: 'BRA1', count: 2 }],
           error: null,
         }) // receiver: user_duplicates — BRA1 count=2, 1 free copy
-      if (callCount === 3) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
+      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
+      if (callCount === 4) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'A' },
@@ -239,7 +246,8 @@ describe('createTradeRequest', () => {
           data: [{ sticker_id: 'MEX1', count: 2 }],
           error: null,
         }) // user_duplicates: MEX1 has count=2 → 1 free copy remaining
-      if (callCount === 3) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
+      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // advanced_trades
+      if (callCount === 4) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'A' },

@@ -38,22 +38,32 @@ export async function getMatches(
 
   if (!myUser) return []
 
-  const [{ data: myStickers }, { data: myDupes }, { data: pendingTrades }, othersResult] =
-    await Promise.all([
-      supabase.from('user_stickers').select('sticker_id').eq('user_id', currentUserId),
-      supabase.from('user_duplicates').select('sticker_id, count').eq('user_id', currentUserId),
-      supabaseAdmin
-        .from('pending_trades')
-        .select('id, initiator_id, receiver_id, giving_ids, receiving_ids')
-        .eq('status', 'pending'),
-      supabase
-        .from('users')
-        .select(
-          'id, display_key, name, apartment, tower, phone, input_mode, user_stickers(sticker_id), user_duplicates(sticker_id, count)'
-        )
-        .neq('id', currentUserId)
-        .eq('approved', true),
-    ])
+  const [
+    { data: myStickers },
+    { data: myDupes },
+    { data: pendingTrades },
+    othersResult,
+    { data: advancedTrades },
+  ] = await Promise.all([
+    supabase.from('user_stickers').select('sticker_id').eq('user_id', currentUserId),
+    supabase.from('user_duplicates').select('sticker_id, count').eq('user_id', currentUserId),
+    supabaseAdmin
+      .from('pending_trades')
+      .select('id, initiator_id, receiver_id, giving_ids, receiving_ids')
+      .eq('status', 'pending'),
+    supabase
+      .from('users')
+      .select(
+        'id, display_key, name, apartment, tower, phone, input_mode, user_stickers(sticker_id), user_duplicates(sticker_id, count)'
+      )
+      .neq('id', currentUserId)
+      .eq('approved', true),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabaseAdmin as any)
+      .from('advanced_trades')
+      .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
+      .eq('status', 'pending'),
+  ])
 
   type OtherUser = {
     id: string
@@ -94,6 +104,33 @@ export async function getMatches(
     }
     for (const id of trade.giving_ids ?? []) {
       incomingByUser.get(trade.receiver_id)!.add(id)
+    }
+  }
+
+  // Include advanced trade reservations
+  for (const at of (advancedTrades ?? []) as Array<{
+    user_a_id: string
+    user_b_id: string
+    user_c_id: string
+    a_gives_ids: string[]
+    b_gives_ids: string[]
+    c_gives_ids: string[]
+  }>) {
+    const legs: [string, string[], string][] = [
+      [at.user_a_id, at.a_gives_ids, at.user_b_id],
+      [at.user_b_id, at.b_gives_ids, at.user_c_id],
+      [at.user_c_id, at.c_gives_ids, at.user_a_id],
+    ]
+    for (const [giverId, givesIds, receiverId] of legs) {
+      if (!reservedByUser.has(giverId)) reservedByUser.set(giverId, new Map())
+      for (const id of givesIds ?? []) {
+        const m = reservedByUser.get(giverId)!
+        m.set(id, (m.get(id) ?? 0) + 1)
+      }
+      if (!incomingByUser.has(receiverId)) incomingByUser.set(receiverId, new Set())
+      for (const id of givesIds ?? []) {
+        incomingByUser.get(receiverId)!.add(id)
+      }
     }
   }
 

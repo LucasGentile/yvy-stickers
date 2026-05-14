@@ -67,15 +67,35 @@ Toque em **"Realizar Troca"** para enviar um pedido formal. Após ambos confirma
 
 Se houver pedidos aguardando sua resposta, um **ponto vermelho** aparece no ícone do menu.
 
-### 5. Ranking do Álbum
+### 5. Troca Avançada (Triangular)
+
+Quando uma troca direta entre dois moradores não é possível, o app busca automaticamente ciclos de 3 pessoas onde todos se beneficiam.
+
+- O item **"Troca Avançada"** aparece no menu quando você tem trocas pendentes ou quando existe pelo menos um ciclo válido
+- Toque em **"Buscar Trocas Triangulares"** para ver todas as combinações possíveis, ranqueadas por número de figurinhas
+- Escolha qual proposta enviar — as figurinhas são selecionadas automaticamente (sem escolha manual)
+- Os 3 participantes precisam **Aprovar** para a troca acontecer
+- Se qualquer um **Recusar**, a proposta é cancelada para todos
+- Quem propôs pode **Cancelar** a proposta a qualquer momento
+- Você pode ter múltiplas trocas avançadas pendentes ao mesmo tempo
+- Figurinhas comprometidas ficam reservadas (aparecem como "em troca" nas Repetidas)
+- Figurinhas recebidas via troca avançada aparecem com fundo azul no álbum
+- Use o botão ↻ no topo para atualizar propostas e buscar novas combinações
+- Quando não há combinações, o botão fica desabilitado com uma explicação
+- Trocas concluídas ficam em seção recolhível no final da página
+- O Histórico mostra figurinhas dadas/recebidas com destaque colorido
+
+**Exemplo:** Você dá para A, A dá para B, B dá para você — cada um recebe figurinhas que precisa, mesmo sem ter troca direta com quem as tem.
+
+### 6. Ranking do Álbum
 
 Veja o percentual de conclusão de todos os moradores, com medalhas para o top 3.
 
-### 6. Faltantes
+### 7. Faltantes
 
 Lista completa das figurinhas que ainda precisam. Use a busca para filtrar por país ou coleção.
 
-### 7. Histórico
+### 8. Histórico
 
 Registro das suas últimas 50 ações no app. As ações marcadas com **⚑** indicam algo a fazer no álbum físico — use como checklist para não esquecer de colar as figurinhas trocadas.
 
