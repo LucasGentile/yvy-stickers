@@ -26,6 +26,7 @@ export function TradeCard({
   const [msg, setMsg] = useState<string | null>(null)
   const [betterMatch, setBetterMatch] = useState<BetterMatchResult | null | undefined>(undefined)
   const [confirming, setConfirming] = useState<'accept' | 'reject' | 'cancel' | null>(null)
+  const [preAcceptHint, setPreAcceptHint] = useState(false)
   const [availability, setAvailability] = useState<TradeAvailability | 'loading' | null>(null)
   const [selectedMyGiving, setSelectedMyGiving] = useState<Set<string>>(new Set())
   const [selectedMyReceiving, setSelectedMyReceiving] = useState<Set<string>>(new Set())
@@ -150,6 +151,43 @@ export function TradeCard({
               >
                 {loading === 'reject' ? '...' : 'Sim, recusar'}
               </button>
+            </div>
+          ) : preAcceptHint ? (
+            <div className="space-y-3">
+              <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                <span className="text-blue-500 text-sm shrink-0 mt-px">ℹ️</span>
+                <div className="space-y-1">
+                  <p className="text-[12px] font-semibold text-blue-900">Antes de aceitar, confira:</p>
+                  <ul className="text-[11px] text-blue-800 leading-snug space-y-1 list-disc list-inside">
+                    <li>Você tem todas as figurinhas que vai dar em mãos?</li>
+                    <li>A outra pessoa também confirmou que tem as figurinhas dela?</li>
+                    <li>Se alguma não estiver disponível agora, use a <strong>seleção parcial</strong> na próxima tela para incluir só as que vocês têm.</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPreAcceptHint(false)}
+                  className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg"
+                >
+                  Voltar
+                </button>
+                <button
+                  onClick={() => {
+                    setPreAcceptHint(false)
+                    setConfirming('accept')
+                    setAvailability('loading')
+                    getTradeAvailability(trade.id, userId).then((av) => {
+                      setAvailability(av)
+                      setSelectedMyGiving(new Set(av?.myGivingAvailable ?? []))
+                      setSelectedMyReceiving(new Set(av?.theirGivingAvailable ?? []))
+                    })
+                  }}
+                  className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors"
+                >
+                  Revisei, continuar
+                </button>
+              </div>
             </div>
           ) : confirming === 'accept' ? (
             <div className="space-y-3">
@@ -340,15 +378,7 @@ export function TradeCard({
                 Recusar
               </button>
               <button
-                onClick={() => {
-                  setConfirming('accept')
-                  setAvailability('loading')
-                  getTradeAvailability(trade.id, userId).then((av) => {
-                    setAvailability(av)
-                    setSelectedMyGiving(new Set(av?.myGivingAvailable ?? []))
-                    setSelectedMyReceiving(new Set(av?.theirGivingAvailable ?? []))
-                  })
-                }}
+                onClick={() => setPreAcceptHint(true)}
                 disabled={loading !== null}
                 className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
               >
