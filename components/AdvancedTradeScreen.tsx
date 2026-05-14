@@ -361,23 +361,91 @@ export default function AdvancedTradeScreen() {
 
       {/* Search / Preview / Confirm */}
       {previews.length === 0 && (
-        <div className="space-y-3">
-          <div className="bg-yvy-bg rounded-xl p-4 space-y-3">
-            <p className="text-xs text-yvy-muted leading-relaxed">
-              Quando uma troca direta não é possível, o sistema busca um terceiro morador que
-              fecha o ciclo. Exemplo: você dá para A, A dá para B, B dá para você.
-            </p>
-            <p className="text-xs text-yvy-muted leading-relaxed">
-              Todos os 3 participantes precisam aprovar para a troca acontecer. As figurinhas
-              são selecionadas automaticamente pelo sistema.
-            </p>
+        <div className="space-y-4">
+          {/* Visual triangle diagram */}
+          <div className="bg-yvy-surface rounded-2xl border border-yvy-border shadow-md p-5 space-y-4">
+            <div className="flex justify-center">
+              <svg width="180" height="140" viewBox="0 0 180 140" fill="none" aria-hidden="true">
+                {/* Triangle nodes */}
+                <circle cx="90" cy="20" r="16" className="fill-yvy-accent/20 stroke-yvy-accent" strokeWidth="2" />
+                <circle cx="30" cy="120" r="16" className="fill-purple-100 stroke-purple-400" strokeWidth="2" />
+                <circle cx="150" cy="120" r="16" className="fill-amber-100 stroke-amber-500" strokeWidth="2" />
+                {/* Labels */}
+                <text x="90" y="24" textAnchor="middle" className="fill-yvy-accent text-[11px] font-bold">Você</text>
+                <text x="30" y="124" textAnchor="middle" className="fill-purple-600 text-[10px] font-bold">B</text>
+                <text x="150" y="124" textAnchor="middle" className="fill-amber-600 text-[10px] font-bold">C</text>
+                {/* Arrows: A→B */}
+                <path d="M 74 30 L 42 106" className="stroke-yvy-accent" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowhead)" />
+                {/* Arrows: B→C */}
+                <path d="M 48 120 L 132 120" className="stroke-purple-400" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowhead)" />
+                {/* Arrows: C→A */}
+                <path d="M 138 106 L 106 30" className="stroke-amber-500" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowhead)" />
+                {/* Arrowhead marker */}
+                <defs>
+                  <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" className="fill-yvy-muted" />
+                  </marker>
+                </defs>
+              </svg>
+            </div>
+
+            <div className="text-center space-y-1">
+              <p className="text-sm font-semibold text-yvy-dark">Como funciona?</p>
+              <p className="text-xs text-yvy-muted leading-relaxed">
+                Quando uma troca direta não é possível, o sistema encontra um ciclo de 3 moradores.
+              </p>
+            </div>
+
+            {/* Steps */}
+            <div className="space-y-2.5">
+              <div className="flex items-start gap-3">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-yvy-accent/15 flex items-center justify-center text-[10px] font-bold text-yvy-accent">1</span>
+                <p className="text-xs text-yvy-text leading-relaxed">
+                  <strong className="text-yvy-dark">Você dá</strong> figurinhas que outra pessoa precisa
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[10px] font-bold text-purple-600">2</span>
+                <p className="text-xs text-yvy-text leading-relaxed">
+                  <strong className="text-yvy-dark">Essa pessoa dá</strong> figurinhas para um terceiro morador
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-[10px] font-bold text-amber-600">3</span>
+                <p className="text-xs text-yvy-text leading-relaxed">
+                  <strong className="text-yvy-dark">O terceiro dá para você</strong> — fechando o ciclo
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-yvy-bg rounded-lg px-3 py-2.5 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">✨</span>
+                <p className="text-[11px] text-yvy-muted leading-snug">
+                  O sistema escolhe as figurinhas automaticamente — sem precisar selecionar nada
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">✅</span>
+                <p className="text-[11px] text-yvy-muted leading-snug">
+                  Os 3 participantes precisam aprovar para a troca acontecer
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">⚖️</span>
+                <p className="text-[11px] text-yvy-muted leading-snug">
+                  Troca equilibrada — todos dão e recebem a mesma quantidade
+                </p>
+              </div>
+            </div>
           </div>
+
           <button
             onClick={handleSearch}
             disabled={searching}
-            className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-3 rounded-xl text-sm transition-colors disabled:opacity-50"
+            className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-50 shadow-md"
           >
-            {searching ? 'Buscando...' : 'Buscar Troca Triangular'}
+            {searching ? 'Buscando combinações...' : 'Buscar Trocas Triangulares'}
           </button>
           {searchMsg && (
             <p className="text-xs text-yvy-muted text-center">{searchMsg}</p>
