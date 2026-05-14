@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { getPendingTrades } from '@/actions/getPendingTrades'
 import { getPendingApprovalCount } from '@/actions/getPendingApprovalCount'
+import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
+import { getAdvancedTrades } from '@/actions/getAdvancedTrades'
 import { usePrefs } from '@/contexts/PreferencesContext'
 
 const MAIN_NAV = [
@@ -34,6 +36,8 @@ export default function Header() {
   const [fontSize, setFontSize] = useState(0)
   const [pendingCount, setPendingCount] = useState(0)
   const [pendingApprovalCount, setPendingApprovalCount] = useState<number | null>(null)
+  const [advancedTradeEligible, setAdvancedTradeEligible] = useState(false)
+  const [advancedTradePending, setAdvancedTradePending] = useState(0)
   const pathname = usePathname()
   const { stickerOrder, setStickerOrder } = usePrefs()
 
@@ -48,6 +52,17 @@ export default function Header() {
       .catch(() => {})
     getPendingApprovalCount(uid)
       .then(setPendingApprovalCount)
+      .catch(() => {})
+    getAdvancedTradeEligibility(uid)
+      .then((r) => setAdvancedTradeEligible(r.eligible))
+      .catch(() => {})
+    getAdvancedTrades(uid)
+      .then((trades) => {
+        const pending = trades.filter(
+          (t) => t.status === 'pending' && t.myApprovalStatus === 'pending'
+        )
+        setAdvancedTradePending(pending.length)
+      })
       .catch(() => {})
   }
 
@@ -158,6 +173,30 @@ export default function Header() {
                   </Link>
                 )
               })}
+
+              {advancedTradeEligible && (() => {
+                const active = pathname === '/advanced-trade'
+                return (
+                  <Link
+                    href="/advanced-trade"
+                    className={`flex items-center px-5 py-3.5 text-sm font-medium transition-colors ${
+                      active
+                        ? 'bg-white/15 text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    Troca Avançada
+                    {advancedTradePending > 0 && (
+                      <span className="ml-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
+                        {advancedTradePending > 9 ? '9+' : advancedTradePending}
+                      </span>
+                    )}
+                    {active && advancedTradePending === 0 && (
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                    )}
+                  </Link>
+                )
+              })()}
 
               <div className="mx-5 my-1 border-t border-white/10" />
 
