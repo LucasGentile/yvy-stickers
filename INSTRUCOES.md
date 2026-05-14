@@ -67,15 +67,28 @@ Toque em **"Realizar Troca"** para enviar um pedido formal. Após ambos confirma
 
 Se houver pedidos aguardando sua resposta, um **ponto vermelho** aparece no ícone do menu.
 
-### 5. Ranking do Álbum
+### 5. Troca Avançada (Triangular)
+
+Quando uma troca direta entre dois moradores não é possível, o app busca automaticamente um ciclo de 3 pessoas onde todos se beneficiam.
+
+- O item **"Troca Avançada"** aparece no menu apenas quando existe pelo menos um ciclo válido para você
+- Toque em **"Buscar Troca Triangular"** — o sistema encontra a melhor combinação
+- As figurinhas são escolhidas automaticamente (sem seleção manual)
+- Os 3 participantes precisam **Aprovar** para a troca acontecer
+- Se qualquer um **Recusar**, a proposta é cancelada para todos
+- Figurinhas comprometidas ficam reservadas e não aparecem em outras sugestões de troca
+
+**Exemplo:** Você dá para A, A dá para B, B dá para você — cada um recebe figurinhas que precisa, mesmo sem ter troca direta com quem as tem.
+
+### 6. Ranking do Álbum
 
 Veja o percentual de conclusão de todos os moradores, com medalhas para o top 3.
 
-### 6. Faltantes
+### 7. Faltantes
 
 Lista completa das figurinhas que ainda precisam. Use a busca para filtrar por país ou coleção.
 
-### 7. Histórico
+### 8. Histórico
 
 Registro das suas últimas 50 ações no app. As ações marcadas com **⚑** indicam algo a fazer no álbum físico — use como checklist para não esquecer de colar as figurinhas trocadas.
 

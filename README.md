@@ -103,28 +103,39 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Pedidos recebidos mostram quantas figurinhas estão envolvidas e alertam se houver uma troca mais vantajosa com outro morador
 - Antes de aceitar, o app lembra de confirmar presencialmente com o outro morador
 
-🔍 _5. Verificar Figurinha_
-Consulte rapidamente se uma figurinha está disponível para troca fora do app.
+🔄 _5. Troca Avançada (Triangular)_
+Quando uma troca direta não é possível, o app busca automaticamente um ciclo de 3 moradores onde todos se beneficiam.
+
+- O menu _"Troca Avançada"_ aparece _somente_ quando existe pelo menos um ciclo válido para você — o sistema calcula isso em tempo real
+- Toque em _"Buscar Troca Triangular"_ e o app encontra a melhor combinação automaticamente
+- As figurinhas são selecionadas pelo sistema — nenhuma escolha manual é necessária
+- Os 3 participantes precisam aprovar para a troca acontecer
+- Se qualquer um recusar, a proposta é cancelada para todos
+- Figurinhas comprometidas em trocas avançadas pendentes ficam reservadas (não aparecem em outras sugestões)
+- Exemplo: você dá para A, A dá para B, B dá para você — todos ganham figurinhas que precisam
+
+🔍 _6. Verificar Figurinha_
+Consulte rapidamente se uma figurinha está disponível para troca fora do app (ou em trocas avançadas pendentes).
 
 - Digite o código (ex: BRA5, FWC00) e veja na hora se está livre, reservada ou totalmente comprometida em trocas ativas
 - Útil quando alguém te pede uma figurinha pelo WhatsApp ou pessoalmente
 - Mostra quantas repetidas você tem, quantas estão reservadas e quantas estão livres para oferecer
 
-🏅 _6. Ranking do Álbum_
+🏅 _7. Ranking do Álbum_
 Veja quem está mais perto de completar o álbum — moradores ordenados por número de figurinhas, com medalhas para o top 3.
 
-🏆 _7. Panelinhas do YVYs_
+🏆 _8. Panelinhas do YVYs_
 Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais inseparáveis — e mais suspeitos de panelinha! Atualiza automaticamente ao abrir o app.
 
-📋 _8. Faltantes_
+📋 _9. Faltantes_
 Veja todas as figurinhas que ainda precisa. Use a busca para filtrar por país ou coleção.
 
-📰 _9. Mural do YVY_
+📰 _10. Mural do YVY_
 Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — maior investidor, rei das repetidas, figurinheiro negociante, economizador do YVY, traidor do condomínio e o investimento coletivo convertido em pizzas. Cache de 5 minutos para não sobrecarregar o banco, atualizado ao abrir o app. Fins humorísticos. Sem julgamentos (mentira).
 
 O insight _Traidor do Condomínio_ conta tanto consultas individuais (Verificar Figurinha) quanto verificações de listas externas (O que preciso desta lista?).
 
-📜 _10. Histórico_
+📜 _11. Histórico_
 Seção de trocas (paginada em 3/página) e seção de atividade geral do app. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico.
 
 - Trocas concluídas mostram figurinhas dadas em _vermelho_ e recebidas em _verde_ para fácil leitura
@@ -212,6 +223,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 | `/duplicates` | Repetidas                                     |
 | `/missing`    | Faltantes                                     |
 | `/matches`    | Ranking de Trocas + Pedidos pendentes         |
+| `/advanced-trade` | Troca Avançada (triangular, 3 moradores)  |
 | `/verificar`  | Verificar Figurinha (disponibilidade externa) |
 | `/historico`  | Histórico de ações + assistente de troca      |
 | `/ranking`    | Ranking do Álbum                              |
@@ -223,7 +235,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (145 testes, 14 suítes)
+npm test                  # roda todos os testes (166 testes, 15 suítes)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```
@@ -255,6 +267,7 @@ supabase db push
 | 010_trade_rollback         | Colunas `accepted_at` e `rollback_requested_by` em `pending_trades`; status `rolled_back`    |
 | 011_trade_rollback_partial | Colunas `rollback_giving_ids` e `rollback_receiving_ids` para desfazimento parcial de trocas |
 | 012_deactivate_visitantes  | Desativa (`approved = false`) usuários com "visitante" no nome                               |
+| 013_advanced_trade         | Tabela `advanced_trades` para trocas triangulares (3 participantes, ciclo A→B→C→A)           |
 
 ### Variáveis de ambiente
 
