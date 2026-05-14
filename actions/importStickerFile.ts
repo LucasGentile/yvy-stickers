@@ -8,8 +8,10 @@ export type ImportStickerFileResult =
       success: true
       totalStickers: number
       addedToAlbum: number
+      addedToAlbumIds: string[]
       removedFromAlbum: number
       newDuplicates: number
+      duplicateIds: string[]
       totalDuplicateCopies: number
       failedStickers: string[]
       failedDuplicates: string[]
@@ -54,7 +56,8 @@ export async function importStickerFile(
 
   const existingSet = new Set((existing ?? []).map((r) => r.sticker_id as string))
   const newSet = new Set(stickerIds)
-  const addedToAlbum = stickerIds.filter((id) => !existingSet.has(id)).length
+  const addedToAlbumIds = stickerIds.filter((id) => !existingSet.has(id))
+  const addedToAlbum = addedToAlbumIds.length
   const removedFromAlbum = [...existingSet].filter((id) => !newSet.has(id)).length
 
   // Replace user_stickers
@@ -84,11 +87,14 @@ export async function importStickerFile(
 
   const savedDuplicates = duplicateRows.filter((r) => !failedDuplicates.includes(r.sticker_id))
   const totalDuplicateCopies = savedDuplicates.reduce((sum, r) => sum + r.count, 0)
+  const duplicateIds = savedDuplicates.map((r) => r.sticker_id)
 
   logAction(userId, 'file_import', {
     total: stickerIds.length,
     added: addedToAlbum,
     removed: removedFromAlbum,
+    addedToAlbumIds,
+    duplicateIds,
     duplicateItems: savedDuplicates.length,
     duplicateCopies: totalDuplicateCopies,
     failedStickers,
@@ -99,8 +105,10 @@ export async function importStickerFile(
     success: true,
     totalStickers: stickerIds.length,
     addedToAlbum,
+    addedToAlbumIds,
     removedFromAlbum,
     newDuplicates: savedDuplicates.length,
+    duplicateIds,
     totalDuplicateCopies,
     failedStickers,
     failedDuplicates,

@@ -565,6 +565,128 @@ function RollbackControl({
   return null
 }
 
+// ─── Import assistant ────────────────────────────────────────────────────────
+
+function ImportAssistant({
+  addedToAlbumIds,
+  duplicateIds,
+  onClose,
+}: {
+  addedToAlbumIds: string[]
+  duplicateIds: string[]
+  onClose: () => void
+}) {
+  const [checkedAlbum, setCheckedAlbum] = useState<Set<string>>(new Set())
+  const [checkedDupes, setCheckedDupes] = useState<Set<string>>(new Set())
+  const { stickerOrder } = usePrefs()
+  const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
+  const sortedAlbum = sort(addedToAlbumIds)
+  const sortedDupes = sort(duplicateIds)
+
+  const allAlbumDone = sortedAlbum.length > 0 && checkedAlbum.size === sortedAlbum.length
+  const allDupesDone = sortedDupes.length > 0 && checkedDupes.size === sortedDupes.length
+
+  function toggle(set: Set<string>, setter: React.Dispatch<React.SetStateAction<Set<string>>>, id: string) {
+    setter((prev) => {
+      const n = new Set(prev)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
+  }
+
+  function ImportChip({
+    id,
+    color,
+    checked,
+    onToggle,
+  }: {
+    id: string
+    color: 'green' | 'amber'
+    checked: boolean
+    onToggle: () => void
+  }) {
+    const isChrome = isChromeSticker(id)
+    const isCoke = isCocaColaSticker(id)
+    const base = 'relative text-sm font-mono font-semibold px-3 py-1.5 rounded-lg border-2 transition-all select-none'
+    const activeGreen = 'bg-green-50 border-green-300 text-green-700'
+    const doneGreen = 'bg-green-100 border-green-200 text-green-300 line-through opacity-50'
+    const activeAmber = 'bg-amber-50 border-amber-300 text-amber-700'
+    const doneAmber = 'bg-amber-100 border-amber-200 text-amber-300 line-through opacity-50'
+    const colorClass = checked
+      ? color === 'green' ? doneGreen : doneAmber
+      : color === 'green' ? activeGreen : activeAmber
+    const label = isChrome ? `✨${id}` : id
+    return (
+      <button type="button" onClick={onToggle} className={`${base} ${colorClass}`}>
+        {isChrome ? <span className={checked ? '' : 'text-amber-500'}>{label}</span>
+          : isCoke ? <span className={checked ? '' : 'text-red-500'}>{id}</span>
+          : id}
+        {checked && (
+          <span className={`absolute -top-1.5 -right-1.5 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center ${color === 'green' ? 'bg-green-500' : 'bg-amber-500'}`}>
+            ✓
+          </span>
+        )}
+      </button>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
+      <div
+        className="w-full max-w-lg bg-yvy-surface rounded-t-2xl shadow-2xl max-h-[85vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-yvy-border shrink-0">
+          <div>
+            <p className="text-sm font-bold text-yvy-dark">Assistente de importação</p>
+            <p className="text-[11px] text-yvy-muted">Toque para marcar cada figurinha separada</p>
+          </div>
+          <button onClick={onClose} className="text-yvy-muted text-xl leading-none px-1">✕</button>
+        </div>
+
+        <div className="overflow-y-auto px-5 py-4 space-y-5">
+          {sortedAlbum.length > 0 && (
+            <div>
+              <div className="flex items-baseline justify-between mb-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-green-600">Para colar no álbum →</p>
+                <p className={`text-[11px] font-medium ${allAlbumDone ? 'text-green-600' : 'text-yvy-muted'}`}>
+                  {allAlbumDone ? 'Tudo colado ✓' : `${checkedAlbum.size}/${sortedAlbum.length} coladas`}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {sortedAlbum.map((id) => (
+                  <ImportChip key={id} id={id} color="green" checked={checkedAlbum.has(id)} onToggle={() => toggle(checkedAlbum, setCheckedAlbum, id)} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {sortedDupes.length > 0 && (
+            <div>
+              <div className="flex items-baseline justify-between mb-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-amber-500">Para separar como repetidas →</p>
+                <p className={`text-[11px] font-medium ${allDupesDone ? 'text-green-600' : 'text-yvy-muted'}`}>
+                  {allDupesDone ? 'Tudo separado ✓' : `${checkedDupes.size}/${sortedDupes.length} separadas`}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {sortedDupes.map((id) => (
+                  <ImportChip key={id} id={id} color="amber" checked={checkedDupes.has(id)} onToggle={() => toggle(checkedDupes, setCheckedDupes, id)} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button onClick={onClose} className="w-full border border-yvy-border text-yvy-text font-semibold py-3 rounded-xl text-sm mt-2">
+            Fechar assistente
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Trade assistant ─────────────────────────────────────────────────────────
 
 function StickerChip({
@@ -765,6 +887,7 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
   if (!cfg) return null
 
   const [assistantOpen, setAssistantOpen] = useState(false)
+  const [importAssistantOpen, setImportAssistantOpen] = useState(false)
   const { stickerOrder } = usePrefs()
   const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
 
@@ -791,6 +914,14 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
 
   // ── Compact row for non-trade events ──────────────────────────────────────
   if (!isTrade) {
+    const importAlbumIds = entry.action === 'file_import'
+      ? ((entry.metadata.addedToAlbumIds as string[] | undefined) ?? [])
+      : []
+    const importDupeIds = entry.action === 'file_import'
+      ? ((entry.metadata.duplicateIds as string[] | undefined) ?? [])
+      : []
+    const hasImportStickers = importAlbumIds.length > 0 || importDupeIds.length > 0
+
     return (
       <div className="space-y-1 py-0.5">
         <div className="flex items-baseline gap-1.5">
@@ -815,6 +946,24 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
                 <p className="text-[11px] text-amber-600 leading-snug">{h}</p>
               </div>
             ))}
+        {hasImportStickers && (
+          <div className="pl-5 pt-0.5">
+            <button
+              onClick={() => setImportAssistantOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+            >
+              <span>📋</span>
+              Assistente de importação
+            </button>
+          </div>
+        )}
+        {importAssistantOpen && hasImportStickers && (
+          <ImportAssistant
+            addedToAlbumIds={importAlbumIds}
+            duplicateIds={importDupeIds}
+            onClose={() => setImportAssistantOpen(false)}
+          />
+        )}
       </div>
     )
   }
