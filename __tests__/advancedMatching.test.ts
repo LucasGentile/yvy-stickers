@@ -4,7 +4,7 @@ vi.mock('@/lib/supabaseAdmin', () => ({
   supabaseAdmin: { from: vi.fn() },
 }))
 
-import { checkAdvancedTradeEligibility, findBestAdvancedTrade } from '@/lib/advancedMatching'
+import { checkAdvancedTradeEligibility, findBestAdvancedTrade, findAllAdvancedTrades } from '@/lib/advancedMatching'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
 
@@ -277,5 +277,73 @@ describe('findBestAdvancedTrade', () => {
     expect(result!.aGivesIds[0]).toBe(
       [S[1], S[2], S[3]].sort()[0]
     )
+  })
+})
+
+// ─── findAllAdvancedTrades ──────────────────────────────────────────────────
+
+describe('findAllAdvancedTrades', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns empty array for empty userId', async () => {
+    expect(await findAllAdvancedTrades('')).toEqual([])
+  })
+
+  it('returns all valid cycles sorted by score descending', async () => {
+    // Triple 1 (A,B,C): score 1
+    // Triple 2 (A,D,E): score 2
+    mockTradeData([
+      makeUser('user-a', 'have', [S[0]], [
+        { sticker_id: S[1], count: 1 },
+        { sticker_id: S[2], count: 1 },
+        { sticker_id: S[3], count: 1 },
+      ]),
+      makeUser('user-b', 'have', [S[0], S[2], S[3]], [{ sticker_id: S[5], count: 1 }]),
+      makeUser('user-c', 'have', [S[0], S[1], S[2], S[3]], [{ sticker_id: S[6], count: 1 }]),
+      makeUser('user-d', 'have', [S[0], S[1]], [
+        { sticker_id: S[7], count: 1 },
+        { sticker_id: S[8], count: 1 },
+      ]),
+      makeUser('user-e', 'have', [S[0], S[1], S[2], S[3]], [
+        { sticker_id: S[6], count: 1 },
+        { sticker_id: S[9], count: 1 },
+      ]),
+    ])
+
+    const results = await findAllAdvancedTrades('user-a')
+    expect(results.length).toBeGreaterThanOrEqual(2)
+    // First result should have highest score
+    expect(results[0].score).toBeGreaterThanOrEqual(results[1].score)
+    // Each result has a score property
+    for (const r of results) {
+      expect(r.score).toBeGreaterThan(0)
+      expect(r.aGivesIds.length).toBe(r.score)
+      expect(r.bGivesIds.length).toBe(r.score)
+      expect(r.cGivesIds.length).toBe(r.score)
+    }
+  })
+
+  it('returns empty array when no cycles exist', async () => {
+    mockTradeData([
+      makeUser('user-a', 'have', [S[0]], [{ sticker_id: S[1], count: 1 }]),
+      makeUser('user-b', 'have', [S[0]], []),
+    ])
+    const results = await findAllAdvancedTrades('user-a')
+    expect(results).toEqual([])
+  })
+
+  it('deduplicates cycles with same participants in different order', async () => {
+    // A→B→C and A→C→B should only produce the valid cycle direction, not duplicate
+    mockTradeData([
+      makeUser('user-a', 'have', [S[0]], [{ sticker_id: S[1], count: 1 }]),
+      makeUser('user-b', 'have', [S[0]], [{ sticker_id: S[2], count: 1 }]),
+      makeUser('user-c', 'have', [S[0], S[1]], [{ sticker_id: S[3], count: 1 }]),
+    ])
+
+    const results = await findAllAdvancedTrades('user-a')
+    // Count how many times the pair (B,C) appears
+    const keys = results.map((r) => [r.userBId, r.userCId].sort().join(':'))
+    const uniqueKeys = new Set(keys)
+    expect(keys.length).toBe(uniqueKeys.size)
   })
 })

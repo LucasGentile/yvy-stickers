@@ -104,14 +104,20 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Antes de aceitar, o app lembra de confirmar presencialmente com o outro morador
 
 🔄 _5. Troca Avançada (Triangular)_
-Quando uma troca direta não é possível, o app busca automaticamente um ciclo de 3 moradores onde todos se beneficiam.
+Quando uma troca direta não é possível, o app busca automaticamente ciclos de 3 moradores onde todos se beneficiam.
 
-- O menu _"Troca Avançada"_ aparece _somente_ quando existe pelo menos um ciclo válido para você — o sistema calcula isso em tempo real
-- Toque em _"Buscar Troca Triangular"_ e o app encontra a melhor combinação automaticamente
-- As figurinhas são selecionadas pelo sistema — nenhuma escolha manual é necessária
-- Os 3 participantes precisam aprovar para a troca acontecer
-- Se qualquer um recusar, a proposta é cancelada para todos
-- Figurinhas comprometidas em trocas avançadas pendentes ficam reservadas (não aparecem em outras sugestões)
+- O menu _"Troca Avançada"_ aparece quando você tem trocas pendentes _ou_ quando existe pelo menos um ciclo válido
+- Toque em _"Buscar Trocas Triangulares"_ para ver _todas_ as combinações possíveis, ranqueadas por número de figurinhas (a melhor aparece no topo)
+- Escolha qual proposta enviar — as figurinhas são selecionadas automaticamente, sem escolha manual
+- Os 3 participantes precisam aprovar para a troca acontecer; se qualquer um recusar, a proposta é cancelada para todos
+- Quem propôs pode cancelar a qualquer momento enquanto estiver pendente
+- Você pode ter _múltiplas_ trocas avançadas pendentes ao mesmo tempo
+- Figurinhas comprometidas ficam reservadas (aparecem como _"em troca"_ na tela de Repetidas e não entram em novas sugestões)
+- Figurinhas recebidas via troca avançada aparecem com fundo _azul_ no álbum
+- O botão de atualizar (↻) no topo re-busca propostas e atualiza o status das pendentes
+- Quando não há combinações disponíveis, o botão de busca fica desabilitado com uma explicação
+- Trocas concluídas ficam em uma seção recolhível e paginada
+- O Histórico mostra figurinhas dadas em _vermelho_ e recebidas em _verde_, igual às trocas normais
 - Exemplo: você dá para A, A dá para B, B dá para você — todos ganham figurinhas que precisam
 
 🔍 _6. Verificar Figurinha_
@@ -235,7 +241,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (166 testes, 15 suítes)
+npm test                  # roda todos os testes (180 testes, 16 suítes)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```

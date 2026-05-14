@@ -57,7 +57,7 @@ This avoids brute-forcing all triples and short-circuits as soon as one valid cy
 
 ### Phase 1: Database Schema
 
-**Migration file**: `supabase/migrations/012_advanced_trade.sql`
+**Migration file**: `supabase/migrations/013_advanced_trade.sql`
 
 ```sql
 CREATE TABLE IF NOT EXISTS advanced_trades (

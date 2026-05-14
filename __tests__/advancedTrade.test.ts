@@ -276,10 +276,6 @@ describe('respondToAdvancedTrade', () => {
   })
 
   it('returns error on race condition (atomic guard)', async () => {
-    mockFrom.mockImplementation(() => {
-      return makeSelectChain({ data: pendingTrade })
-    })
-    // Second call (update) returns null = race lost
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
@@ -290,5 +286,28 @@ describe('respondToAdvancedTrade', () => {
     const result = await respondToAdvancedTrade('trade-1', 'user-b', 'approve')
     expect(result.success).toBe(false)
     if (!result.success) expect(result.error).toMatch(/outro dispositivo/i)
+  })
+
+  it('cancel: succeeds when requested by the proposer', async () => {
+    const tradeWithRequester = { ...pendingTrade, requested_by: 'user-a' }
+    let callCount = 0
+    mockFrom.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) return makeSelectChain({ data: tradeWithRequester })
+      if (callCount === 2) return makeUpdateChain({ data: { id: 'trade-1' } })
+      return makeSelectChain({ data: [{ id: 'user-a', name: 'Ana' }, { id: 'user-b', name: 'Bob' }, { id: 'user-c', name: 'Carol' }] })
+    })
+
+    const result = await respondToAdvancedTrade('trade-1', 'user-a', 'cancel')
+    expect(result.success).toBe(true)
+  })
+
+  it('cancel: returns error when non-proposer tries to cancel', async () => {
+    const tradeWithRequester = { ...pendingTrade, requested_by: 'user-a' }
+    mockFrom.mockReturnValue(makeSelectChain({ data: tradeWithRequester }))
+
+    const result = await respondToAdvancedTrade('trade-1', 'user-b', 'cancel')
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toMatch(/apenas quem propôs/i)
   })
 })
