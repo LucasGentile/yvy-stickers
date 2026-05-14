@@ -213,25 +213,51 @@ export default function ProfileScreen() {
           />
           {data.mostDuplicatedSticker && (
             <StatTile
-              label="Figurinha mais repetida"
+              label="Mais repetida"
               value={data.mostDuplicatedSticker}
-              sub={`${data.mostDuplicatedStickerCount}x no inventário`}
+              sub={`${data.mostDuplicatedStickerCount}x — mais cópias`}
               color="purple"
             />
           )}
+          {data.leastDuplicatedSticker && (
+            <StatTile
+              label="Menos repetida"
+              value={data.leastDuplicatedSticker}
+              sub={`${data.leastDuplicatedStickerCount}x — menos cópias`}
+              color="default"
+            />
+          )}
         </div>
-        {data.mostDuplicatedCountryName && (
-          <div className="bg-yvy-surface rounded-xl p-3 flex items-center gap-3 shadow-sm">
-            <span className="text-2xl">📦</span>
-            <div>
-              <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide">
-                País/seção com mais repetidas
-              </p>
-              <p className="font-bold text-yvy-dark">{data.mostDuplicatedCountryName}</p>
-              <p className="text-[11px] text-yvy-muted">
-                {data.mostDuplicatedCountryCount} cópia{data.mostDuplicatedCountryCount !== 1 ? 's' : ''} extras · código {data.mostDuplicatedCountry}
-              </p>
-            </div>
+        {(data.mostDuplicatedCountryName || data.leastDuplicatedCountryName) && (
+          <div className="grid grid-cols-2 gap-2">
+            {data.mostDuplicatedCountryName && (
+              <div className="bg-yvy-surface rounded-xl p-3 flex items-start gap-2 shadow-sm">
+                <span className="text-lg mt-0.5">📦</span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide leading-tight">
+                    País mais repetido
+                  </p>
+                  <p className="font-bold text-yvy-dark text-sm truncate">{data.mostDuplicatedCountryName}</p>
+                  <p className="text-[11px] text-yvy-muted">
+                    {data.mostDuplicatedCountryCount} cópia{data.mostDuplicatedCountryCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+            )}
+            {data.leastDuplicatedCountryName && (
+              <div className="bg-yvy-surface rounded-xl p-3 flex items-start gap-2 shadow-sm">
+                <span className="text-lg mt-0.5">🔍</span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide leading-tight">
+                    País menos repetido
+                  </p>
+                  <p className="font-bold text-yvy-dark text-sm truncate">{data.leastDuplicatedCountryName}</p>
+                  <p className="text-[11px] text-yvy-muted">
+                    {data.leastDuplicatedCountryCount} cópia{data.leastDuplicatedCountryCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
         {data.totalDuplicateCopies === 0 && (

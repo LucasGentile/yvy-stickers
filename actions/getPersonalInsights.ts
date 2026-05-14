@@ -39,9 +39,14 @@ export type PersonalInsights = {
   totalDuplicateCopies: number
   mostDuplicatedSticker: string | null
   mostDuplicatedStickerCount: number
+  leastDuplicatedSticker: string | null
+  leastDuplicatedStickerCount: number
   mostDuplicatedCountry: string | null   // team code e.g. "BRA"
   mostDuplicatedCountryName: string | null
   mostDuplicatedCountryCount: number
+  leastDuplicatedCountry: string | null
+  leastDuplicatedCountryName: string | null
+  leastDuplicatedCountryCount: number
 
   // Collection highlights
   mostCompleteTeam: string | null        // team name
@@ -135,6 +140,8 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
   // ── Duplicate stats ──────────────────────────────────────────────────────
   let mostDuplicatedSticker: string | null = null
   let mostDuplicatedStickerCount = 0
+  let leastDuplicatedSticker: string | null = null
+  let leastDuplicatedStickerCount = Infinity
 
   const countryDupeTotals: Record<string, number> = {}
   for (const row of duplicates ?? []) {
@@ -144,11 +151,26 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
       mostDuplicatedStickerCount = count
       mostDuplicatedSticker = id
     }
+    if (count < leastDuplicatedStickerCount) {
+      leastDuplicatedStickerCount = count
+      leastDuplicatedSticker = id
+    }
     // Extract team code (letters before the number)
     const match = id.match(/^([A-Z]+)/)
     if (match) {
       countryDupeTotals[match[1]] = (countryDupeTotals[match[1]] ?? 0) + count
     }
+  }
+  if (leastDuplicatedStickerCount === Infinity) leastDuplicatedStickerCount = 0
+
+  function lookupTeamName(code: string): string | null {
+    for (const section of ALL_STICKER_SECTIONS) {
+      if (section.type === 'group') {
+        const team = section.teams.find((t) => t.code === code)
+        if (team) return team.name
+      }
+    }
+    return null
   }
 
   // Find team name for most-duped country
@@ -159,12 +181,18 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
   if (topCountryEntry) {
     mostDuplicatedCountry = topCountryEntry[0]
     mostDuplicatedCountryCount = topCountryEntry[1]
-    for (const section of ALL_STICKER_SECTIONS) {
-      if (section.type === 'group') {
-        const team = section.teams.find((t) => t.code === mostDuplicatedCountry)
-        if (team) { mostDuplicatedCountryName = team.name; break }
-      }
-    }
+    mostDuplicatedCountryName = lookupTeamName(mostDuplicatedCountry)
+  }
+
+  // Find team name for least-duped country
+  let leastDuplicatedCountry: string | null = null
+  let leastDuplicatedCountryName: string | null = null
+  let leastDuplicatedCountryCount = 0
+  const bottomCountryEntry = Object.entries(countryDupeTotals).sort(([, a], [, b]) => a - b)[0]
+  if (bottomCountryEntry) {
+    leastDuplicatedCountry = bottomCountryEntry[0]
+    leastDuplicatedCountryCount = bottomCountryEntry[1]
+    leastDuplicatedCountryName = lookupTeamName(leastDuplicatedCountry)
   }
 
   // ── Team completion highlights ───────────────────────────────────────────
@@ -215,9 +243,14 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
     totalDuplicateCopies: totalDupesCopies,
     mostDuplicatedSticker,
     mostDuplicatedStickerCount,
+    leastDuplicatedSticker,
+    leastDuplicatedStickerCount,
     mostDuplicatedCountry,
     mostDuplicatedCountryName,
     mostDuplicatedCountryCount,
+    leastDuplicatedCountry,
+    leastDuplicatedCountryName,
+    leastDuplicatedCountryCount,
 
     mostCompleteTeam,
     mostCompleteTeamPct,
