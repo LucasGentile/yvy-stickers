@@ -325,6 +325,7 @@ export default function AdvancedTradeScreen() {
       ])
       setTrades(result)
       setCanSearch(eligibility.canSearch)
+      window.dispatchEvent(new Event('trade-action'))
     } catch {
       setError('Erro ao carregar trocas avançadas.')
     }

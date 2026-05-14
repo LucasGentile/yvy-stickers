@@ -78,6 +78,16 @@ export default function Header() {
     document.documentElement.style.fontSize = `${FONT_SIZES[idx].px}px`
   }, [])
 
+  // Refresh badges when a trade action occurs on the same page
+  useEffect(() => {
+    function onTradeAction() {
+      const uid = localStorage.getItem('userId')
+      if (uid) refreshBadges(uid)
+    }
+    window.addEventListener('trade-action', onTradeAction)
+    return () => window.removeEventListener('trade-action', onTradeAction)
+  }, [])
+
   // Refresh badges when navigating
   useEffect(() => {
     const uid = localStorage.getItem('userId')
