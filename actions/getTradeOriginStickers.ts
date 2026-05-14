@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export type TradeOriginResult = {
   fromTradeIds: string[] // all stickers ever received from accepted trades
-  newestIds: string[] // stickers received in the last 12 hours
+  newestIds: string[] // stickers received via trade OR imported in the last 12 hours
 }
 
 const NEWEST_WINDOW_MS = 12 * 60 * 60 * 1000
@@ -12,7 +12,9 @@ const NEWEST_WINDOW_MS = 12 * 60 * 60 * 1000
 export async function getTradeOriginStickers(userId: string): Promise<TradeOriginResult> {
   if (!userId) return { fromTradeIds: [], newestIds: [] }
 
-  const [{ data: trades }, { data: advancedTrades }] = await Promise.all([
+  const cutoffIso = new Date(Date.now() - NEWEST_WINDOW_MS).toISOString()
+
+  const [{ data: trades }, { data: advancedTrades }, { data: importLogs }, { data: saveLogs }] = await Promise.all([
     supabaseAdmin
       .from('pending_trades')
       .select('initiator_id, giving_ids, receiving_ids, accepted_at')
@@ -24,11 +26,35 @@ export async function getTradeOriginStickers(userId: string): Promise<TradeOrigi
       .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, accepted_at')
       .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
       .eq('status', 'accepted'),
+    supabaseAdmin
+      .from('audit_log')
+      .select('metadata')
+      .eq('user_id', userId)
+      .eq('action', 'file_import')
+      .gte('created_at', cutoffIso),
+    supabaseAdmin
+      .from('audit_log')
+      .select('metadata')
+      .eq('user_id', userId)
+      .eq('action', 'stickers_saved')
+      .gte('created_at', cutoffIso),
   ])
 
   const fromTrade = new Set<string>()
   const newest = new Set<string>()
   const cutoff = Date.now() - NEWEST_WINDOW_MS
+
+  // Stickers added via file import in the last 12h
+  for (const log of importLogs ?? []) {
+    const ids = (log.metadata as Record<string, unknown>)?.addedToAlbumIds as string[] | undefined
+    for (const id of ids ?? []) newest.add(id)
+  }
+
+  // Stickers added manually (save) in the last 12h
+  for (const log of saveLogs ?? []) {
+    const ids = (log.metadata as Record<string, unknown>)?.addedIds as string[] | undefined
+    for (const id of ids ?? []) newest.add(id)
+  }
 
   for (const trade of trades ?? []) {
     const received = trade.initiator_id === userId ? trade.receiving_ids : trade.giving_ids

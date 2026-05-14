@@ -30,11 +30,11 @@ export async function saveStickers(
     return { success: false, error: 'Erro ao atualizar figurinhas. Tente novamente.' }
   }
 
-  const added = stickerIds.filter((id) => !existingSet.has(id)).length
+  const addedIds = stickerIds.filter((id) => !existingSet.has(id))
   const removed = [...existingSet].filter((id) => !newSet.has(id)).length
 
   if (stickerIds.length === 0) {
-    logAction(userId, 'stickers_saved', { added: 0, removed, total: 0 })
+    logAction(userId, 'stickers_saved', { added: 0, addedIds: [], removed, total: 0 })
     return { success: true, count: 0, removedWithDupes: [] }
   }
 
@@ -58,6 +58,6 @@ export async function saveStickers(
     removedWithDupes = (dupes ?? []).map((d) => d.sticker_id)
   }
 
-  logAction(userId, 'stickers_saved', { added, removed, total: stickerIds.length })
+  logAction(userId, 'stickers_saved', { added: addedIds.length, addedIds, removed, total: stickerIds.length })
   return { success: true, count: stickerIds.length, removedWithDupes }
 }
