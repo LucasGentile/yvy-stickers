@@ -234,6 +234,77 @@ function TradeCard({
   )
 }
 
+const COMPLETED_PAGE_SIZE = 3
+
+function CompletedTradesSection({
+  trades,
+  userId,
+  onRefresh,
+}: {
+  trades: AdvancedTradeView[]
+  userId: string
+  onRefresh: () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const [page, setPage] = useState(0)
+
+  const totalPages = Math.ceil(trades.length / COMPLETED_PAGE_SIZE)
+  const visible = expanded
+    ? trades.slice(page * COMPLETED_PAGE_SIZE, (page + 1) * COMPLETED_PAGE_SIZE)
+    : []
+
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex items-center gap-2 w-full text-left"
+      >
+        <span className="text-[10px] text-yvy-muted transition-transform" style={{ transform: expanded ? 'rotate(90deg)' : undefined }}>
+          ▶
+        </span>
+        <h3 className="text-sm font-bold text-yvy-muted">
+          Trocas concluídas ({trades.length})
+        </h3>
+      </button>
+
+      {expanded && (
+        <div className="space-y-3">
+          {visible.map((t) => (
+            <TradeCard
+              key={t.id}
+              trade={t}
+              userId={userId}
+              onDone={onRefresh}
+            />
+          ))}
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="text-xs text-yvy-muted disabled:opacity-30"
+              >
+                ← Anterior
+              </button>
+              <span className="text-[10px] text-yvy-muted">
+                {page + 1} / {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={page === totalPages - 1}
+                className="text-xs text-yvy-muted disabled:opacity-30"
+              >
+                Próxima →
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AdvancedTradeScreen() {
   const [userId, setUserId] = useState<string | null>(null)
   const [trades, setTrades] = useState<AdvancedTradeView[]>([])
@@ -546,19 +617,13 @@ export default function AdvancedTradeScreen() {
         </div>
       )}
 
-      {/* Completed trades */}
+      {/* Completed trades — collapsible and paginated */}
       {completedTrades.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-base font-bold text-yvy-dark">Trocas concluídas</h3>
-          {completedTrades.map((t) => (
-            <TradeCard
-              key={t.id}
-              trade={t}
-              userId={userId!}
-              onDone={() => loadTrades(userId!)}
-            />
-          ))}
-        </div>
+        <CompletedTradesSection
+          trades={completedTrades}
+          userId={userId!}
+          onRefresh={() => loadTrades(userId!)}
+        />
       )}
     </div>
   )
