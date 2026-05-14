@@ -156,7 +156,7 @@ export async function respondToAdvancedTrade(
       .update({ status: 'accepted', accepted_at: new Date().toISOString() })
       .eq('id', tradeId)
 
-    // Fire-and-forget logging
+    // Fire-and-forget logging with sticker details per participant
     ;(async () => {
       try {
         const { data: users } = await supabaseAdmin
@@ -166,12 +166,23 @@ export async function respondToAdvancedTrade(
         const nameMap = Object.fromEntries(
           (users ?? []).map((u) => [u.id, formatName(u.name)])
         )
-        const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
-        for (const pid of participants) {
-          const others = participants.filter((id) => id !== pid).map((id) => nameMap[id] ?? 'Usuário')
-          logAction(pid, 'advanced_trade_executed', {
+        // Cycle: A→B→C→A. Each gives to the next, receives from the previous.
+        const legs: Array<{ userId: string; givingIds: string[]; receivingIds: string[]; giveToId: string; receiveFromId: string }> = [
+          { userId: trade.user_a_id, givingIds: trade.a_gives_ids, receivingIds: trade.c_gives_ids, giveToId: trade.user_b_id, receiveFromId: trade.user_c_id },
+          { userId: trade.user_b_id, givingIds: trade.b_gives_ids, receivingIds: trade.a_gives_ids, giveToId: trade.user_c_id, receiveFromId: trade.user_a_id },
+          { userId: trade.user_c_id, givingIds: trade.c_gives_ids, receivingIds: trade.b_gives_ids, giveToId: trade.user_a_id, receiveFromId: trade.user_b_id },
+        ]
+        for (const leg of legs) {
+          const partners = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
+            .filter((id) => id !== leg.userId)
+            .map((id) => nameMap[id] ?? 'Usuário')
+          logAction(leg.userId, 'advanced_trade_executed', {
             tradeId: trade.id,
-            partners: others,
+            partners,
+            givingIds: leg.givingIds,
+            receivingIds: leg.receivingIds,
+            giveToName: nameMap[leg.giveToId] ?? 'Usuário',
+            receiveFromName: nameMap[leg.receiveFromId] ?? 'Usuário',
           })
         }
       } catch { /* logging is best-effort */ }

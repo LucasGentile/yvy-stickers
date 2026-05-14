@@ -129,8 +129,15 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-[#16a34a]',
     iconBg: 'bg-green-50',
     iconColor: 'text-green-700',
-    label: () => 'Troca triangular concluída',
-    detail: (m) => `Com ${((m.partners as string[]) ?? []).join(' e ')}`,
+    label: (m) => `Troca triangular concluída com ${((m.partners as string[]) ?? []).join(' e ')}`,
+    detail: (m) => {
+      const giving = (m.givingIds as string[] | undefined) ?? []
+      const receiving = (m.receivingIds as string[] | undefined) ?? []
+      const parts: string[] = []
+      if (giving.length > 0) parts.push(`${giving.length} para ${m.giveToName ?? 'alguém'}`)
+      if (receiving.length > 0) parts.push(`${receiving.length} de ${m.receiveFromName ?? 'alguém'}`)
+      return parts.join(' · ')
+    },
   },
   advanced_trade_cancelled: {
     icon: '○',
