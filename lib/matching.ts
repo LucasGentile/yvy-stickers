@@ -17,6 +17,8 @@ export type MatchResult = {
   mutualScore: number
   matchStickers: string[]
   reciprocalStickers: string[]
+  completionPct: number
+  missingCount: number
 }
 
 function computeNeeded(mode: string, marked: Set<string>): Set<string> {
@@ -133,6 +135,12 @@ export async function getMatches(
       const reciprocalScore = reciprocalStickers.length
 
       const mutualScore = Math.min(matchScore, reciprocalScore)
+
+      const theirOwnedCount =
+        user.input_mode === 'have' ? theirMarked.size : ALL_STICKER_IDS.length - theirMarked.size
+      const completionPct = Math.round((theirOwnedCount / ALL_STICKER_IDS.length) * 100)
+      const missingCount = theirNeeded.size
+
       return {
         userId: user.id,
         displayKey: user.display_key,
@@ -145,6 +153,8 @@ export async function getMatches(
         mutualScore,
         matchStickers,
         reciprocalStickers,
+        completionPct,
+        missingCount,
       }
     })
     .sort((a, b) => {

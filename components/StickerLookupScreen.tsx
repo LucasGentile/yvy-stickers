@@ -431,7 +431,7 @@ export default function StickerLookupScreen() {
       {result && <ResultCard stickerId={displayId} result={result} />}
 
       {!result && !selectedEntry && (
-        <p className="text-[11px] text-yvy-muted text-center leading-relaxed">
+        <p className="text-xs text-yvy-text/70 text-center leading-relaxed">
           Digite o código da figurinha — ex: <span className="font-mono">BRA5</span>,{' '}
           <span className="font-mono">FWC00</span>, <span className="font-mono">MEX12</span>
         </p>

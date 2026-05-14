@@ -308,28 +308,46 @@ function DetailModal({
 export default function MatchCard({
   match,
   rank,
+  nearComplete,
   onTradeCreated,
 }: {
   match: MatchResult
   rank: number
+  nearComplete?: boolean
   onTradeCreated?: () => void
 }) {
   const isMutual = match.mutualScore > 0
+  const hasBanner = nearComplete || rank === 1
   const [showDetail, setShowDetail] = useState(false)
 
   return (
     <>
       <div
         className={`bg-yvy-surface rounded-xl border shadow-md flex flex-col gap-3 overflow-hidden ${
-          rank === 1
-            ? 'border-yvy-gold border-2'
-            : isMutual
-              ? 'border-yvy-accent p-4'
-              : 'border-yvy-border p-4'
+          nearComplete
+            ? 'border-amber-400 border-2'
+            : rank === 1
+              ? 'border-yvy-gold border-2'
+              : isMutual
+                ? 'border-yvy-accent p-4'
+                : 'border-yvy-border p-4'
         }`}
       >
-        {/* #1 trophy banner */}
-        {rank === 1 && (
+        {/* Near-complete amber banner */}
+        {nearComplete && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-amber-400">
+            <span className="text-white text-sm leading-none">🎯</span>
+            <span className="text-white text-[11px] font-bold uppercase tracking-widest">
+              Quase completo — Ajude!
+            </span>
+            <span className="ml-auto text-white text-[11px] font-bold">
+              {match.completionPct}%
+            </span>
+          </div>
+        )}
+
+        {/* #1 trophy banner (only when not near-complete) */}
+        {rank === 1 && !nearComplete && (
           <div className="flex items-center gap-2 px-4 py-2 bg-yvy-gold">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
@@ -348,13 +366,15 @@ export default function MatchCard({
         )}
 
         {/* Header */}
-        <div className={`flex items-start justify-between gap-2 ${rank === 1 ? 'px-4 pb-1' : ''}`}>
+        <div className={`flex items-start justify-between gap-2 ${hasBanner ? 'px-4 pb-1' : ''}`}>
           <div className="flex items-start gap-2.5">
             <span
               className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold mt-0.5 ${
-                rank === 1
-                  ? 'bg-yvy-gold text-white'
-                  : 'bg-yvy-bg text-yvy-muted border border-yvy-border'
+                nearComplete
+                  ? 'bg-amber-400 text-white'
+                  : rank === 1
+                    ? 'bg-yvy-gold text-white'
+                    : 'bg-yvy-bg text-yvy-muted border border-yvy-border'
               }`}
             >
               {rank}
@@ -367,6 +387,11 @@ export default function MatchCard({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {!nearComplete && match.completionPct >= 85 && (
+              <span className="text-[10px] font-semibold bg-amber-400/20 text-amber-700 px-2 py-1 rounded-full">
+                🎯 {match.completionPct}%
+              </span>
+            )}
             {isMutual && (
               <span className="text-[10px] font-semibold uppercase tracking-wide bg-yvy-accent/15 text-yvy-dark px-2 py-1 rounded-full">
                 Troca mútua
@@ -376,7 +401,24 @@ export default function MatchCard({
         </div>
 
         {/* Scores */}
-        <div className={rank === 1 ? 'px-4 pb-4 flex flex-col gap-3' : 'flex flex-col gap-3'}>
+        <div className={hasBanner ? 'px-4 pb-4 flex flex-col gap-3' : 'flex flex-col gap-3'}>
+          {nearComplete && (
+            <div className="space-y-1">
+              <div className="h-1.5 bg-amber-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-400 rounded-full"
+                  style={{ width: `${match.completionPct}%` }}
+                />
+              </div>
+              {match.reciprocalScore > 0 && (
+                <p className="text-xs text-amber-700 font-medium">
+                  Você tem <strong>{match.reciprocalScore}</strong> das{' '}
+                  <strong>{match.missingCount}</strong> figurinhas que faltam
+                </p>
+              )}
+            </div>
+          )}
+
           {match.matchScore > 0 || match.reciprocalScore > 0 ? (
             <>
               {(() => {

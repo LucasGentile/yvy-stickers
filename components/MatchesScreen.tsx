@@ -105,9 +105,22 @@ export default function MatchesScreen() {
         <button
           onClick={() => userId && refreshMatches(userId)}
           disabled={refreshing}
-          className="text-sm text-yvy-accent underline disabled:opacity-40"
+          aria-label="Atualizar ranking"
+          className="w-8 h-8 flex items-center justify-center rounded-full border border-yvy-border bg-yvy-surface text-yvy-muted hover:text-yvy-dark hover:border-yvy-dark transition-colors disabled:opacity-40"
         >
-          {refreshing ? 'Atualizando...' : 'Atualizar'}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+          >
+            <path d="M23 4v6h-6" />
+            <path d="M1 20v-6h6" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
         </button>
       </div>
 
@@ -136,23 +149,77 @@ export default function MatchesScreen() {
         </div>
       ) : (
         <>
-          <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-3 text-xs text-yvy-muted leading-relaxed">
-            Ranking de compatibilidade — quem aparece primeiro é quem mais tem figurinhas para
-            trocar <strong className="text-yvy-dark">com você</strong>, e você com ele/ela ao mesmo
-            tempo. Toque em <strong className="text-yvy-dark">Realizar Troca</strong> para enviar um
-            pedido de troca.
-          </div>
+          {(() => {
+            const NEAR_COMPLETE_THRESHOLD = 85
+            const nearCompleteMatches = matches
+              .filter(
+                (m) => m.completionPct >= NEAR_COMPLETE_THRESHOLD && m.mutualScore >= 1
+              )
+              .sort((a, b) => {
+                if (b.completionPct !== a.completionPct) return b.completionPct - a.completionPct
+                return b.reciprocalScore - a.reciprocalScore
+              })
+            const nearCompleteIds = new Set(nearCompleteMatches.map((m) => m.userId))
+            const regularMatches = matches.filter(
+              (m) => !nearCompleteIds.has(m.userId) || m.mutualScore >= 5
+            )
 
-          <div className="space-y-3">
-            {matches.map((m, i) => (
-              <MatchCard
-                key={m.userId}
-                match={m}
-                rank={i + 1}
-                onTradeCreated={() => userId && refreshMatches(userId)}
-              />
-            ))}
-          </div>
+            return (
+              <>
+                {nearCompleteMatches.length > 0 && (
+                  <>
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-bold text-amber-600 flex items-center gap-1.5">
+                        🎯 Ajude a completar o álbum
+                      </h3>
+                      <p className="text-xs text-yvy-muted leading-relaxed">
+                        Estes participantes estão quase completando o álbum e têm pelo menos uma
+                        figurinha para trocar com você. Uma pequena troca pode fazer a diferença!
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      {nearCompleteMatches.map((m, i) => (
+                        <MatchCard
+                          key={`nc-${m.userId}`}
+                          match={m}
+                          rank={i + 1}
+                          nearComplete
+                          onTradeCreated={() => userId && refreshMatches(userId)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {regularMatches.length > 0 && (
+                  <>
+                    {nearCompleteMatches.length > 0 && (
+                      <h3 className="text-sm font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5">
+                        Ranking de Compatibilidade
+                      </h3>
+                    )}
+                    <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-3 text-xs text-yvy-muted leading-relaxed">
+                      Quem aparece primeiro é quem mais tem figurinhas para trocar{' '}
+                      <strong className="text-yvy-dark">com você</strong>, e você com ele/ela ao
+                      mesmo tempo. Toque em{' '}
+                      <strong className="text-yvy-dark">Realizar Troca</strong> para enviar um
+                      pedido.
+                    </div>
+                    <div className="space-y-3">
+                      {regularMatches.map((m, i) => (
+                        <MatchCard
+                          key={m.userId}
+                          match={m}
+                          rank={i + 1}
+                          onTradeCreated={() => userId && refreshMatches(userId)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )
+          })()}
         </>
       )}
     </div>
