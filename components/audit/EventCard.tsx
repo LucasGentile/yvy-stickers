@@ -165,6 +165,18 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
                 </div>
               </div>
             )}
+            {isAdvancedExecuted && ((entry.metadata.thirdPartyIds as string[] | undefined) ?? []).length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 mb-1.5">
+                  {entry.metadata.thirdPartyFromName as string} dá para {entry.metadata.thirdPartyToName as string}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {sort((entry.metadata.thirdPartyIds as string[]) ?? []).map((id) => (
+                    <StickerChip key={id} id={id} variant="third-party" />
+                  ))}
+                </div>
+              </div>
+            )}
             <button
               onClick={() => setAssistantOpen(true)}
               className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
