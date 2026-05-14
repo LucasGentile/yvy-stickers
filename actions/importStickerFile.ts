@@ -89,8 +89,11 @@ export async function importStickerFile(
   const totalDuplicateCopies = savedDuplicates.reduce((sum, r) => sum + r.count, 0)
   const duplicateIds = savedDuplicates.map((r) => r.sticker_id)
 
+  const totalLines = Object.values(counts).reduce((s, c) => s + c, 0)
+
   logAction(userId, 'file_import', {
     total: stickerIds.length,
+    totalLines,
     added: addedToAlbum,
     removed: removedFromAlbum,
     addedToAlbumIds,

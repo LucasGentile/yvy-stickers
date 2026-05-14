@@ -177,15 +177,19 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     label: () => 'Álbum importado por arquivo',
     detail: (m) => {
       const total = m.total as number
+      const totalLines = (m.totalLines as number | undefined) ?? total
       const dupItems = (m.duplicateItems as number) ?? 0
       const dupCopies = (m.duplicateCopies as number) ?? 0
       const failed =
         ((m.failedStickers as string[]) ?? []).length +
         ((m.failedDuplicates as string[]) ?? []).length
-      const parts = [`${total} figurinha${total !== 1 ? 's' : ''} no álbum`]
+      const parts: string[] = []
+      if (totalLines !== total)
+        parts.push(`${totalLines} linha${totalLines !== 1 ? 's' : ''} no arquivo`)
+      parts.push(`${total} figurinha${total !== 1 ? 's' : ''} únicas no álbum`)
       if (dupItems > 0)
         parts.push(
-          `${dupItems} repetida${dupItems !== 1 ? 's' : ''} (${dupCopies} cópia${dupCopies !== 1 ? 's' : ''} extra)`
+          `${dupItems} com repetida${dupItems !== 1 ? 's' : ''} (${dupCopies} cópia${dupCopies !== 1 ? 's' : ''} extra)`
         )
       if (failed > 0) parts.push(`${failed} não salvo${failed !== 1 ? 's' : ''}`)
       return parts.join(' · ')

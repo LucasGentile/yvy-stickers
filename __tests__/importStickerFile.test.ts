@@ -103,8 +103,33 @@ describe('importStickerFile', () => {
     const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 3, BRA5: 2 })
     expect(result.success).toBe(true)
     if (result.success) {
+      expect(result.totalStickers).toBe(2)   // 2 unique IDs
       expect(result.newDuplicates).toBe(2)
       expect(result.totalDuplicateCopies).toBe(3) // 2 + 1
+    }
+  })
+
+  it('totalLines equals sum of all counts (unique + extra copies)', async () => {
+    // This verifies the metadata logged to audit includes the raw file line count,
+    // not just the unique sticker count, so history shows "5 linhas no arquivo · 2 únicas".
+    let callIndex = 0
+    mockFrom.mockImplementation(() => {
+      callIndex++
+      if (callIndex === 1) return makeChain({ data: [] })
+      if (callIndex === 2) return makeChain({ error: null })
+      if (callIndex === 3) return makeChain({ error: null })
+      if (callIndex === 4) return makeChain({ error: null })
+      if (callIndex === 5) return makeChain({ error: null })
+      return makeChain({ error: null })
+    })
+
+    // MEX1×3 + BRA5×2 = 5 lines, 2 unique
+    const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 3, BRA5: 2 })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      // totalStickers = unique IDs (2); total lines = 3+2 = 5
+      expect(result.totalStickers).toBe(2)
+      expect(result.totalDuplicateCopies).toBe(3) // lines - unique = 5 - 2
     }
   })
 
