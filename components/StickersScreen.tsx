@@ -8,7 +8,8 @@ import { removeDuplicate } from '@/actions/removeDuplicate'
 import { getUserData } from '@/actions/getUserData'
 import { getTradeOriginStickers, type TradeOriginResult } from '@/actions/getTradeOriginStickers'
 import { parseStickerFile } from '@/lib/parser'
-import { ALL_STICKER_IDS, isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
+import { ALL_STICKER_IDS, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
+import { StickerChip } from './StickerChip'
 import StickerGrid from './StickerGrid'
 import CountrySearch from './CountrySearch'
 import { usePrefs } from '@/contexts/PreferencesContext'
@@ -429,23 +430,6 @@ export default function StickersScreen() {
         const dupeIds = sortFn(importSummary.duplicateIds)
         const LIMIT = 30
 
-        function StickerChip({ id, color }: { id: string; color: 'green' | 'amber' }) {
-          const chrome = isChromeSticker(id)
-          const coke = isCocaColaSticker(id)
-          const base = 'text-[11px] font-mono px-2 py-0.5 rounded-md border'
-          const cls =
-            color === 'green'
-              ? `${base} bg-green-50 border-green-200 text-green-700`
-              : `${base} bg-amber-50 border-amber-200 text-amber-700`
-          return (
-            <span className={cls}>
-              {chrome ? <span className="font-bold text-amber-500">{id}</span>
-                : coke ? <span className="font-bold text-red-500">{id}</span>
-                : id}
-            </span>
-          )
-        }
-
         return (
           <div className="bg-yvy-surface rounded-xl border border-green-200 shadow-md p-4 space-y-3">
             <div className="flex items-center justify-between">
@@ -459,7 +443,7 @@ export default function StickersScreen() {
                   Para colar no álbum ({albumIds.length})
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {albumIds.slice(0, LIMIT).map((id) => <StickerChip key={id} id={id} color="green" />)}
+                  {albumIds.slice(0, LIMIT).map((id) => <StickerChip key={id} id={id} variant="green" />)}
                   {albumIds.length > LIMIT && (
                     <span className="text-[11px] text-yvy-muted py-0.5">+{albumIds.length - LIMIT} mais</span>
                   )}
@@ -476,7 +460,7 @@ export default function StickersScreen() {
                   )}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {dupeIds.slice(0, LIMIT).map((id) => <StickerChip key={id} id={id} color="amber" />)}
+                  {dupeIds.slice(0, LIMIT).map((id) => <StickerChip key={id} id={id} variant="amber" />)}
                   {dupeIds.length > LIMIT && (
                     <span className="text-[11px] text-yvy-muted py-0.5">+{dupeIds.length - LIMIT} mais</span>
                   )}

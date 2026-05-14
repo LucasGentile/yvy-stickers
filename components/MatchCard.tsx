@@ -3,37 +3,8 @@
 import { useState } from 'react'
 import type { MatchResult } from '@/lib/matching'
 import { createTradeRequest } from '@/actions/createTradeRequest'
-import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
-
-function StickerChip({
-  id,
-  selected,
-  onToggle,
-}: {
-  id: string
-  selected: boolean
-  onToggle: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={`text-[11px] font-mono px-2 py-0.5 rounded-md border transition-colors ${
-        selected
-          ? 'bg-yvy-dark text-white border-yvy-dark'
-          : 'bg-yvy-bg text-yvy-text border-yvy-border hover:border-yvy-dark'
-      }`}
-    >
-      {isChromeSticker(id) ? (
-        <span className="font-bold text-amber-400">{id}</span>
-      ) : isCocaColaSticker(id) ? (
-        <span className="font-bold text-red-500">{id}</span>
-      ) : (
-        id
-      )}
-    </button>
-  )
-}
+import { isChromeSticker } from '@/lib/stickers'
+import { StickerChip } from './StickerChip'
 
 function DetailModal({
   match,
@@ -123,18 +94,7 @@ function DetailModal({
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {[...receiving].map((id) => (
-                    <span
-                      key={id}
-                      className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-dark text-white"
-                    >
-                      {isChromeSticker(id) ? (
-                        <span className="font-bold text-amber-400">{id}</span>
-                      ) : isCocaColaSticker(id) ? (
-                        <span className="font-bold text-red-500">{id}</span>
-                      ) : (
-                        id
-                      )}
-                    </span>
+                    <StickerChip key={id} id={id} selected />
                   ))}
                 </div>
               </div>
@@ -147,18 +107,7 @@ function DetailModal({
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {[...giving].map((id) => (
-                    <span
-                      key={id}
-                      className="text-[11px] font-mono px-2 py-0.5 rounded-md border border-yvy-border text-yvy-text"
-                    >
-                      {isChromeSticker(id) ? (
-                        <span className="font-bold text-amber-400">{id}</span>
-                      ) : isCocaColaSticker(id) ? (
-                        <span className="font-bold text-red-500">{id}</span>
-                      ) : (
-                        id
-                      )}
-                    </span>
+                    <StickerChip key={id} id={id} />
                   ))}
                 </div>
               </div>

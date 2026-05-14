@@ -4,15 +4,11 @@ import { useEffect, useState } from 'react'
 import { getAuditLog, AuditEntry } from '@/actions/getAuditLog'
 import { getTradeLog } from '@/actions/getTradeLog'
 import { rollbackTrade } from '@/actions/rollbackTrade'
-import {
-  isChromeSticker,
-  isCocaColaSticker,
-  sortByAlbumOrder,
-  sortAlphabetically,
-} from '@/lib/stickers'
+import { sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
 import { getTradeRollbackInfo } from '@/actions/getTradeRollbackInfo'
 import { formatName } from '@/lib/format'
+import { StickerChip } from './StickerChip'
 
 // ─── Event config ─────────────────────────────────────────────────────────────
 
@@ -595,41 +591,6 @@ function ImportAssistant({
     })
   }
 
-  function ImportChip({
-    id,
-    color,
-    checked,
-    onToggle,
-  }: {
-    id: string
-    color: 'green' | 'amber'
-    checked: boolean
-    onToggle: () => void
-  }) {
-    const isChrome = isChromeSticker(id)
-    const isCoke = isCocaColaSticker(id)
-    const base = 'relative text-sm font-mono font-semibold px-3 py-1.5 rounded-lg border-2 transition-all select-none'
-    const activeGreen = 'bg-green-50 border-green-300 text-green-700'
-    const doneGreen = 'bg-green-100 border-green-200 text-green-300 line-through opacity-50'
-    const activeAmber = 'bg-amber-50 border-amber-300 text-amber-700'
-    const doneAmber = 'bg-amber-100 border-amber-200 text-amber-300 line-through opacity-50'
-    const colorClass = checked
-      ? color === 'green' ? doneGreen : doneAmber
-      : color === 'green' ? activeGreen : activeAmber
-    const label = isChrome ? `✨${id}` : id
-    return (
-      <button type="button" onClick={onToggle} className={`${base} ${colorClass}`}>
-        {isChrome ? <span className={checked ? '' : 'text-amber-500'}>{label}</span>
-          : isCoke ? <span className={checked ? '' : 'text-red-500'}>{id}</span>
-          : id}
-        {checked && (
-          <span className={`absolute -top-1.5 -right-1.5 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center ${color === 'green' ? 'bg-green-500' : 'bg-amber-500'}`}>
-            ✓
-          </span>
-        )}
-      </button>
-    )
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
@@ -656,7 +617,7 @@ function ImportAssistant({
               </div>
               <div className="flex flex-wrap gap-2">
                 {sortedAlbum.map((id) => (
-                  <ImportChip key={id} id={id} color="green" checked={checkedAlbum.has(id)} onToggle={() => toggle(checkedAlbum, setCheckedAlbum, id)} />
+                  <StickerChip key={id} id={id} variant="green" size="md" checked={checkedAlbum.has(id)} onToggle={() => toggle(checkedAlbum, setCheckedAlbum, id)} />
                 ))}
               </div>
             </div>
@@ -672,7 +633,7 @@ function ImportAssistant({
               </div>
               <div className="flex flex-wrap gap-2">
                 {sortedDupes.map((id) => (
-                  <ImportChip key={id} id={id} color="amber" checked={checkedDupes.has(id)} onToggle={() => toggle(checkedDupes, setCheckedDupes, id)} />
+                  <StickerChip key={id} id={id} variant="amber" size="md" checked={checkedDupes.has(id)} onToggle={() => toggle(checkedDupes, setCheckedDupes, id)} />
                 ))}
               </div>
             </div>
@@ -688,59 +649,6 @@ function ImportAssistant({
 }
 
 // ─── Trade assistant ─────────────────────────────────────────────────────────
-
-function StickerChip({
-  id,
-  variant,
-  checked,
-  onToggle,
-}: {
-  id: string
-  variant: 'giving' | 'receiving'
-  checked: boolean
-  onToggle?: () => void
-}) {
-  const isChrome = isChromeSticker(id)
-  const isCoke = isCocaColaSticker(id)
-
-  const base =
-    'relative text-sm font-mono font-semibold px-3 py-1.5 rounded-lg border-2 transition-all select-none'
-  const activeGiving = 'bg-rose-50 border-rose-300 text-rose-700'
-  const doneGiving = 'bg-rose-100 border-rose-200 text-rose-300 line-through opacity-50'
-  const activeReceiving = 'bg-green-50 border-green-300 text-green-700'
-  const doneReceiving = 'bg-green-100 border-green-200 text-green-300 line-through opacity-50'
-
-  const colorClass = checked
-    ? variant === 'giving'
-      ? doneGiving
-      : doneReceiving
-    : variant === 'giving'
-      ? activeGiving
-      : activeReceiving
-
-  const label = isChrome ? `✨${id}` : isCoke ? id : id
-
-  if (onToggle) {
-    return (
-      <button type="button" onClick={onToggle} className={`${base} ${colorClass}`}>
-        {isChrome ? <span className={checked ? '' : 'text-amber-500'}>{label}</span> : label}
-        {checked && (
-          <span
-            className={`absolute -top-1.5 -right-1.5 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center ${variant === 'giving' ? 'bg-rose-400' : 'bg-green-500'}`}
-          >
-            ✓
-          </span>
-        )}
-      </button>
-    )
-  }
-
-  return (
-    <span className={`${base} ${colorClass} cursor-default`}>
-      {isChrome ? <span className={checked ? '' : 'text-amber-500'}>{label}</span> : label}
-    </span>
-  )
-}
 
 function TradeAssistant({
   partnerName: _partnerName,
@@ -1015,18 +923,7 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {givingIds.map((id) => (
-                    <span
-                      key={id}
-                      className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-rose-50 border border-rose-200 text-rose-700"
-                    >
-                      {isChromeSticker(id) ? (
-                        <span className="font-bold text-amber-500">{id}</span>
-                      ) : isCocaColaSticker(id) ? (
-                        <span className="font-bold text-red-500">{id}</span>
-                      ) : (
-                        id
-                      )}
-                    </span>
+                    <StickerChip key={id} id={id} variant="giving" />
                   ))}
                 </div>
               </div>
@@ -1039,18 +936,7 @@ function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {receivingIds.map((id) => (
-                    <span
-                      key={id}
-                      className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-green-50 border border-green-200 text-green-700"
-                    >
-                      {isChromeSticker(id) ? (
-                        <span className="font-bold text-amber-500">{id}</span>
-                      ) : isCocaColaSticker(id) ? (
-                        <span className="font-bold text-red-500">{id}</span>
-                      ) : (
-                        id
-                      )}
-                    </span>
+                    <StickerChip key={id} id={id} variant="receiving" />
                   ))}
                 </div>
               </div>
