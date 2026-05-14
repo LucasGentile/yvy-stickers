@@ -20,6 +20,13 @@ const ARROW: Record<StickerListVariant, string> = {
   default: '',
 }
 
+function buildLabel(label: string, variant: StickerListVariant): string {
+  if (!label) return ''
+  const prefix = variant === 'receiving' ? ARROW[variant] : ''
+  const suffix = variant === 'giving' ? ARROW[variant] : ''
+  return `${prefix}${label}${suffix}`
+}
+
 export function StickerList({
   ids,
   label,
@@ -36,16 +43,20 @@ export function StickerList({
 
   const chipVariant: StickerChipVariant = variant === 'default' ? 'default' : variant
 
+  const displayLabel = buildLabel(label, variant)
+
   return (
     <div>
-      <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${LABEL_STYLES[variant]}`}>
-        {variant === 'receiving' ? ARROW[variant] : ''}{label}{variant === 'giving' ? ARROW[variant] : ''}
-        {chromeCount > 0 && (
-          <span className="ml-1.5 text-amber-600 normal-case font-medium">
-            · ✨ {chromeCount} cromada{chromeCount !== 1 ? 's' : ''}
-          </span>
-        )}
-      </p>
+      {displayLabel && (
+        <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${LABEL_STYLES[variant]}`}>
+          {displayLabel}
+          {chromeCount > 0 && (
+            <span className="ml-1.5 text-amber-600 normal-case font-medium">
+              · ✨ {chromeCount} cromada{chromeCount !== 1 ? 's' : ''}
+            </span>
+          )}
+        </p>
+      )}
       <div className="flex flex-wrap gap-1">
         {sorted.map((id) => (
           <StickerChip key={id} id={id} variant={chipVariant} />

@@ -66,7 +66,9 @@ export function StickerChip({
   const showSparkle = (variant === 'giving' || variant === 'receiving' || variant === 'third-party') && isChrome
   const label = showSparkle ? `✨${id}` : id
 
-  const skipSpecialColor = checked && (variant === 'giving' || variant === 'receiving' || variant === 'green' || variant === 'amber')
+  const skipSpecialColor =
+    variant === 'giving' || variant === 'receiving' || variant === 'third-party' ||
+    (checked && (variant === 'green' || variant === 'amber'))
   const chromeClass = variant === 'default' && selected ? 'font-bold text-amber-300' : 'font-bold text-amber-500'
   const cokeClass = variant === 'default' && selected ? 'font-bold text-red-300' : 'font-bold text-red-500'
 
