@@ -7,6 +7,7 @@ import { findAdvancedTrade } from '@/actions/findAdvancedTrade'
 import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previewAdvancedTrade'
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
 import { StickerList } from '@/components/trades/StickerList'
+import { ColorLegend } from '@/components/trades/ColorLegend'
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'approved') {
@@ -436,6 +437,8 @@ export default function AdvancedTradeScreen() {
           </svg>
         </button>
       </div>
+
+      <ColorLegend />
 
       {/* Pending trades */}
       {pendingTrades.length > 0 && (
