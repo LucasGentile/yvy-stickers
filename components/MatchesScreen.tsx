@@ -139,7 +139,7 @@ export default function MatchesScreen() {
               sent={pending.sent}
               recentlyAccepted={rollbackRequests}
               userId={userId}
-              onRefresh={() => loadPending(userId)}
+              onRefresh={() => refreshMatches(userId)}
             />
           )
         })()}
