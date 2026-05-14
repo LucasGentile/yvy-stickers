@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getAdvancedTrades, type AdvancedTradeView } from '@/actions/getAdvancedTrades'
 import { findAdvancedTrade } from '@/actions/findAdvancedTrade'
+import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previewAdvancedTrade'
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
 import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
@@ -67,11 +68,11 @@ function TradeCard({
   userId: string
   onDone: () => void
 }) {
-  const [loading, setLoading] = useState<'approve' | 'reject' | null>(null)
+  const [loading, setLoading] = useState<'approve' | 'reject' | 'cancel' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
-  const [confirming, setConfirming] = useState<'approve' | 'reject' | null>(null)
+  const [confirming, setConfirming] = useState<'approve' | 'reject' | 'cancel' | null>(null)
 
-  async function handle(action: 'approve' | 'reject') {
+  async function handle(action: 'approve' | 'reject' | 'cancel') {
     setLoading(action)
     setMsg(null)
     try {
@@ -129,7 +130,7 @@ function TradeCard({
         <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
           <p className="text-xs font-semibold text-yvy-dark">
             <span className="capitalize">{trade.thirdParty.name}</span> dá para{' '}
-            <span className="capitalize">{trade.giveTo.name}</span>
+            <span className="capitalize">{trade.thirdParty.givesToName}</span>
           </p>
           <StickerList ids={trade.thirdParty.givesIds} label="" />
         </div>
@@ -191,9 +192,42 @@ function TradeCard({
       )}
 
       {trade.myApprovalStatus === 'approved' && trade.status === 'pending' && (
-        <p className="text-xs text-emerald-600 font-medium">
-          ✓ Você aprovou. Aguardando os outros participantes.
-        </p>
+        <div className="space-y-2">
+          <p className="text-xs text-emerald-600 font-medium">
+            ✓ Você aprovou. Aguardando os outros participantes.
+          </p>
+          {trade.isRequester && (
+            <>
+              {confirming === 'cancel' ? (
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-yvy-muted flex-1">Cancelar esta troca?</p>
+                  <button
+                    onClick={() => setConfirming(null)}
+                    disabled={loading !== null}
+                    className="text-xs text-yvy-muted underline disabled:opacity-50"
+                  >
+                    Não
+                  </button>
+                  <button
+                    onClick={() => handle('cancel')}
+                    disabled={loading !== null}
+                    className="text-xs font-semibold text-red-600 underline disabled:opacity-50"
+                  >
+                    {loading === 'cancel' ? 'Cancelando...' : 'Sim, cancelar'}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirming('cancel')}
+                  disabled={loading !== null}
+                  className="text-xs text-yvy-muted underline disabled:opacity-50"
+                >
+                  Cancelar proposta
+                </button>
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
   )
@@ -204,6 +238,8 @@ export default function AdvancedTradeScreen() {
   const [trades, setTrades] = useState<AdvancedTradeView[]>([])
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const [preview, setPreview] = useState<AdvancedTradePreview | null>(null)
   const [searchMsg, setSearchMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -231,11 +267,11 @@ export default function AdvancedTradeScreen() {
     if (!userId) return
     setSearching(true)
     setSearchMsg(null)
+    setPreview(null)
     try {
-      const result = await findAdvancedTrade(userId)
+      const result = await previewAdvancedTrade(userId)
       if (result.found) {
-        setSearchMsg(null)
-        await loadTrades(userId)
+        setPreview(result.preview)
       } else {
         setSearchMsg(
           result.error ?? 'Nenhuma troca triangular disponível no momento. Tente mais tarde.'
@@ -245,6 +281,27 @@ export default function AdvancedTradeScreen() {
       setSearchMsg('Erro inesperado. Tente novamente.')
     } finally {
       setSearching(false)
+    }
+  }
+
+  async function handleConfirm() {
+    if (!userId) return
+    setConfirming(true)
+    setSearchMsg(null)
+    try {
+      const result = await findAdvancedTrade(userId)
+      if (result.found) {
+        setPreview(null)
+        await loadTrades(userId)
+      } else {
+        setSearchMsg(
+          result.error ?? 'Erro ao criar proposta. Tente novamente.'
+        )
+      }
+    } catch {
+      setSearchMsg('Erro inesperado. Tente novamente.')
+    } finally {
+      setConfirming(false)
     }
   }
 
@@ -292,8 +349,8 @@ export default function AdvancedTradeScreen() {
         </div>
       )}
 
-      {/* Search button */}
-      {pendingTrades.length === 0 && (
+      {/* Search / Preview / Confirm */}
+      {pendingTrades.length === 0 && !preview && (
         <div className="space-y-3">
           <div className="bg-yvy-bg rounded-xl p-4 space-y-3">
             <p className="text-xs text-yvy-muted leading-relaxed">
@@ -315,6 +372,60 @@ export default function AdvancedTradeScreen() {
           {searchMsg && (
             <p className="text-xs text-yvy-muted text-center">{searchMsg}</p>
           )}
+        </div>
+      )}
+
+      {/* Preview before confirming */}
+      {preview && (
+        <div className="space-y-3">
+          <h3 className="text-base font-bold text-yvy-dark">Proposta encontrada</h3>
+          <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
+            <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
+              <p className="text-xs font-semibold text-yvy-dark">
+                Você dá para <span className="capitalize">{preview.userB.name}</span>
+              </p>
+              <StickerList ids={preview.aGivesIds} label="" />
+            </div>
+            <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
+              <p className="text-xs font-semibold text-yvy-dark">
+                Você recebe de <span className="capitalize">{preview.userC.name}</span>
+              </p>
+              <StickerList ids={preview.cGivesIds} label="" />
+            </div>
+            <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
+              <p className="text-xs font-semibold text-yvy-dark">
+                <span className="capitalize">{preview.userB.name}</span> dá para{' '}
+                <span className="capitalize">{preview.userC.name}</span>
+              </p>
+              <StickerList ids={preview.bGivesIds} label="" />
+            </div>
+
+            <p className="text-xs text-yvy-muted leading-relaxed">
+              Ao confirmar, os outros 2 participantes receberão a proposta e precisarão aprovar
+              para a troca acontecer.
+            </p>
+
+            {searchMsg && (
+              <p className="text-xs text-red-600">{searchMsg}</p>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setPreview(null); setSearchMsg(null) }}
+                disabled={confirming}
+                className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2.5 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={confirming}
+                className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                {confirming ? 'Enviando...' : 'Confirmar proposta'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

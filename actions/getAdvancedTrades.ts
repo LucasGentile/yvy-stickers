@@ -10,7 +10,7 @@ export type AdvancedTradeView = {
   myReceivingIds: string[]
   giveTo: { id: string; name: string }
   receiveFrom: { id: string; name: string }
-  thirdParty: { id: string; name: string; givesIds: string[]; receivesIds: string[] }
+  thirdParty: { id: string; name: string; givesIds: string[]; givesToName: string; receivesIds: string[] }
   myApprovalStatus: string
   otherStatuses: Array<{ name: string; status: string }>
   createdAt: string
@@ -80,13 +80,17 @@ export async function getAdvancedTrades(
     let myStatus: string
     let otherStatuses: Array<{ name: string; status: string }>
 
+    let thirdGivesToId: string
+
     if (trade.user_a_id === userId) {
+      // A gives to B, receives from C. Third party is B who gives to C.
       myGivingIds = trade.a_gives_ids
       myReceivingIds = trade.c_gives_ids
       giveToId = trade.user_b_id
       receiveFromId = trade.user_c_id
       thirdId = trade.user_b_id
       thirdGives = trade.b_gives_ids
+      thirdGivesToId = trade.user_c_id
       thirdReceives = trade.a_gives_ids
       myStatus = trade.user_a_status
       otherStatuses = [
@@ -94,12 +98,14 @@ export async function getAdvancedTrades(
         { name: nameMap[trade.user_c_id] ?? 'Usuário', status: trade.user_c_status },
       ]
     } else if (trade.user_b_id === userId) {
+      // B gives to C, receives from A. Third party is C who gives to A.
       myGivingIds = trade.b_gives_ids
       myReceivingIds = trade.a_gives_ids
       giveToId = trade.user_c_id
       receiveFromId = trade.user_a_id
       thirdId = trade.user_c_id
       thirdGives = trade.c_gives_ids
+      thirdGivesToId = trade.user_a_id
       thirdReceives = trade.b_gives_ids
       myStatus = trade.user_b_status
       otherStatuses = [
@@ -107,12 +113,14 @@ export async function getAdvancedTrades(
         { name: nameMap[trade.user_c_id] ?? 'Usuário', status: trade.user_c_status },
       ]
     } else {
+      // C gives to A, receives from B. Third party is A who gives to B.
       myGivingIds = trade.c_gives_ids
       myReceivingIds = trade.b_gives_ids
       giveToId = trade.user_a_id
       receiveFromId = trade.user_b_id
       thirdId = trade.user_a_id
       thirdGives = trade.a_gives_ids
+      thirdGivesToId = trade.user_b_id
       thirdReceives = trade.c_gives_ids
       myStatus = trade.user_c_status
       otherStatuses = [
@@ -132,6 +140,7 @@ export async function getAdvancedTrades(
         id: thirdId,
         name: nameMap[thirdId] ?? 'Usuário',
         givesIds: thirdGives,
+        givesToName: nameMap[thirdGivesToId] ?? 'Usuário',
         receivesIds: thirdReceives,
       },
       myApprovalStatus: myStatus,
