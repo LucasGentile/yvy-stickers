@@ -6,37 +6,8 @@ import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibili
 import { findAdvancedTrade } from '@/actions/findAdvancedTrade'
 import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previewAdvancedTrade'
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
-import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder } from '@/lib/stickers'
-import { usePrefs } from '@/contexts/PreferencesContext'
-
-function StickerList({ ids, label }: { ids: string[]; label: string }) {
-  const { stickerOrder } = usePrefs()
-  if (ids.length === 0) return null
-  const sorted = stickerOrder === 'album' ? sortByAlbumOrder(ids) : [...ids].sort()
-  return (
-    <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">
-        {label}
-      </p>
-      <div className="flex flex-wrap gap-1">
-        {sorted.map((id) => (
-          <span
-            key={id}
-            className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text"
-          >
-            {isChromeSticker(id) ? (
-              <span className="font-bold text-amber-500">{id}</span>
-            ) : isCocaColaSticker(id) ? (
-              <span className="font-bold text-red-500">{id}</span>
-            ) : (
-              id
-            )}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
+import { StickerList } from '@/components/trades/StickerList'
+import { ColorLegend } from '@/components/trades/ColorLegend'
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'approved') {
@@ -114,26 +85,26 @@ function TradeCard({
 
       {/* Triangle visualization */}
       <div className="space-y-2">
-        <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
-          <p className="text-xs font-semibold text-yvy-dark">
-            Você dá para <span className="capitalize">{trade.giveTo.name}</span>
+        <div className="bg-rose-50/50 rounded-lg p-3 space-y-2 border border-rose-100">
+          <p className="text-xs font-semibold text-rose-700">
+            Você dá para <span className="capitalize">{trade.giveTo.name}</span> →
           </p>
-          <StickerList ids={trade.myGivingIds} label="" />
+          <StickerList ids={trade.myGivingIds} label="" variant="giving" />
         </div>
 
-        <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
-          <p className="text-xs font-semibold text-yvy-dark">
-            Você recebe de <span className="capitalize">{trade.receiveFrom.name}</span>
+        <div className="bg-green-50/50 rounded-lg p-3 space-y-2 border border-green-100">
+          <p className="text-xs font-semibold text-green-700">
+            ← Você recebe de <span className="capitalize">{trade.receiveFrom.name}</span>
           </p>
-          <StickerList ids={trade.myReceivingIds} label="" />
+          <StickerList ids={trade.myReceivingIds} label="" variant="receiving" />
         </div>
 
-        <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
-          <p className="text-xs font-semibold text-yvy-dark">
+        <div className="bg-sky-50/50 rounded-lg p-3 space-y-2 border border-sky-100">
+          <p className="text-xs font-semibold text-sky-700">
             <span className="capitalize">{trade.thirdParty.name}</span> dá para{' '}
             <span className="capitalize">{trade.thirdParty.givesToName}</span>
           </p>
-          <StickerList ids={trade.thirdParty.givesIds} label="" />
+          <StickerList ids={trade.thirdParty.givesIds} label="" variant="third-party" />
         </div>
       </div>
 
@@ -467,6 +438,8 @@ export default function AdvancedTradeScreen() {
         </button>
       </div>
 
+      <ColorLegend />
+
       {/* Pending trades */}
       {pendingTrades.length > 0 && (
         <div className="space-y-3">
@@ -621,24 +594,24 @@ export default function AdvancedTradeScreen() {
                 </span>
               </div>
 
-              <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
-                <p className="text-xs font-semibold text-yvy-dark">
-                  Você dá para <span className="capitalize">{preview.userB.name}</span>
+              <div className="bg-rose-50/50 rounded-lg p-3 space-y-2 border border-rose-100">
+                <p className="text-xs font-semibold text-rose-700">
+                  Você dá para <span className="capitalize">{preview.userB.name}</span> →
                 </p>
-                <StickerList ids={preview.aGivesIds} label="" />
+                <StickerList ids={preview.aGivesIds} label="" variant="giving" />
               </div>
-              <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
-                <p className="text-xs font-semibold text-yvy-dark">
-                  Você recebe de <span className="capitalize">{preview.userC.name}</span>
+              <div className="bg-green-50/50 rounded-lg p-3 space-y-2 border border-green-100">
+                <p className="text-xs font-semibold text-green-700">
+                  ← Você recebe de <span className="capitalize">{preview.userC.name}</span>
                 </p>
-                <StickerList ids={preview.cGivesIds} label="" />
+                <StickerList ids={preview.cGivesIds} label="" variant="receiving" />
               </div>
-              <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
-                <p className="text-xs font-semibold text-yvy-dark">
+              <div className="bg-sky-50/50 rounded-lg p-3 space-y-2 border border-sky-100">
+                <p className="text-xs font-semibold text-sky-700">
                   <span className="capitalize">{preview.userB.name}</span> dá para{' '}
                   <span className="capitalize">{preview.userC.name}</span>
                 </p>
-                <StickerList ids={preview.bGivesIds} label="" />
+                <StickerList ids={preview.bGivesIds} label="" variant="third-party" />
               </div>
 
               <button

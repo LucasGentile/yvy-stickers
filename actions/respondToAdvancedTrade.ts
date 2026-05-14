@@ -167,10 +167,19 @@ export async function respondToAdvancedTrade(
           (users ?? []).map((u) => [u.id, formatName(u.name)])
         )
         // Cycle: A→B→C→A. Each gives to the next, receives from the previous.
-        const legs: Array<{ userId: string; givingIds: string[]; receivingIds: string[]; giveToId: string; receiveFromId: string }> = [
-          { userId: trade.user_a_id, givingIds: trade.a_gives_ids, receivingIds: trade.c_gives_ids, giveToId: trade.user_b_id, receiveFromId: trade.user_c_id },
-          { userId: trade.user_b_id, givingIds: trade.b_gives_ids, receivingIds: trade.a_gives_ids, giveToId: trade.user_c_id, receiveFromId: trade.user_a_id },
-          { userId: trade.user_c_id, givingIds: trade.c_gives_ids, receivingIds: trade.b_gives_ids, giveToId: trade.user_a_id, receiveFromId: trade.user_b_id },
+        const legs: Array<{
+          userId: string
+          givingIds: string[]
+          receivingIds: string[]
+          giveToId: string
+          receiveFromId: string
+          thirdPartyIds: string[]
+          thirdPartyFromName: string
+          thirdPartyToName: string
+        }> = [
+          { userId: trade.user_a_id, givingIds: trade.a_gives_ids, receivingIds: trade.c_gives_ids, giveToId: trade.user_b_id, receiveFromId: trade.user_c_id, thirdPartyIds: trade.b_gives_ids, thirdPartyFromName: nameMap[trade.user_b_id] ?? 'Usuário', thirdPartyToName: nameMap[trade.user_c_id] ?? 'Usuário' },
+          { userId: trade.user_b_id, givingIds: trade.b_gives_ids, receivingIds: trade.a_gives_ids, giveToId: trade.user_c_id, receiveFromId: trade.user_a_id, thirdPartyIds: trade.c_gives_ids, thirdPartyFromName: nameMap[trade.user_c_id] ?? 'Usuário', thirdPartyToName: nameMap[trade.user_a_id] ?? 'Usuário' },
+          { userId: trade.user_c_id, givingIds: trade.c_gives_ids, receivingIds: trade.b_gives_ids, giveToId: trade.user_a_id, receiveFromId: trade.user_b_id, thirdPartyIds: trade.a_gives_ids, thirdPartyFromName: nameMap[trade.user_a_id] ?? 'Usuário', thirdPartyToName: nameMap[trade.user_b_id] ?? 'Usuário' },
         ]
         for (const leg of legs) {
           const partners = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
@@ -183,6 +192,9 @@ export async function respondToAdvancedTrade(
             receivingIds: leg.receivingIds,
             giveToName: nameMap[leg.giveToId] ?? 'Usuário',
             receiveFromName: nameMap[leg.receiveFromId] ?? 'Usuário',
+            thirdPartyIds: leg.thirdPartyIds,
+            thirdPartyFromName: leg.thirdPartyFromName,
+            thirdPartyToName: leg.thirdPartyToName,
           })
         }
       } catch { /* logging is best-effort */ }

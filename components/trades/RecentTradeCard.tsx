@@ -91,8 +91,8 @@ export function RecentTradeCard({
         </span>
       </div>
 
-      <StickerList ids={trade.myReceivingIds} label="Você recebeu" />
-      <StickerList ids={trade.myGivingIds} label="Você deu" />
+      <StickerList ids={trade.myReceivingIds} label="Você recebeu" variant="receiving" />
+      <StickerList ids={trade.myGivingIds} label="Você deu" variant="giving" />
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 

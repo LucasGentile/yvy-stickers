@@ -65,6 +65,8 @@ O app mostra quem são os melhores parceiros de troca com base nas suas figurinh
 
 Toque em **"Realizar Troca"** para enviar um pedido formal. Após ambos confirmarem, os álbuns são atualizados automaticamente.
 
+Nos cards de troca, figurinhas aparecem coloridas: vermelho = você dá, verde = você recebe (com setas indicando direção). Uma legenda de cores aparece no topo da página.
+
 Se houver pedidos aguardando sua resposta, um **ponto vermelho** aparece no ícone do menu.
 
 ### 5. Troca Avançada (Triangular)
@@ -74,6 +76,7 @@ Quando uma troca direta entre dois moradores não é possível, o app busca auto
 - O item **"Troca Avançada"** aparece no menu quando você tem trocas pendentes ou quando existe pelo menos um ciclo válido
 - Toque em **"Buscar Trocas Triangulares"** para ver todas as combinações possíveis, ranqueadas por número de figurinhas
 - Escolha qual proposta enviar — as figurinhas são selecionadas automaticamente (sem escolha manual)
+- Código de cores: vermelho = você dá, verde = você recebe, azul = troca entre os outros dois
 - Os 3 participantes precisam **Aprovar** para a troca acontecer
 - Se qualquer um **Recusar**, a proposta é cancelada para todos
 - Quem propôs pode **Cancelar** a proposta a qualquer momento
@@ -83,7 +86,7 @@ Quando uma troca direta entre dois moradores não é possível, o app busca auto
 - Use o botão ↻ no topo para atualizar propostas e buscar novas combinações
 - Quando não há combinações, o botão fica desabilitado com uma explicação
 - Trocas concluídas ficam em seção recolhível no final da página
-- O Histórico mostra figurinhas dadas/recebidas com destaque colorido
+- O Histórico mostra figurinhas dadas em vermelho, recebidas em verde e do terceiro participante em azul
 
 **Exemplo:** Você dá para A, A dá para B, B dá para você — cada um recebe figurinhas que precisa, mesmo sem ter troca direta com quem as tem.
 

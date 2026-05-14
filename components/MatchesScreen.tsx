@@ -5,6 +5,7 @@ import { getMatches, MatchResult } from '@/lib/matching'
 import { getPendingTrades, PendingTrade } from '@/actions/getPendingTrades'
 import MatchCard from './MatchCard'
 import PendingTradesSection from './PendingTradesSection'
+import { ColorLegend } from './trades/ColorLegend'
 
 export default function MatchesScreen() {
   const [matches, setMatches] = useState<MatchResult[]>([])
@@ -143,6 +144,8 @@ export default function MatchesScreen() {
             />
           )
         })()}
+
+      <ColorLegend />
 
       {matches.length === 0 ? (
         <div className="text-center py-16 text-yvy-muted">

@@ -104,6 +104,7 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Um _ponto vermelho_ no menu indica pedidos esperando sua resposta
 - Pedidos recebidos mostram quantas figurinhas estão envolvidas e alertam se houver uma troca mais vantajosa com outro morador
 - Antes de aceitar, o app lembra de confirmar presencialmente com o outro morador
+- Figurinhas nos cards de troca são coloridas: _vermelho_ = você dá, _verde_ = você recebe (com setas indicando direção)
 
 🔄 _5. Troca Avançada (Triangular)_
 Quando uma troca direta não é possível, o app busca automaticamente ciclos de 3 moradores onde todos se beneficiam.
@@ -111,6 +112,7 @@ Quando uma troca direta não é possível, o app busca automaticamente ciclos de
 - O menu _"Troca Avançada"_ aparece quando você tem trocas pendentes _ou_ quando existe pelo menos um ciclo válido
 - Toque em _"Buscar Trocas Triangulares"_ para ver _todas_ as combinações possíveis, ranqueadas por número de figurinhas (a melhor aparece no topo)
 - Escolha qual proposta enviar — as figurinhas são selecionadas automaticamente, sem escolha manual
+- Código de cores nos cards: _vermelho_ = você dá, _verde_ = você recebe, _azul_ = troca entre os outros dois participantes
 - Os 3 participantes precisam aprovar para a troca acontecer; se qualquer um recusar, a proposta é cancelada para todos
 - Quem propôs pode cancelar a qualquer momento enquanto estiver pendente
 - Você pode ter _múltiplas_ trocas avançadas pendentes ao mesmo tempo
@@ -119,7 +121,7 @@ Quando uma troca direta não é possível, o app busca automaticamente ciclos de
 - O botão de atualizar (↻) no topo re-busca propostas e atualiza o status das pendentes
 - Quando não há combinações disponíveis, o botão de busca fica desabilitado com uma explicação
 - Trocas concluídas ficam em uma seção recolhível e paginada
-- O Histórico mostra figurinhas dadas em _vermelho_ e recebidas em _verde_, igual às trocas normais
+- O Histórico mostra figurinhas dadas em _vermelho_, recebidas em _verde_ e do terceiro participante em _azul_
 - Exemplo: você dá para A, A dá para B, B dá para você — todos ganham figurinhas que precisam
 
 🔍 _6. Verificar Figurinha_
