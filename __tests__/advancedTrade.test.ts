@@ -32,13 +32,13 @@ const mockEffectuate = effectuateAdvancedTrade as ReturnType<typeof vi.fn>
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function makeSelectChain(result: { data: unknown; error?: unknown }) {
-  const chain = {
-    select: vi.fn().mockReturnThis(),
-    or: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
+  const chain: Record<string, unknown> = {
+    select: vi.fn().mockImplementation(() => chain),
+    or: vi.fn().mockImplementation(() => chain),
+    eq: vi.fn().mockImplementation(() => chain),
+    in: vi.fn().mockImplementation(() => chain),
+    limit: vi.fn().mockImplementation(() => chain),
+    order: vi.fn().mockImplementation(() => chain),
     maybeSingle: vi.fn().mockResolvedValue(result),
     single: vi.fn().mockResolvedValue(result),
     then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown): Promise<unknown> =>
@@ -51,7 +51,7 @@ function makeInsertChain(result: { data: unknown; error: unknown }) {
   const single = vi.fn().mockResolvedValue(result)
   const select = vi.fn().mockReturnValue({ single })
   const insert = vi.fn().mockReturnValue({ select })
-  return { insert, select, single }
+  return { insert, select, single, in: vi.fn().mockResolvedValue(result) }
 }
 
 function makeUpdateChain(result: unknown) {
@@ -59,6 +59,7 @@ function makeUpdateChain(result: unknown) {
   chain.update = vi.fn().mockReturnValue(chain)
   chain.eq = vi.fn().mockReturnValue(chain)
   chain.select = vi.fn().mockReturnValue(chain)
+  chain.in = vi.fn().mockResolvedValue(result)
   chain.maybeSingle = vi.fn().mockResolvedValue(result)
   return chain
 }

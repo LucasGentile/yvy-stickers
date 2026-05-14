@@ -52,22 +52,24 @@ export async function respondToAdvancedTrade(
 
     // Fire-and-forget logging
     ;(async () => {
-      const { data: users } = await supabaseAdmin
-        .from('users')
-        .select('id, name')
-        .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
-      const nameMap = Object.fromEntries(
-        (users ?? []).map((u) => [u.id, formatName(u.name)])
-      )
-      const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
-      for (const pid of participants) {
-        const others = participants.filter((id) => id !== pid).map((id) => nameMap[id] ?? 'Usuário')
-        logAction(pid, 'advanced_trade_rejected', {
-          tradeId: trade.id,
-          rejectedBy: nameMap[userId] ?? 'Usuário',
-          partners: others,
-        })
-      }
+      try {
+        const { data: users } = await supabaseAdmin
+          .from('users')
+          .select('id, name')
+          .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
+        const nameMap = Object.fromEntries(
+          (users ?? []).map((u) => [u.id, formatName(u.name)])
+        )
+        const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
+        for (const pid of participants) {
+          const others = participants.filter((id) => id !== pid).map((id) => nameMap[id] ?? 'Usuário')
+          logAction(pid, 'advanced_trade_rejected', {
+            tradeId: trade.id,
+            rejectedBy: nameMap[userId] ?? 'Usuário',
+            partners: others,
+          })
+        }
+      } catch { /* logging is best-effort */ }
     })()
 
     return { success: true }
@@ -121,38 +123,42 @@ export async function respondToAdvancedTrade(
 
     // Fire-and-forget logging
     ;(async () => {
-      const { data: users } = await supabaseAdmin
-        .from('users')
-        .select('id, name')
-        .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
-      const nameMap = Object.fromEntries(
-        (users ?? []).map((u) => [u.id, formatName(u.name)])
-      )
-      const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
-      for (const pid of participants) {
-        const others = participants.filter((id) => id !== pid).map((id) => nameMap[id] ?? 'Usuário')
-        logAction(pid, 'advanced_trade_executed', {
-          tradeId: trade.id,
-          partners: others,
-        })
-      }
+      try {
+        const { data: users } = await supabaseAdmin
+          .from('users')
+          .select('id, name')
+          .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
+        const nameMap = Object.fromEntries(
+          (users ?? []).map((u) => [u.id, formatName(u.name)])
+        )
+        const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
+        for (const pid of participants) {
+          const others = participants.filter((id) => id !== pid).map((id) => nameMap[id] ?? 'Usuário')
+          logAction(pid, 'advanced_trade_executed', {
+            tradeId: trade.id,
+            partners: others,
+          })
+        }
+      } catch { /* logging is best-effort */ }
     })()
   } else {
     // Fire-and-forget: log approval
     ;(async () => {
-      const { data: users } = await supabaseAdmin
-        .from('users')
-        .select('id, name')
-        .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
-      const nameMap = Object.fromEntries(
-        (users ?? []).map((u) => [u.id, formatName(u.name)])
-      )
-      logAction(userId, 'advanced_trade_approved', {
-        tradeId: trade.id,
-        partners: [trade.user_a_id, trade.user_b_id, trade.user_c_id]
-          .filter((id) => id !== userId)
-          .map((id) => nameMap[id] ?? 'Usuário'),
-      })
+      try {
+        const { data: users } = await supabaseAdmin
+          .from('users')
+          .select('id, name')
+          .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
+        const nameMap = Object.fromEntries(
+          (users ?? []).map((u) => [u.id, formatName(u.name)])
+        )
+        logAction(userId, 'advanced_trade_approved', {
+          tradeId: trade.id,
+          partners: [trade.user_a_id, trade.user_b_id, trade.user_c_id]
+            .filter((id) => id !== userId)
+            .map((id) => nameMap[id] ?? 'Usuário'),
+        })
+      } catch { /* logging is best-effort */ }
     })()
   }
 
