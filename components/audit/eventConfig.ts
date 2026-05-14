@@ -100,6 +100,46 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     label: (m) => (m.partial ? 'Troca parcialmente desfeita' : 'Troca desfeita'),
     detail: (m) => `Com ${m.partnerName}`,
   },
+  advanced_trade_proposed: {
+    icon: '🔄',
+    borderColor: 'border-l-purple-400',
+    iconBg: 'bg-purple-50',
+    iconColor: 'text-purple-600',
+    label: (m) => m.isRequester ? 'Troca triangular proposta' : 'Troca triangular recebida',
+    detail: (m) => `Com ${((m.partners as string[]) ?? []).join(' e ')}`,
+  },
+  advanced_trade_approved: {
+    icon: '✓',
+    borderColor: 'border-l-purple-400',
+    iconBg: 'bg-purple-50',
+    iconColor: 'text-purple-600',
+    label: () => 'Troca triangular aprovada',
+    detail: (m) => `Com ${((m.partners as string[]) ?? []).join(' e ')}`,
+  },
+  advanced_trade_rejected: {
+    icon: '✕',
+    borderColor: 'border-l-red-400',
+    iconBg: 'bg-red-50',
+    iconColor: 'text-red-500',
+    label: () => 'Troca triangular recusada',
+    detail: (m) => `${m.rejectedBy} recusou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
+  },
+  advanced_trade_executed: {
+    icon: '🤝',
+    borderColor: 'border-l-[#16a34a]',
+    iconBg: 'bg-green-50',
+    iconColor: 'text-green-700',
+    label: () => 'Troca triangular concluída',
+    detail: (m) => `Com ${((m.partners as string[]) ?? []).join(' e ')}`,
+  },
+  advanced_trade_cancelled: {
+    icon: '○',
+    borderColor: 'border-l-yvy-border',
+    iconBg: 'bg-yvy-bg',
+    iconColor: 'text-yvy-muted',
+    label: () => 'Troca triangular cancelada',
+    detail: (m) => `${m.cancelledBy} cancelou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
+  },
   duplicate_updated: {
     icon: '＋',
     borderColor: 'border-l-yvy-gold',
@@ -181,6 +221,11 @@ export const TRADE_ACTIONS = new Set([
   'trade_rejected',
   'trade_cancelled',
   'trade_rolled_back',
+  'advanced_trade_proposed',
+  'advanced_trade_approved',
+  'advanced_trade_rejected',
+  'advanced_trade_executed',
+  'advanced_trade_cancelled',
 ])
 
 export function dayLabel(dateStr: string): string {
