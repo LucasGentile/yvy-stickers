@@ -155,28 +155,16 @@ async function loadAllTradeData(): Promise<{
 export async function checkAdvancedTradeEligibility(userId: string): Promise<boolean> {
   if (!userId) return false
 
-  console.log('[checkEligibility] Checking for userId:', userId)
   const { users, pendingNormalTrades, pendingAdvancedTrades } = await loadAllTradeData()
 
   const me = users.find((u) => u.id === userId)
-  if (!me) {
-    console.log('[checkEligibility] User not found in approved users')
-    return false
-  }
+  if (!me) return false
 
   const myReserved = getReservedCounts(userId, pendingNormalTrades, pendingAdvancedTrades)
   const myAvailableDupes = getAvailableDuplicates(me, myReserved)
   const myNeeded = computeNeeded(me.inputMode, me.stickers)
 
-  console.log('[checkEligibility] State:', {
-    availableDupes: myAvailableDupes.size,
-    needed: myNeeded.size,
-  })
-
-  if (myAvailableDupes.size === 0 || myNeeded.size === 0) {
-    console.log('[checkEligibility] Not eligible: no dupes or no needs')
-    return false
-  }
+  if (myAvailableDupes.size === 0 || myNeeded.size === 0) return false
 
   const others = users.filter((u) => u.id !== userId)
 
@@ -227,40 +215,18 @@ export async function findAllAdvancedTrades(
 ): Promise<ScoredProposal[]> {
   if (!userId) return []
 
-  console.log('[findAllAdvancedTrades] Loading trade data...')
   const { users, pendingNormalTrades, pendingAdvancedTrades } = await loadAllTradeData()
-  console.log('[findAllAdvancedTrades] Loaded:', {
-    usersCount: users.length,
-    pendingNormal: pendingNormalTrades.length,
-    pendingAdvanced: pendingAdvancedTrades.length,
-  })
 
   const me = users.find((u) => u.id === userId)
-  if (!me) {
-    console.log('[findAllAdvancedTrades] User not found in approved users')
-    return []
-  }
+  if (!me) return []
 
   const myReserved = getReservedCounts(userId, pendingNormalTrades, pendingAdvancedTrades)
   const myAvailableDupes = getAvailableDuplicates(me, myReserved)
   const myNeeded = computeNeeded(me.inputMode, me.stickers)
 
-  console.log('[findAllAdvancedTrades] My state:', {
-    inputMode: me.inputMode,
-    stickersCount: me.stickers.size,
-    duplicatesCount: me.duplicates.size,
-    reservedCount: myReserved.size,
-    availableDupesCount: myAvailableDupes.size,
-    neededCount: myNeeded.size,
-  })
-
-  if (myAvailableDupes.size === 0 || myNeeded.size === 0) {
-    console.log('[findAllAdvancedTrades] No available dupes or no needed stickers, aborting')
-    return []
-  }
+  if (myAvailableDupes.size === 0 || myNeeded.size === 0) return []
 
   const others = users.filter((u) => u.id !== userId)
-  console.log('[findAllAdvancedTrades] Checking', others.length, 'other users for cycles...')
 
   const proposals: ScoredProposal[] = []
   const seen = new Set<string>()
@@ -309,13 +275,7 @@ export async function findAllAdvancedTrades(
     }
   }
 
-  // Sort by score descending
   proposals.sort((a, b) => b.score - a.score)
-
-  console.log('[findAllAdvancedTrades] Found', proposals.length, 'valid cycles')
-  if (proposals.length > 0) {
-    console.log('[findAllAdvancedTrades] Top score:', proposals[0].score)
-  }
 
   return proposals
 }
