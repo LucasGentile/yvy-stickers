@@ -8,6 +8,9 @@ import { formatName } from '@/lib/format'
 const TOTAL = ALL_STICKER_IDS.length
 const PACK_SIZE = 7
 const PACK_PRICE = 7 // R$7 per pack
+const CHOPP_PRICE = 16 // R$ per liter (draft beer)
+const COSTELA_KG_PRICE = 35 // R$ per kg (costela gaúcha)
+const DIAPER_PRICE = 1 // R$ per disposable diaper
 
 export type Insight = {
   id: string
@@ -142,30 +145,45 @@ async function computeMuralInsights(): Promise<Insight[]> {
     (spendByUser[a.id] ?? 0) >= (spendByUser[b.id] ?? 0) ? a : b
   )
   const bigSpend = spendByUser[bigSpender.id] ?? 0
+  const personalChopps = Math.floor(bigSpend / CHOPP_PRICE)
   insights.push({
     id: 'big-spender',
     emoji: '💸',
     title: 'Maior Investidor',
     highlight: `${formatName(bigSpender.name as string)} gastou ~R$${bigSpend} em figurinhas`,
-    detail: `Com esse dinheiro dava pra assinar o streaming da Copa inteira e ainda sobrava troco.`,
+    detail: personalChopps >= 3
+      ? `Com esse dinheiro dava pra tomar ${personalChopps} litros de chopp na beira da piscina (em copo plástico, claro — vidro não é permitido).`
+      : `Com esse dinheiro dava pra assinar o streaming da Copa inteira e ainda sobrava troco.`,
     color: 'orange',
   })
 
   // ── 4. Collective spend ───────────────────────────────────────────────────
   const totalSpend = Object.values(spendByUser).reduce((s, v) => s + v, 0)
   const pizzas = Math.floor(totalSpend / 50)
-  const ubers = Math.floor(totalSpend / 25)
+  const chopps = Math.floor(totalSpend / CHOPP_PRICE)
+  const kgCostela = Math.floor(totalSpend / COSTELA_KG_PRICE)
   insights.push({
     id: 'collective-spend',
     emoji: '🍕',
     title: 'Investimento Coletivo do YVY',
     highlight: `O condomínio gastou coletivamente ~R$${totalSpend} em figurinhas`,
-    detail:
-      pizzas > 0
-        ? `Dava pra pedir ${pizzas} pizzas grandes pra todo mundo — uma por ${Math.ceil(users.length / pizzas)} morador. Prioridades, né?`
-        : `Dava pra pagar ${ubers} corridas de Uber. Figurinha é caro, hein!`,
+    detail: `Isso dava pra: ${pizzas > 0 ? `${pizzas} pizzas grandes 🍕 · ` : ''}${chopps} litros de chopp 🍺 · ${kgCostela} kg de costela gaúcha 🥩. As prioridades do YVY!`,
     color: 'amber',
   })
+
+  // ── 4b. Fraldas (absurd humor) ────────────────────────────────────────────
+  const diapers = Math.floor(totalSpend / DIAPER_PRICE)
+  const babyMonths = Math.round(diapers / 180) // ~6 fraldas/dia × 30 dias
+  if (diapers >= 100) {
+    insights.push({
+      id: 'fraldas',
+      emoji: '👶',
+      title: 'Figurinha ou Fralda?',
+      highlight: `Os ~R$${totalSpend} gastos no álbum equivalem a ${diapers} fraldas descartáveis`,
+      detail: `Um bebê usaria por cerca de ${babyMonths} meses. Mas não — escolhemos Mbappé e Vini Jr. de papel. Decisão acertada.`,
+      color: 'pink',
+    })
+  }
 
   // ── 5. Duplicate king ─────────────────────────────────────────────────────
   const dupeKing = activeUsers
@@ -199,6 +217,27 @@ async function computeMuralInsights(): Promise<Insight[]> {
       title: 'Pior Custo-Benefício',
       highlight: `${ratio}% das figurinhas que ${nameMap[uid]} comprou são repetidas`,
       detail: `O destino claramente não quer que esse álbum seja completado. Boa sorte.`,
+      color: 'red',
+    })
+  }
+
+  // ── 6b. Real cost per sticker ─────────────────────────────────────────────
+  const effectiveCostByUser: Record<string, number> = {}
+  for (const u of activeUsers) {
+    const s = stickerMap[u.id] ?? 0
+    const spent = spendByUser[u.id] ?? 0
+    if (s >= 20 && spent > 0) effectiveCostByUser[u.id] = spent / s
+  }
+  const expensiveEntry = Object.entries(effectiveCostByUser).sort(([, a], [, b]) => b - a)[0]
+  if (expensiveEntry && expensiveEntry[1] >= 1.5) {
+    const [uid, cost] = expensiveEntry
+    const markup = Math.round((cost - 1) * 100)
+    insights.push({
+      id: 'custo-real',
+      emoji: '📊',
+      title: 'Imposto das Repetidas',
+      highlight: `${nameMap[uid]} pagou em média R$${cost.toFixed(2).replace('.', ',')} por figurinha única — a Panini cobra R$1,00`,
+      detail: `As repetidas inflaram o custo em ${markup}%. Troca antes de abrir mais pacotes!`,
       color: 'red',
     })
   }
