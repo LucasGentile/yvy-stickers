@@ -10,7 +10,7 @@ export type RespondAdvancedResult = { success: true } | { success: false; error:
 export async function respondToAdvancedTrade(
   tradeId: string,
   userId: string,
-  action: 'approve' | 'reject'
+  action: 'approve' | 'reject' | 'cancel'
 ): Promise<RespondAdvancedResult> {
   if (!tradeId || !userId) {
     return { success: false, error: 'Parâmetros inválidos.' }
@@ -20,7 +20,7 @@ export async function respondToAdvancedTrade(
   const { data: trade } = await (supabaseAdmin as any)
     .from('advanced_trades')
     .select(
-      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status'
+      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status, requested_by'
     )
     .eq('id', tradeId)
     .eq('status', 'pending')
@@ -36,6 +36,41 @@ export async function respondToAdvancedTrade(
   else if (trade.user_b_id === userId) statusColumn = 'user_b_status'
   else if (trade.user_c_id === userId) statusColumn = 'user_c_status'
   else return { success: false, error: 'Você não faz parte desta troca.' }
+
+  if (action === 'cancel') {
+    if (trade.requested_by !== userId) {
+      return { success: false, error: 'Apenas quem propôs a troca pode cancelá-la.' }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabaseAdmin as any)
+      .from('advanced_trades')
+      .update({ status: 'cancelled' })
+      .eq('id', tradeId)
+      .eq('status', 'pending')
+
+    ;(async () => {
+      try {
+        const { data: users } = await supabaseAdmin
+          .from('users')
+          .select('id, name')
+          .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
+        const nameMap = Object.fromEntries(
+          (users ?? []).map((u) => [u.id, formatName(u.name)])
+        )
+        const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
+        for (const pid of participants) {
+          const others = participants.filter((id) => id !== pid).map((id) => nameMap[id] ?? 'Usuário')
+          logAction(pid, 'advanced_trade_cancelled', {
+            tradeId: trade.id,
+            cancelledBy: nameMap[userId] ?? 'Usuário',
+            partners: others,
+          })
+        }
+      } catch { /* logging is best-effort */ }
+    })()
+
+    return { success: true }
+  }
 
   const currentStatus = trade[statusColumn]
   if (currentStatus !== 'pending') {
