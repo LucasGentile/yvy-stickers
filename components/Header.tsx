@@ -206,52 +206,52 @@ export default function Header() {
                 })()}
             </nav>
 
-            {/* Font size */}
-            <div className="px-5 py-4 border-t border-white/10 space-y-2">
-              <p className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">
-                Tamanho do texto
-              </p>
-              <div className="flex gap-2">
-                {FONT_SIZES.map((s, i) => (
-                  <button
-                    key={s.label}
-                    onClick={() => pickFontSize(i)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                      fontSize === i
-                        ? 'bg-white text-yvy-dark'
-                        : 'bg-white/10 text-white/60 hover:bg-white/20'
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
+            {/* Font size + Sticker order */}
+            <div className="px-5 py-3 border-t border-white/10 space-y-2.5">
+              <div className="space-y-1">
+                <p className="text-[9px] uppercase tracking-widest text-white/40 font-semibold">
+                  Tamanho do texto
+                </p>
+                <div className="flex gap-1.5">
+                  {FONT_SIZES.map((s, i) => (
+                    <button
+                      key={s.label}
+                      onClick={() => pickFontSize(i)}
+                      className={`flex-1 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                        fontSize === i
+                          ? 'bg-white text-yvy-dark'
+                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {/* Sticker order */}
-            <div className="px-5 py-4 border-t border-white/10 space-y-2">
-              <p className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">
-                Ordem das figurinhas
-              </p>
-              <div className="flex gap-2">
-                {(
-                  [
-                    ['album', 'Álbum'],
-                    ['alpha', 'A–Z'],
-                  ] as const
-                ).map(([val, label]) => (
-                  <button
-                    key={val}
-                    onClick={() => setStickerOrder(val)}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                      stickerOrder === val
-                        ? 'bg-white text-yvy-dark'
-                        : 'bg-white/10 text-white/60 hover:bg-white/20'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
+              <div className="space-y-1">
+                <p className="text-[9px] uppercase tracking-widest text-white/40 font-semibold">
+                  Ordem das figurinhas
+                </p>
+                <div className="flex gap-1.5">
+                  {(
+                    [
+                      ['album', 'Álbum'],
+                      ['alpha', 'A–Z'],
+                    ] as const
+                  ).map(([val, label]) => (
+                    <button
+                      key={val}
+                      onClick={() => setStickerOrder(val)}
+                      className={`flex-1 py-1 rounded-md text-[11px] font-bold transition-colors ${
+                        stickerOrder === val
+                          ? 'bg-white text-yvy-dark'
+                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
