@@ -5,10 +5,10 @@ import { checkAdvancedTradeEligibility } from '@/lib/advancedMatching'
 
 export async function getAdvancedTradeEligibility(
   userId: string
-): Promise<{ eligible: boolean }> {
-  if (!userId) return { eligible: false }
+): Promise<{ eligible: boolean; canSearch: boolean }> {
+  if (!userId) return { eligible: false, canSearch: false }
 
-  // Show menu if user has any active advanced trades (pending or recently accepted)
+  // Check if user has any active advanced trades (pending or recently accepted)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: activeTrades } = await (supabaseAdmin as any)
     .from('advanced_trades')
@@ -17,8 +17,8 @@ export async function getAdvancedTradeEligibility(
     .in('status', ['pending', 'accepted'])
     .limit(1)
 
-  if (activeTrades && activeTrades.length > 0) return { eligible: true }
+  const hasActiveTrades = (activeTrades?.length ?? 0) > 0
+  const canSearch = await checkAdvancedTradeEligibility(userId)
 
-  const eligible = await checkAdvancedTradeEligibility(userId)
-  return { eligible }
+  return { eligible: hasActiveTrades || canSearch, canSearch }
 }

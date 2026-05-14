@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getAdvancedTrades, type AdvancedTradeView } from '@/actions/getAdvancedTrades'
+import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
 import { findAdvancedTrade } from '@/actions/findAdvancedTrade'
 import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previewAdvancedTrade'
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
@@ -240,13 +241,18 @@ export default function AdvancedTradeScreen() {
   const [searching, setSearching] = useState(false)
   const [confirmingIdx, setConfirmingIdx] = useState<number | null>(null)
   const [previews, setPreviews] = useState<AdvancedTradePreview[]>([])
+  const [canSearch, setCanSearch] = useState(true)
   const [searchMsg, setSearchMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const loadTrades = useCallback(async (uid: string) => {
     try {
-      const result = await getAdvancedTrades(uid)
+      const [result, eligibility] = await Promise.all([
+        getAdvancedTrades(uid),
+        getAdvancedTradeEligibility(uid),
+      ])
       setTrades(result)
+      setCanSearch(eligibility.canSearch)
     } catch {
       setError('Erro ao carregar trocas avançadas.')
     }
@@ -302,7 +308,12 @@ export default function AdvancedTradeScreen() {
       if (result.found) {
         await loadTrades(userId)
         const fresh = await previewAdvancedTrade(userId)
-        setPreviews(fresh.found ? fresh.previews : [])
+        if (fresh.found) {
+          setPreviews(fresh.previews)
+        } else {
+          setPreviews([])
+          setCanSearch(false)
+        }
       } else {
         setSearchMsg(
           result.error ?? 'Erro ao criar proposta. Tente novamente.'
@@ -442,11 +453,19 @@ export default function AdvancedTradeScreen() {
 
           <button
             onClick={handleSearch}
-            disabled={searching}
+            disabled={searching || !canSearch}
             className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-50 shadow-md"
           >
             {searching ? 'Buscando combinações...' : 'Buscar Trocas Triangulares'}
           </button>
+          {!canSearch && (
+            <p className="text-xs text-yvy-muted text-center leading-relaxed">
+              Nenhuma nova combinação disponível no momento. Suas figurinhas repetidas já estão
+              comprometidas em trocas pendentes, ou não há ciclos possíveis com os outros moradores.
+              Novas combinações podem surgir quando alguém atualizar suas repetidas ou quando uma
+              troca pendente for concluída.
+            </p>
+          )}
           {searchMsg && (
             <p className="text-xs text-yvy-muted text-center">{searchMsg}</p>
           )}

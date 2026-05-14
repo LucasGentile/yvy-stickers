@@ -72,18 +72,31 @@ describe('getAdvancedTradeEligibility', () => {
   it('returns eligible: false for empty userId', async () => {
     const result = await getAdvancedTradeEligibility('')
     expect(result.eligible).toBe(false)
+    expect(result.canSearch).toBe(false)
   })
 
-  it('returns eligible: true when algorithm finds a cycle', async () => {
+  it('returns eligible: true and canSearch: true when algorithm finds a cycle', async () => {
+    mockFrom.mockReturnValue(makeSelectChain({ data: [] }))
     mockCheckEligibility.mockResolvedValue(true)
     const result = await getAdvancedTradeEligibility('user-a')
     expect(result.eligible).toBe(true)
+    expect(result.canSearch).toBe(true)
   })
 
-  it('returns eligible: false when no cycle exists', async () => {
+  it('returns eligible: false and canSearch: false when no cycle and no active trades', async () => {
+    mockFrom.mockReturnValue(makeSelectChain({ data: [] }))
     mockCheckEligibility.mockResolvedValue(false)
     const result = await getAdvancedTradeEligibility('user-a')
     expect(result.eligible).toBe(false)
+    expect(result.canSearch).toBe(false)
+  })
+
+  it('returns eligible: true but canSearch: false when user has active trades but no new cycles', async () => {
+    mockFrom.mockReturnValue(makeSelectChain({ data: [{ id: 'trade-1' }] }))
+    mockCheckEligibility.mockResolvedValue(false)
+    const result = await getAdvancedTradeEligibility('user-a')
+    expect(result.eligible).toBe(true)
+    expect(result.canSearch).toBe(false)
   })
 })
 
