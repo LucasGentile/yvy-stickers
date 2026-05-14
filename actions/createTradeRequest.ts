@@ -26,7 +26,7 @@ export async function createTradeRequest(
 
   // Check that giving stickers have enough free copies (not fully reserved in other pending trades)
   if (givingIds.length > 0) {
-    const [{ data: existingTrades }, { data: dupes }] = await Promise.all([
+    const [{ data: existingTrades }, { data: dupes }, { data: advancedTrades }] = await Promise.all([
       supabaseAdmin
         .from('pending_trades')
         .select('initiator_id, giving_ids, receiving_ids')
@@ -37,6 +37,12 @@ export async function createTradeRequest(
         .select('sticker_id, count')
         .eq('user_id', initiatorId)
         .in('sticker_id', givingIds),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabaseAdmin as any)
+        .from('advanced_trades')
+        .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
+        .or(`user_a_id.eq.${initiatorId},user_b_id.eq.${initiatorId},user_c_id.eq.${initiatorId}`)
+        .eq('status', 'pending'),
     ])
 
     // Count how many copies of each sticker are already committed to pending trades
@@ -44,6 +50,17 @@ export async function createTradeRequest(
     for (const trade of existingTrades ?? []) {
       const myGiving = trade.initiator_id === initiatorId ? trade.giving_ids : trade.receiving_ids
       for (const id of myGiving ?? []) reservedCounts[id] = (reservedCounts[id] ?? 0) + 1
+    }
+    // Include advanced trade reservations
+    for (const at of (advancedTrades ?? []) as Array<{
+      user_a_id: string; user_b_id: string; user_c_id: string
+      a_gives_ids: string[]; b_gives_ids: string[]; c_gives_ids: string[]
+    }>) {
+      let myGiving: string[] = []
+      if (at.user_a_id === initiatorId) myGiving = at.a_gives_ids
+      else if (at.user_b_id === initiatorId) myGiving = at.b_gives_ids
+      else if (at.user_c_id === initiatorId) myGiving = at.c_gives_ids
+      for (const id of myGiving) reservedCounts[id] = (reservedCounts[id] ?? 0) + 1
     }
 
     const dupeCount: Record<string, number> = {}
@@ -64,7 +81,7 @@ export async function createTradeRequest(
 
   // Check that the receiver has enough free copies of the stickers they are expected to give
   if (receivingIds.length > 0) {
-    const [{ data: receiverTrades }, { data: receiverDupes }] = await Promise.all([
+    const [{ data: receiverTrades }, { data: receiverDupes }, { data: receiverAdvanced }] = await Promise.all([
       supabaseAdmin
         .from('pending_trades')
         .select('initiator_id, giving_ids, receiving_ids')
@@ -75,12 +92,29 @@ export async function createTradeRequest(
         .select('sticker_id, count')
         .eq('user_id', receiverId)
         .in('sticker_id', receivingIds),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabaseAdmin as any)
+        .from('advanced_trades')
+        .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
+        .or(`user_a_id.eq.${receiverId},user_b_id.eq.${receiverId},user_c_id.eq.${receiverId}`)
+        .eq('status', 'pending'),
     ])
 
     const receiverReserved: Record<string, number> = {}
     for (const trade of receiverTrades ?? []) {
       const theirGiving = trade.initiator_id === receiverId ? trade.giving_ids : trade.receiving_ids
       for (const id of theirGiving ?? []) receiverReserved[id] = (receiverReserved[id] ?? 0) + 1
+    }
+    // Include advanced trade reservations for receiver
+    for (const at of (receiverAdvanced ?? []) as Array<{
+      user_a_id: string; user_b_id: string; user_c_id: string
+      a_gives_ids: string[]; b_gives_ids: string[]; c_gives_ids: string[]
+    }>) {
+      let theirGiving: string[] = []
+      if (at.user_a_id === receiverId) theirGiving = at.a_gives_ids
+      else if (at.user_b_id === receiverId) theirGiving = at.b_gives_ids
+      else if (at.user_c_id === receiverId) theirGiving = at.c_gives_ids
+      for (const id of theirGiving) receiverReserved[id] = (receiverReserved[id] ?? 0) + 1
     }
 
     const receiverDupeCount: Record<string, number> = {}
