@@ -145,7 +145,7 @@ Fatos e insights gerados automaticamente sobre o condomínio figurinheiro — ma
 
 O insight _Traidor do Condomínio_ conta tanto consultas individuais (Verificar Figurinha) quanto verificações de listas externas (O que preciso desta lista?).
 
-👤 _10. Meu Perfil_
+👤 _11. Meu Perfil_
 Seus dados pessoais e estatísticas do álbum em um só lugar.
 
 - Progresso do álbum: total de figurinhas, percentual e quantas faltam
@@ -154,7 +154,7 @@ Seus dados pessoais e estatísticas do álbum em um só lugar.
 - Repetidas: total de cópias extras, figurinha mais e menos duplicada, país com mais e menos repetidas
 - Destaques de coleção: seleção mais e menos completa com barra de progresso
 
-📜 _11. Histórico_
+📜 _12. Histórico_
 Seção de trocas (paginada em 3/página) e seção de atividade geral do app. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico.
 
 - Trocas concluídas mostram figurinhas dadas em _vermelho_ e recebidas em _verde_ para fácil leitura
