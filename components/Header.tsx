@@ -179,16 +179,13 @@ export default function Header() {
                 return (
                   <Link
                     href="/advanced-trade"
-                    className={`flex items-center gap-2.5 mx-3 my-1 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    className={`flex items-center mx-3 my-1 px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
                       active
-                        ? 'bg-gradient-to-r from-amber-500/30 to-purple-500/20 text-white'
-                        : 'bg-gradient-to-r from-amber-500/15 to-purple-500/10 text-white hover:from-amber-500/25 hover:to-purple-500/15'
+                        ? 'bg-gradient-to-r from-amber-500/30 to-sky-500/20 text-white'
+                        : 'bg-gradient-to-r from-amber-500/15 to-sky-500/10 text-white hover:from-amber-500/25 hover:to-sky-500/15'
                     }`}
                   >
-                    <span className="shrink-0 w-5 h-5 rounded-md bg-gradient-to-br from-amber-400 to-purple-500 flex items-center justify-center text-[10px]">
-                      △
-                    </span>
-                    <span className="font-semibold">Troca Avançada</span>
+                    Troca Avançada
                     {advancedTradePending > 0 && (
                       <span className="ml-auto min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
                         {advancedTradePending > 9 ? '9+' : advancedTradePending}
