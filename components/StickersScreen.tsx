@@ -7,6 +7,8 @@ import { importStickerFile } from '@/actions/importStickerFile'
 import { removeDuplicate } from '@/actions/removeDuplicate'
 import { getUserData } from '@/actions/getUserData'
 import { getTradeOriginStickers, type TradeOriginResult } from '@/actions/getTradeOriginStickers'
+import { getDuplicates } from '@/actions/getDuplicates'
+import { DuplicateQuickAdd } from './DuplicateQuickAdd'
 import { parseStickerFile } from '@/lib/parser'
 import { ALL_STICKER_IDS, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { StickerChip } from './StickerChip'
@@ -41,6 +43,8 @@ export default function StickersScreen() {
   const [toast, setToast] = useState<{ message: string; prev: Set<string> } | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastSaved = useRef<Set<string>>(new Set())
+  const [duplicateMap, setDuplicateMap] = useState<Map<string, number>>(new Map())
+  const [longPressedId, setLongPressedId] = useState<string | null>(null)
 
   // Compute unsaved diff at component scope so effects can read it
   const addedCount = [...selected].filter((id) => !lastSaved.current.has(id)).length
@@ -78,8 +82,9 @@ export default function StickersScreen() {
       setLoading(false)
       return
     }
-    Promise.all([getUserData(id), getTradeOriginStickers(id)]).then(([data, origin]) => {
+    Promise.all([getUserData(id), getTradeOriginStickers(id), getDuplicates(id)]).then(([data, origin, dupes]) => {
       setTradeOrigin(origin)
+      setDuplicateMap(new Map(dupes.map((d) => [d.stickerId, d.count])))
       if (data) {
         if (!data.approved) {
           setStep('pending' as Step)
@@ -335,6 +340,13 @@ export default function StickersScreen() {
             )
           })()}
 
+        {mode === 'have' && (
+          <p className="text-[11px] text-yvy-muted/70 flex items-center gap-1.5 pb-1">
+            <span>👆</span>
+            Segure uma figurinha marcada para registrar como repetida
+          </p>
+        )}
+
         <StickerGrid
           selected={selected}
           onChange={setSelected}
@@ -353,6 +365,7 @@ export default function StickersScreen() {
               ? new Set([...selected].filter((id) => !lastSaved.current.has(id)))
               : undefined
           }
+          onLongPress={mode === 'have' ? (id) => setLongPressedId(id) : undefined}
         />
       </div>
 
@@ -573,6 +586,20 @@ export default function StickersScreen() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Duplicate quick-add popup */}
+      {longPressedId && userId && (
+        <DuplicateQuickAdd
+          id={longPressedId}
+          currentCount={duplicateMap.get(longPressedId) ?? 0}
+          userId={userId}
+          onClose={() => setLongPressedId(null)}
+          onSaved={(id, count) => {
+            setDuplicateMap((prev) => new Map(prev).set(id, count))
+            setLongPressedId(null)
+          }}
+        />
       )}
 
       {/* Importing overlay */}

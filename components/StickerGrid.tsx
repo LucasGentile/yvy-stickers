@@ -1,6 +1,6 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useRef } from 'react'
 import { ALL_STICKER_SECTIONS, isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
   tradeReceived?: Set<string>
   newestFromTrade?: Set<string>
   staged?: Set<string>
+  onLongPress?: (id: string) => void
 }
 
 function TrophySVG() {
@@ -70,7 +71,36 @@ function StickerGrid({
   tradeReceived,
   newestFromTrade,
   staged,
+  onLongPress,
 }: Props) {
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suppressNextClick = useRef(false)
+
+  function handleTouchStart(id: string, on: boolean) {
+    if (!on || !onLongPress) return
+    longPressTimer.current = setTimeout(() => {
+      longPressTimer.current = null
+      suppressNextClick.current = true
+      navigator.vibrate?.(50)
+      onLongPress(id)
+    }, 500)
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
+  function handleClick(id: string) {
+    if (suppressNextClick.current) {
+      suppressNextClick.current = false
+      return
+    }
+    toggle(id)
+  }
+
   function toggle(id: string) {
     const next = new Set(selected)
     if (next.has(id)) {
@@ -170,7 +200,11 @@ function StickerGrid({
                             <button
                               key={id}
                               type="button"
-                              onClick={() => toggle(id)}
+                              onClick={() => handleClick(id)}
+                              onTouchStart={() => handleTouchStart(id, on)}
+                              onTouchEnd={cancelLongPress}
+                              onTouchMove={cancelLongPress}
+                              onContextMenu={(e) => { e.preventDefault(); if (on && onLongPress) { navigator.vibrate?.(50); onLongPress(id) } }}
                               className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
                             >
                               {isChromeSticker(id) ? (
@@ -199,7 +233,11 @@ function StickerGrid({
                     <button
                       key={id}
                       type="button"
-                      onClick={() => toggle(id)}
+                      onClick={() => handleClick(id)}
+                      onTouchStart={() => handleTouchStart(id, on)}
+                      onTouchEnd={cancelLongPress}
+                      onTouchMove={cancelLongPress}
+                      onContextMenu={(e) => { e.preventDefault(); if (on && onLongPress) { navigator.vibrate?.(50); onLongPress(id) } }}
                       className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
                     >
                       {isChromeSticker(id) ? (
