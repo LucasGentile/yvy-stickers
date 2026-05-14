@@ -1,0 +1,323 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import type { PendingTrade } from '@/actions/getPendingTrades'
+import { respondToTrade } from '@/actions/respondToTrade'
+import {
+  getBetterMatchExcludingTrade,
+  type BetterMatchResult,
+} from '@/actions/getBetterMatchExcludingTrade'
+import {
+  getTradeAvailability,
+  type TradeAvailability,
+} from '@/actions/getTradeAvailability'
+import { StickerList, StickerToggle } from './StickerList'
+
+export function TradeCard({
+  trade,
+  userId,
+  onDone,
+}: {
+  trade: PendingTrade
+  userId: string
+  onDone: () => void
+}) {
+  const [loading, setLoading] = useState<'accept' | 'reject' | 'cancel' | null>(null)
+  const [msg, setMsg] = useState<string | null>(null)
+  const [betterMatch, setBetterMatch] = useState<BetterMatchResult | null | undefined>(undefined)
+  const [confirming, setConfirming] = useState<'accept' | 'reject' | 'cancel' | null>(null)
+  const [availability, setAvailability] = useState<TradeAvailability | 'loading' | null>(null)
+  const [selectedMyGiving, setSelectedMyGiving] = useState<Set<string>>(new Set())
+  const [selectedMyReceiving, setSelectedMyReceiving] = useState<Set<string>>(new Set())
+
+  const totalReceiving = trade.myReceivingIds.length
+  const totalGiving = trade.myGivingIds.length
+  const tradeMutual = Math.min(totalReceiving, totalGiving)
+
+  useEffect(() => {
+    if (trade.isSender) return
+    getBetterMatchExcludingTrade(userId, trade.id, trade.otherUserId, tradeMutual)
+      .then(setBetterMatch)
+      .catch(() => setBetterMatch(null))
+  }, [trade.id])
+
+  async function handle(action: 'accept' | 'reject' | 'cancel') {
+    setLoading(action)
+    try {
+      const result = await respondToTrade(trade.id, userId, action)
+      if (result.success) {
+        onDone()
+      } else {
+        setMsg(result.error)
+      }
+    } catch {
+      setMsg('Erro inesperado. Tente novamente.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  return (
+    <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-yvy-dark capitalize">{trade.otherUserName}</p>
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted">
+          {trade.isSender ? 'Aguardando resposta' : 'Pedido recebido'}
+        </span>
+      </div>
+
+      <p className="text-[11px] text-yvy-muted">
+        {totalReceiving > 0 && totalGiving > 0
+          ? `${totalReceiving + totalGiving} figurinhas — ${totalReceiving} você recebe · ${totalGiving} você dá`
+          : totalReceiving > 0
+            ? `${totalReceiving} figurinha${totalReceiving !== 1 ? 's' : ''} você recebe`
+            : `${totalGiving} figurinha${totalGiving !== 1 ? 's' : ''} você dá`}
+      </p>
+
+      <StickerList ids={trade.myReceivingIds} label="Você vai receber" />
+      <StickerList ids={trade.myGivingIds} label="Você vai dar" />
+
+      {!trade.isSender && betterMatch && (
+        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <span className="text-amber-500 text-sm shrink-0 mt-px">⚠️</span>
+          <p className="text-[11px] text-amber-800 leading-snug">
+            <strong className="capitalize">{betterMatch.name.split(' ')[0]}</strong> tem uma troca
+            mais equilibrada disponível para você no ranking ({betterMatch.mutualScore} figurinhas
+            mútuas). Considere antes de aceitar.
+          </p>
+        </div>
+      )}
+
+      {msg && <p className="text-xs text-red-600">{msg}</p>}
+
+      {trade.isSender ? (
+        confirming === 'cancel' ? (
+          <div className="flex items-center gap-2 pt-0.5">
+            <p className="text-xs text-yvy-muted flex-1">Cancelar o pedido?</p>
+            <button
+              onClick={() => setConfirming(null)}
+              disabled={loading !== null}
+              className="text-xs text-yvy-muted underline disabled:opacity-50"
+            >
+              Não
+            </button>
+            <button
+              onClick={() => {
+                setConfirming(null)
+                handle('cancel')
+              }}
+              disabled={loading !== null}
+              className="text-xs font-semibold text-red-600 underline disabled:opacity-50"
+            >
+              {loading === 'cancel' ? 'Cancelando...' : 'Sim, cancelar'}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirming('cancel')}
+            disabled={loading !== null}
+            className="text-xs text-yvy-muted underline disabled:opacity-50"
+          >
+            Cancelar pedido
+          </button>
+        )
+      ) : (
+        <div className="space-y-2">
+          <p className="text-[11px] text-yvy-muted leading-snug">
+            💡 Antes de aceitar, confirme presencialmente com {trade.otherUserName.split(' ')[0]} se
+            as figurinhas estão disponíveis. As figurinhas desta troca já estão reservadas e não
+            aparecem em novas sugestões de troca.
+          </p>
+
+          {confirming === 'reject' ? (
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-yvy-muted flex-1">Recusar esta troca?</p>
+              <button
+                onClick={() => setConfirming(null)}
+                disabled={loading !== null}
+                className="text-xs text-yvy-muted underline disabled:opacity-50"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={() => {
+                  setConfirming(null)
+                  handle('reject')
+                }}
+                disabled={loading !== null}
+                className="text-xs font-semibold text-red-600 underline disabled:opacity-50"
+              >
+                {loading === 'reject' ? '...' : 'Sim, recusar'}
+              </button>
+            </div>
+          ) : confirming === 'accept' ? (
+            <div className="space-y-3">
+              {availability === 'loading' && (
+                <p className="text-xs text-yvy-muted">Verificando disponibilidade…</p>
+              )}
+
+              {availability !== 'loading' && availability !== null && (
+                <>
+                  {(availability.myGivingUnavailable.length > 0 ||
+                    availability.theirGivingUnavailable.length > 0) && (
+                    <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      <span className="text-amber-500 text-sm shrink-0 mt-px">⚠️</span>
+                      <p className="text-[11px] text-amber-800 leading-snug">
+                        {availability.myGivingUnavailable.length +
+                          availability.theirGivingUnavailable.length}{' '}
+                        figurinha(s) não disponível(eis) — verifique com{' '}
+                        {trade.otherUserName.split(' ')[0]} antes de confirmar.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <StickerToggle
+                      ids={availability.myGivingAvailable}
+                      label="Você vai dar"
+                      selected={selectedMyGiving}
+                      onToggle={(id) =>
+                        setSelectedMyGiving((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(id)) next.delete(id)
+                          else next.add(id)
+                          return next
+                        })
+                      }
+                    />
+                    {availability.myGivingUnavailable.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">
+                          Você vai dar{' '}
+                          <span className="text-amber-600 normal-case font-medium">
+                            · indisponíveis
+                          </span>
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {availability.myGivingUnavailable.map((id) => (
+                            <span
+                              key={id}
+                              className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text line-through opacity-50"
+                            >
+                              {id}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <StickerToggle
+                      ids={availability.theirGivingAvailable}
+                      label="Você vai receber"
+                      selected={selectedMyReceiving}
+                      onToggle={(id) =>
+                        setSelectedMyReceiving((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(id)) next.delete(id)
+                          else next.add(id)
+                          return next
+                        })
+                      }
+                    />
+                    {availability.theirGivingUnavailable.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">
+                          Você vai receber{' '}
+                          <span className="text-amber-600 normal-case font-medium">
+                            · indisponíveis
+                          </span>
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {availability.theirGivingUnavailable.map((id) => (
+                            <span
+                              key={id}
+                              className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text line-through opacity-50"
+                            >
+                              {id}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setConfirming(null)
+                        setAvailability(null)
+                      }}
+                      disabled={loading !== null}
+                      className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+                    >
+                      Voltar
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setLoading('accept')
+                        try {
+                          const result = await respondToTrade(
+                            trade.id,
+                            userId,
+                            'accept',
+                            [...selectedMyGiving],
+                            [...selectedMyReceiving]
+                          )
+                          if (result.success) {
+                            onDone()
+                          } else {
+                            setMsg(result.error)
+                          }
+                        } catch {
+                          setMsg('Erro inesperado.')
+                        } finally {
+                          setLoading(null)
+                        }
+                      }}
+                      disabled={
+                        loading !== null ||
+                        selectedMyGiving.size + selectedMyReceiving.size === 0
+                      }
+                      className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+                    >
+                      {loading === 'accept'
+                        ? 'Aceitando...'
+                        : `Confirmar troca (${selectedMyGiving.size + selectedMyReceiving.size} figurinha${selectedMyGiving.size + selectedMyReceiving.size !== 1 ? 's' : ''})`}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirming('reject')}
+                disabled={loading !== null}
+                className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+              >
+                Recusar
+              </button>
+              <button
+                onClick={() => {
+                  setConfirming('accept')
+                  setAvailability('loading')
+                  getTradeAvailability(trade.id, userId).then((av) => {
+                    setAvailability(av)
+                    setSelectedMyGiving(new Set(av?.myGivingAvailable ?? []))
+                    setSelectedMyReceiving(new Set(av?.theirGivingAvailable ?? []))
+                  })
+                }}
+                disabled={loading !== null}
+                className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                Aceitar troca
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

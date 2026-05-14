@@ -4,12 +4,12 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
 import {
   ALL_STICKER_IDS,
-  STICKER_SET,
   isChromeSticker,
   isCocaColaSticker,
   sortByAlbumOrder,
   sortAlphabetically,
 } from '@/lib/stickers'
+import { checkExternalList } from '@/lib/checkExternalList'
 import { logAction } from '@/actions/logAction'
 import { getDuplicates, DuplicateEntry } from '@/actions/getDuplicates'
 import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
@@ -194,38 +194,12 @@ export default function DuplicatesScreen() {
     if (checkFile) content = await checkFile.text()
     if (!content.trim()) return
 
-    const parts = content
-      .split(/[;\n]/)
-      .map((p) => {
-        const n = p.trim().toUpperCase()
-        return n === '00' ? 'FWC00' : n
-      })
-      .filter((p) => p !== '')
-
-    const needed: string[] = []
-    const owned: string[] = []
-    const invalid: string[] = []
-    const seen = new Set<string>()
-
-    for (const part of parts) {
-      if (!STICKER_SET.has(part)) {
-        invalid.push(part)
-        continue
-      }
-      if (seen.has(part)) continue
-      seen.add(part)
-      if (ownedSet.has(part)) {
-        owned.push(part)
-      } else {
-        needed.push(part)
-      }
-    }
-
-    setCheckResult({ needed, owned, invalid })
-    if (userId && needed.length + owned.length > 0) {
+    const result = checkExternalList(content, ownedSet)
+    setCheckResult(result)
+    if (userId && result.needed.length + result.owned.length > 0) {
       logAction(userId, 'external_list_check', {
-        checkedCount: needed.length + owned.length,
-        neededCount: needed.length,
+        checkedCount: result.needed.length + result.owned.length,
+        neededCount: result.needed.length,
       })
     }
   }
