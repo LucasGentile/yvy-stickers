@@ -342,6 +342,78 @@ async function adminRollbackTrade(tradeId: string) {
   console.log(`\n✓ Trade ${trade.id} rolled back successfully`)
 }
 
+async function listMigrations() {
+  const ALL_MIGRATIONS = [
+    '001_initial',
+    '002_add_duplicates',
+    '003_text_sticker_ids',
+    '004_unique_name',
+    '005_approval',
+    '006_pending_trades',
+    '007_audit_log',
+    '008_admin_role',
+    '009_sticker_count_rpc',
+    '010_trade_rollback',
+    '011_trade_rollback_partial',
+    '012_advanced_trade',
+  ]
+
+  console.log('Querying schema_migrations...\n')
+
+  // Query via the REST SQL endpoint
+  const res = await fetch(`${url}/rest/v1/rpc/exec_sql`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: key!,
+      Authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      query: 'SELECT version, name FROM supabase_migrations.schema_migrations ORDER BY version',
+    }),
+  })
+
+  if (res.ok) {
+    const rows = await res.json() as Array<{ version: string; name?: string }>
+    const appliedSet = new Set(rows.map((r) => (r.version ?? r.name ?? '').replace(/\.sql$/, '')))
+
+    for (const migration of ALL_MIGRATIONS) {
+      const applied = appliedSet.has(migration) ||
+        [...appliedSet].some((v) => v.includes(migration))
+      console.log(`  ${applied ? '✓' : '✗'} ${migration}`)
+    }
+
+    if (rows.length > ALL_MIGRATIONS.length) {
+      console.log(`\n  (${rows.length} total migrations in DB, ${ALL_MIGRATIONS.length} tracked in code)`)
+    }
+    return
+  }
+
+  // Fallback: check tables directly
+  console.log('⚠️  exec_sql RPC not available. Falling back to table existence checks.\n')
+
+  const tableMap: Record<string, string> = {
+    '001_initial': 'users',
+    '002_add_duplicates': 'user_duplicates',
+    '006_pending_trades': 'pending_trades',
+    '007_audit_log': 'audit_log',
+    '012_advanced_trade': 'advanced_trades',
+  }
+
+  for (const migration of ALL_MIGRATIONS) {
+    const table = tableMap[migration]
+    if (table) {
+      const { error } = await supabase.from(table).select('id').limit(0)
+      console.log(`  ${error ? '✗' : '✓'} ${migration} (table: ${table})`)
+    } else {
+      console.log(`  ? ${migration} (no table check available)`)
+    }
+  }
+
+  console.log('\nFor the authoritative list, run in Supabase SQL Editor:')
+  console.log('  SELECT version, name FROM supabase_migrations.schema_migrations ORDER BY version;')
+}
+
 async function main() {
   const [cmd, arg] = process.argv.slice(2)
 
@@ -354,6 +426,7 @@ async function main() {
   else if (cmd === 'find-trades' && arg) await findTrades(arg)
   else if (cmd === 'backfill-trade' && arg) await backfillTrade(arg)
   else if (cmd === 'admin-rollback-trade' && arg) await adminRollbackTrade(arg)
+  else if (cmd === 'migrations') await listMigrations()
   else {
     console.log(
       'Usage:\n' +
@@ -364,7 +437,8 @@ async function main() {
         '  npx tsx scripts/admin.ts grant-admin <phone>\n' +
         '  npx tsx scripts/admin.ts debug-user <name>\n' +
         '  npx tsx scripts/admin.ts find-trades <name>\n' +
-        '  npx tsx scripts/admin.ts admin-rollback-trade <tradeId>'
+        '  npx tsx scripts/admin.ts admin-rollback-trade <tradeId>\n' +
+        '  npx tsx scripts/admin.ts migrations'
     )
   }
 }
