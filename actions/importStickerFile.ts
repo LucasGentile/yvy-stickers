@@ -18,24 +18,38 @@ export type ImportStickerFileResult =
     }
   | { success: false; error: string }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any
+
 async function insertWithFallback(
   table: string,
   rows: Record<string, unknown>[]
 ): Promise<{ failed: string[] }> {
   if (rows.length === 0) return { failed: [] }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
   const { error } = await db.from(table).insert(rows)
   if (!error) return { failed: [] }
 
-  // Bulk failed — retry individually to isolate bad rows
   const failed: string[] = []
   for (const row of rows) {
     const { error: e } = await db.from(table).insert(row)
-    if (e) {
-      const id = (row.sticker_id as string) ?? JSON.stringify(row)
-      failed.push(id)
+    if (e) failed.push((row.sticker_id as string) ?? JSON.stringify(row))
+  }
+  return { failed }
+}
+
+async function upsertDupesWithFallback(
+  rows: { user_id: string; sticker_id: string; count: number }[]
+): Promise<{ failed: string[] }> {
+  if (rows.length === 0) return { failed: [] }
+  const BATCH = 500
+  const failed: string[] = []
+  for (let i = 0; i < rows.length; i += BATCH) {
+    const batch = rows.slice(i, i + BATCH)
+    const { error } = await db.from('user_duplicates').upsert(batch, { onConflict: 'user_id,sticker_id' })
+    if (!error) continue
+    for (const row of batch) {
+      const { error: e } = await db.from('user_duplicates').upsert(row, { onConflict: 'user_id,sticker_id' })
+      if (e) failed.push(row.sticker_id)
     }
   }
   return { failed }
@@ -48,58 +62,64 @@ export async function importStickerFile(
 ): Promise<ImportStickerFileResult> {
   if (!userId) return { success: false, error: 'Usuário não identificado.' }
 
-  // Fetch existing stickers for delta calculation
-  const { data: existing } = await supabase
-    .from('user_stickers')
-    .select('sticker_id')
-    .eq('user_id', userId)
+  // Fetch current state
+  const [{ data: existing }, { data: existingDupes }] = await Promise.all([
+    supabase.from('user_stickers').select('sticker_id').eq('user_id', userId),
+    supabase.from('user_duplicates').select('sticker_id, count').eq('user_id', userId),
+  ])
 
   const existingSet = new Set((existing ?? []).map((r) => r.sticker_id as string))
-  const newSet = new Set(stickerIds)
+  const existingDupeMap: Record<string, number> = {}
+  for (const r of existingDupes ?? []) existingDupeMap[r.sticker_id as string] = r.count as number
+
+  // Stickers to add to album (not already there)
   const addedToAlbumIds = stickerIds.filter((id) => !existingSet.has(id))
-  const addedToAlbum = addedToAlbumIds.length
-  const removedFromAlbum = [...existingSet].filter((id) => !newSet.has(id)).length
 
-  // Replace user_stickers
-  const { error: deleteStickersError } = await supabase
-    .from('user_stickers')
-    .delete()
-    .eq('user_id', userId)
+  // Build duplicate increments:
+  // - stickers in file that are already in the album → +1 duplicate each (overlap)
+  // - stickers appearing more than once in file → +(count-1) duplicates each
+  const dupeIncrements: Record<string, number> = {}
+  for (const id of stickerIds) {
+    if (existingSet.has(id)) dupeIncrements[id] = (dupeIncrements[id] ?? 0) + 1
+  }
+  for (const [id, count] of Object.entries(counts)) {
+    if (count > 1) dupeIncrements[id] = (dupeIncrements[id] ?? 0) + (count - 1)
+  }
 
-  if (deleteStickersError) return { success: false, error: 'Erro ao limpar álbum.' }
+  // Merge increments with existing duplicate counts
+  const mergedDupeRows = Object.entries(dupeIncrements)
+    .map(([sticker_id, inc]) => ({
+      user_id: userId,
+      sticker_id,
+      count: (existingDupeMap[sticker_id] ?? 0) + inc,
+    }))
 
-  const stickerRows = stickerIds.map((sticker_id) => ({ user_id: userId, sticker_id }))
+  // Insert only new album stickers (never remove existing ones)
+  const stickerRows = addedToAlbumIds.map((sticker_id) => ({ user_id: userId, sticker_id }))
   const { failed: failedStickers } = await insertWithFallback('user_stickers', stickerRows)
 
-  // Replace user_duplicates
-  const { error: deleteDupError } = await supabase
-    .from('user_duplicates')
-    .delete()
-    .eq('user_id', userId)
+  // Upsert duplicate counts (merge with existing)
+  const { failed: failedDuplicates } = await upsertDupesWithFallback(mergedDupeRows)
 
-  if (deleteDupError) return { success: false, error: 'Erro ao limpar repetidas.' }
+  const savedDupeIds = mergedDupeRows
+    .filter((r) => !failedDuplicates.includes(r.sticker_id))
+    .map((r) => r.sticker_id)
 
-  const duplicateRows = Object.entries(counts)
-    .filter(([, count]) => count > 1)
-    .map(([sticker_id, count]) => ({ user_id: userId, sticker_id, count: count - 1 }))
-
-  const { failed: failedDuplicates } = await insertWithFallback('user_duplicates', duplicateRows)
-
-  const savedDuplicates = duplicateRows.filter((r) => !failedDuplicates.includes(r.sticker_id))
-  const totalDuplicateCopies = savedDuplicates.reduce((sum, r) => sum + r.count, 0)
-  const duplicateIds = savedDuplicates.map((r) => r.sticker_id)
+  const newDuplicateCopies = Object.entries(dupeIncrements)
+    .filter(([id]) => !failedDuplicates.includes(id))
+    .reduce((s, [, inc]) => s + inc, 0)
 
   const totalLines = Object.values(counts).reduce((s, c) => s + c, 0)
 
   logAction(userId, 'file_import', {
     total: stickerIds.length,
     totalLines,
-    added: addedToAlbum,
-    removed: removedFromAlbum,
+    added: addedToAlbumIds.length,
+    removed: 0,
     addedToAlbumIds,
-    duplicateIds,
-    duplicateItems: savedDuplicates.length,
-    duplicateCopies: totalDuplicateCopies,
+    duplicateIds: savedDupeIds,
+    duplicateItems: savedDupeIds.length,
+    duplicateCopies: newDuplicateCopies,
     failedStickers,
     failedDuplicates,
   })
@@ -107,12 +127,12 @@ export async function importStickerFile(
   return {
     success: true,
     totalStickers: stickerIds.length,
-    addedToAlbum,
+    addedToAlbum: addedToAlbumIds.length,
     addedToAlbumIds,
-    removedFromAlbum,
-    newDuplicates: savedDuplicates.length,
-    duplicateIds,
-    totalDuplicateCopies,
+    removedFromAlbum: 0,
+    newDuplicates: savedDupeIds.length,
+    duplicateIds: savedDupeIds,
+    totalDuplicateCopies: newDuplicateCopies,
     failedStickers,
     failedDuplicates,
   }

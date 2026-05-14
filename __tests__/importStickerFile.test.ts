@@ -19,12 +19,14 @@ function makeChain(resolveValue: unknown) {
   const chain = {
     select: vi.fn(),
     insert: vi.fn(),
+    upsert: vi.fn(),
     delete: vi.fn(),
     eq: vi.fn(),
     then: (resolve: (v: unknown) => unknown) => Promise.resolve(resolveValue).then(resolve),
   }
   chain.select.mockReturnValue(chain)
   chain.insert.mockReturnValue(chain)
+  chain.upsert.mockReturnValue(chain)
   chain.delete.mockReturnValue(chain)
   chain.eq.mockReturnValue(chain)
   return chain
@@ -33,7 +35,6 @@ function makeChain(resolveValue: unknown) {
 describe('importStickerFile', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // logAction (fire-and-forget) uses supabaseAdmin — provide a no-op chain
     mockAdminFrom.mockReturnValue(makeChain({ error: null }))
   })
 
@@ -43,115 +44,125 @@ describe('importStickerFile', () => {
     if (!result.success) expect(result.error).toMatch(/usuário/i)
   })
 
-  it('returns error when deleting stickers fails', async () => {
+  it('adds only new stickers — never removes existing album stickers', async () => {
+    // User already has MEX1 and MEX2 in album.
+    // File contains MEX1 (overlap) + BRA5 (new). MEX2 is NOT in file.
+    // Expected: BRA5 added, MEX2 KEPT (not removed), MEX1 overlap → +1 duplicate.
     let callIndex = 0
     mockFrom.mockImplementation(() => {
       callIndex++
-      if (callIndex === 1) {
-        // select existing
-        return makeChain({ data: [] })
-      }
-      // delete user_stickers — fails
-      return makeChain({ error: { message: 'db error' } })
+      if (callIndex === 1) return makeChain({ data: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }] }) // existing stickers
+      if (callIndex === 2) return makeChain({ data: [] }) // existing dupes
+      if (callIndex === 3) return makeChain({ error: null }) // insert new stickers (BRA5)
+      return makeChain({ error: null }) // upsert dupes
     })
 
-    const result = await importStickerFile('u1', ['MEX1'], { MEX1: 1 })
-    expect(result.success).toBe(false)
-    if (!result.success) expect(result.error).toMatch(/álbum/i)
-  })
-
-  it('succeeds with no duplicates when all stickers appear once', async () => {
-    let callIndex = 0
-    mockFrom.mockImplementation(() => {
-      callIndex++
-      // 1: select existing stickers
-      if (callIndex === 1) return makeChain({ data: [] })
-      // 2: delete user_stickers
-      if (callIndex === 2) return makeChain({ error: null })
-      // 3: insert user_stickers
-      if (callIndex === 3) return makeChain({ error: null })
-      // 4: delete user_duplicates
-      if (callIndex === 4) return makeChain({ error: null })
-      // no insert for duplicates (none)
-      return makeChain({ error: null })
-    })
-
-    const result = await importStickerFile('u1', ['MEX1', 'MEX2'], { MEX1: 1, MEX2: 1 })
+    const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 1, BRA5: 1 })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.totalStickers).toBe(2)
-      expect(result.newDuplicates).toBe(0)
-      expect(result.totalDuplicateCopies).toBe(0)
-      expect(result.failedStickers).toEqual([])
-      expect(result.failedDuplicates).toEqual([])
+      expect(result.addedToAlbum).toBe(1)       // only BRA5
+      expect(result.removedFromAlbum).toBe(0)   // MEX2 NOT removed
     }
   })
 
-  it('succeeds and computes duplicates when stickers appear more than once', async () => {
+  it('overlap sticker (in file + already in album) generates +1 duplicate', async () => {
+    // MEX1 in album + MEX1 in file (once) → MEX1 stays in album, gains 1 duplicate
     let callIndex = 0
     mockFrom.mockImplementation(() => {
       callIndex++
-      if (callIndex === 1) return makeChain({ data: [] })
-      if (callIndex === 2) return makeChain({ error: null }) // delete stickers
-      if (callIndex === 3) return makeChain({ error: null }) // insert stickers
-      if (callIndex === 4) return makeChain({ error: null }) // delete dupes
-      if (callIndex === 5) return makeChain({ error: null }) // insert dupes
-      return makeChain({ error: null })
+      if (callIndex === 1) return makeChain({ data: [{ sticker_id: 'MEX1' }] }) // existing stickers
+      if (callIndex === 2) return makeChain({ data: [] }) // existing dupes
+      if (callIndex === 3) return makeChain({ error: null }) // insert new stickers (none)
+      return makeChain({ error: null }) // upsert dupes
     })
 
-    // MEX1 appears 3 times → 1 in album, 2 duplicates; BRA5 appears 2 times → 1 in album, 1 duplicate
+    const result = await importStickerFile('u1', ['MEX1'], { MEX1: 1 })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.addedToAlbum).toBe(0)         // MEX1 already in album
+      expect(result.newDuplicates).toBe(1)         // MEX1 becomes 1 duplicate
+      expect(result.totalDuplicateCopies).toBe(1)
+    }
+  })
+
+  it('merges new duplicates with pre-existing duplicate counts', async () => {
+    // MEX1 already in album + already has 3 duplicates.
+    // File contains MEX1 once → overlap adds +1.
+    // Expected: MEX1 duplicate count becomes 4.
+    let callIndex = 0
+    mockFrom.mockImplementation(() => {
+      callIndex++
+      if (callIndex === 1) return makeChain({ data: [{ sticker_id: 'MEX1' }] }) // existing stickers
+      if (callIndex === 2) return makeChain({ data: [{ sticker_id: 'MEX1', count: 3 }] }) // existing dupes
+      if (callIndex === 3) return makeChain({ error: null }) // insert new stickers (none)
+      return makeChain({ error: null }) // upsert dupes
+    })
+
+    const result = await importStickerFile('u1', ['MEX1'], { MEX1: 1 })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.newDuplicates).toBe(1)         // 1 sticker code updated
+      expect(result.totalDuplicateCopies).toBe(1)  // +1 new copy added
+    }
+  })
+
+  it('multi-occurrence sticker in file generates count-1 duplicates', async () => {
+    // No existing stickers. File has MEX1×3, BRA5×2.
+    // MEX1 → 1 in album + 2 duplicates; BRA5 → 1 in album + 1 duplicate.
+    let callIndex = 0
+    mockFrom.mockImplementation(() => {
+      callIndex++
+      if (callIndex === 1) return makeChain({ data: [] }) // no existing stickers
+      if (callIndex === 2) return makeChain({ data: [] }) // no existing dupes
+      if (callIndex === 3) return makeChain({ error: null }) // insert stickers
+      return makeChain({ error: null }) // upsert dupes
+    })
+
     const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 3, BRA5: 2 })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.totalStickers).toBe(2)   // 2 unique IDs
-      expect(result.newDuplicates).toBe(2)
-      expect(result.totalDuplicateCopies).toBe(3) // 2 + 1
+      expect(result.addedToAlbum).toBe(2)
+      expect(result.newDuplicates).toBe(2)         // 2 sticker codes got duplicates
+      expect(result.totalDuplicateCopies).toBe(3)  // 2 + 1
     }
   })
 
   it('totalLines equals sum of all counts (unique + extra copies)', async () => {
-    // This verifies the metadata logged to audit includes the raw file line count,
-    // not just the unique sticker count, so history shows "5 linhas no arquivo · 2 únicas".
+    // MEX1×3 + BRA5×2 = 5 lines, 2 unique IDs
     let callIndex = 0
     mockFrom.mockImplementation(() => {
       callIndex++
       if (callIndex === 1) return makeChain({ data: [] })
-      if (callIndex === 2) return makeChain({ error: null })
+      if (callIndex === 2) return makeChain({ data: [] })
       if (callIndex === 3) return makeChain({ error: null })
-      if (callIndex === 4) return makeChain({ error: null })
-      if (callIndex === 5) return makeChain({ error: null })
       return makeChain({ error: null })
     })
 
-    // MEX1×3 + BRA5×2 = 5 lines, 2 unique
     const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 3, BRA5: 2 })
     expect(result.success).toBe(true)
     if (result.success) {
-      // totalStickers = unique IDs (2); total lines = 3+2 = 5
-      expect(result.totalStickers).toBe(2)
-      expect(result.totalDuplicateCopies).toBe(3) // lines - unique = 5 - 2
+      expect(result.totalStickers).toBe(2)          // 2 unique IDs
+      expect(result.totalDuplicateCopies).toBe(3)   // 5 lines - 2 unique = 3 extra
     }
   })
 
-  it('computes addedToAlbum and removedFromAlbum correctly', async () => {
+  it('overlap + multi-occurrence combined: adds correctly', async () => {
+    // MEX1 already in album with 1 existing duplicate.
+    // File has MEX1×2: overlap (+1) + count-1 (+1) = +2 new copies.
+    // Expected: MEX1 duplicate count goes from 1 to 3.
     let callIndex = 0
     mockFrom.mockImplementation(() => {
       callIndex++
-      // existing stickers: MEX1 and MEX2
-      if (callIndex === 1)
-        return makeChain({ data: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }] })
-      if (callIndex === 2) return makeChain({ error: null }) // delete stickers
-      if (callIndex === 3) return makeChain({ error: null }) // insert stickers (MEX1, BRA5)
-      if (callIndex === 4) return makeChain({ error: null }) // delete dupes
+      if (callIndex === 1) return makeChain({ data: [{ sticker_id: 'MEX1' }] })
+      if (callIndex === 2) return makeChain({ data: [{ sticker_id: 'MEX1', count: 1 }] })
+      if (callIndex === 3) return makeChain({ error: null })
       return makeChain({ error: null })
     })
 
-    // New file has MEX1 (kept) + BRA5 (added); MEX2 was removed
-    const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 1, BRA5: 1 })
+    const result = await importStickerFile('u1', ['MEX1'], { MEX1: 2 })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.addedToAlbum).toBe(1) // BRA5 is new
-      expect(result.removedFromAlbum).toBe(1) // MEX2 removed
+      expect(result.totalDuplicateCopies).toBe(2)  // +1 overlap + +1 from count-1
     }
   })
 
@@ -159,13 +170,11 @@ describe('importStickerFile', () => {
     let callIndex = 0
     mockFrom.mockImplementation(() => {
       callIndex++
-      if (callIndex === 1) return makeChain({ data: [] }) // select existing
-      if (callIndex === 2) return makeChain({ error: null }) // delete stickers
+      if (callIndex === 1) return makeChain({ data: [] })
+      if (callIndex === 2) return makeChain({ data: [] })
       if (callIndex === 3) return makeChain({ error: { message: 'bulk failed' } }) // bulk insert fails
-      // individual inserts: MEX1 succeeds, MEX2 fails
-      if (callIndex === 4) return makeChain({ error: null })
-      if (callIndex === 5) return makeChain({ error: { message: 'row error' } })
-      if (callIndex === 6) return makeChain({ error: null }) // delete dupes
+      if (callIndex === 4) return makeChain({ error: null })                        // MEX1 ok
+      if (callIndex === 5) return makeChain({ error: { message: 'row error' } })   // MEX2 fails
       return makeChain({ error: null })
     })
 
