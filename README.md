@@ -92,6 +92,7 @@ Recebeu uma lista de figurinhas de alguém fora do app? Cole os códigos ou envi
 🤝 _4. Ranking de Trocas_
 O app monta um ranking de compatibilidade entre você e os outros moradores.
 
+- A seção _"Ajude a completar o álbum"_ aparece no topo com moradores que já têm ≥85% do álbum — uma chance de dar aquela forcinha para quem está quase lá!
 - Quem aparece no topo 🏆 é a melhor troca para os _dois lados ao mesmo tempo_
 - Toque em _"Realizar Troca"_ para enviar um pedido formal
 - O pedido fica pendente até que o outro morador aceite
@@ -222,7 +223,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (137 testes, 13 suítes)
+npm test                  # roda todos os testes (145 testes, 14 suítes)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```
@@ -253,6 +254,7 @@ supabase db push
 | 009_sticker_count_rpc      | RPC `get_sticker_counts_by_user` (contorna limite PostgREST)                                 |
 | 010_trade_rollback         | Colunas `accepted_at` e `rollback_requested_by` em `pending_trades`; status `rolled_back`    |
 | 011_trade_rollback_partial | Colunas `rollback_giving_ids` e `rollback_receiving_ids` para desfazimento parcial de trocas |
+| 012_deactivate_visitantes  | Desativa (`approved = false`) usuários com "visitante" no nome                               |
 
 ### Variáveis de ambiente
 
