@@ -74,8 +74,8 @@ export function TradeCard({
             : `${totalGiving} figurinha${totalGiving !== 1 ? 's' : ''} você dá`}
       </p>
 
-      <StickerList ids={trade.myReceivingIds} label="Você vai receber" />
-      <StickerList ids={trade.myGivingIds} label="Você vai dar" />
+      <StickerList ids={trade.myReceivingIds} label="Você vai receber" variant="receiving" />
+      <StickerList ids={trade.myGivingIds} label="Você vai dar" variant="giving" />
 
       {!trade.isSender && betterMatch && (
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">

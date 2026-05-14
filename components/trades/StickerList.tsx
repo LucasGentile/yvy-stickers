@@ -2,16 +2,44 @@
 
 import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
+import { StickerChip, type StickerChipVariant } from '@/components/StickerChip'
 
-export function StickerList({ ids, label }: { ids: string[]; label: string }) {
+type StickerListVariant = 'giving' | 'receiving' | 'third-party' | 'default'
+
+const LABEL_STYLES: Record<StickerListVariant, string> = {
+  giving: 'text-rose-500',
+  receiving: 'text-green-600',
+  'third-party': 'text-sky-500',
+  default: 'text-yvy-muted',
+}
+
+const ARROW: Record<StickerListVariant, string> = {
+  giving: ' →',
+  receiving: '← ',
+  'third-party': '',
+  default: '',
+}
+
+export function StickerList({
+  ids,
+  label,
+  variant = 'default',
+}: {
+  ids: string[]
+  label: string
+  variant?: StickerListVariant
+}) {
   const { stickerOrder } = usePrefs()
   if (ids.length === 0) return null
   const sorted = stickerOrder === 'album' ? sortByAlbumOrder(ids) : sortAlphabetically(ids)
   const chromeCount = ids.filter(isChromeSticker).length
+
+  const chipVariant: StickerChipVariant = variant === 'default' ? 'default' : variant
+
   return (
     <div>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1">
-        {label}
+      <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${LABEL_STYLES[variant]}`}>
+        {variant === 'receiving' ? ARROW[variant] : ''}{label}{variant === 'giving' ? ARROW[variant] : ''}
         {chromeCount > 0 && (
           <span className="ml-1.5 text-amber-600 normal-case font-medium">
             · ✨ {chromeCount} cromada{chromeCount !== 1 ? 's' : ''}
@@ -20,18 +48,7 @@ export function StickerList({ ids, label }: { ids: string[]; label: string }) {
       </p>
       <div className="flex flex-wrap gap-1">
         {sorted.map((id) => (
-          <span
-            key={id}
-            className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-yvy-bg border border-yvy-border text-yvy-text"
-          >
-            {isChromeSticker(id) ? (
-              <span className="font-bold text-amber-500">{id}</span>
-            ) : isCocaColaSticker(id) ? (
-              <span className="font-bold text-red-500">{id}</span>
-            ) : (
-              id
-            )}
-          </span>
+          <StickerChip key={id} id={id} variant={chipVariant} />
         ))}
       </div>
     </div>

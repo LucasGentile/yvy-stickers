@@ -2,7 +2,7 @@
 
 import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 
-export type StickerChipVariant = 'default' | 'green' | 'amber' | 'giving' | 'receiving'
+export type StickerChipVariant = 'default' | 'green' | 'amber' | 'giving' | 'receiving' | 'third-party'
 
 export function StickerChip({
   id,
@@ -59,9 +59,11 @@ export function StickerChip({
     containerClass = checked
       ? 'bg-green-100 border-green-200 text-green-300 line-through opacity-50'
       : 'bg-green-50 border-green-300 text-green-700'
+  } else if (variant === 'third-party') {
+    containerClass = 'bg-sky-50 border-sky-200 text-sky-700'
   }
 
-  const showSparkle = (variant === 'giving' || variant === 'receiving') && isChrome
+  const showSparkle = (variant === 'giving' || variant === 'receiving' || variant === 'third-party') && isChrome
   const label = showSparkle ? `✨${id}` : id
 
   const skipSpecialColor = checked && (variant === 'giving' || variant === 'receiving' || variant === 'green' || variant === 'amber')
