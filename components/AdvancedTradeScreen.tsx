@@ -300,8 +300,9 @@ export default function AdvancedTradeScreen() {
         cGivesIds: selected.cGivesIds,
       })
       if (result.found) {
-        setPreviews([])
         await loadTrades(userId)
+        const fresh = await previewAdvancedTrade(userId)
+        setPreviews(fresh.found ? fresh.previews : [])
       } else {
         setSearchMsg(
           result.error ?? 'Erro ao criar proposta. Tente novamente.'
@@ -359,7 +360,7 @@ export default function AdvancedTradeScreen() {
       )}
 
       {/* Search / Preview / Confirm */}
-      {pendingTrades.length === 0 && previews.length === 0 && (
+      {previews.length === 0 && (
         <div className="space-y-3">
           <div className="bg-yvy-bg rounded-xl p-4 space-y-3">
             <p className="text-xs text-yvy-muted leading-relaxed">
