@@ -1,7 +1,7 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { findBestAdvancedTrade } from '@/lib/advancedMatching'
+import { findAllAdvancedTrades } from '@/lib/advancedMatching'
 import { formatName } from '@/lib/format'
 
 export type AdvancedTradePreview = {
@@ -11,10 +11,11 @@ export type AdvancedTradePreview = {
   aGivesIds: string[]
   bGivesIds: string[]
   cGivesIds: string[]
+  score: number
 }
 
 export type PreviewAdvancedTradeResult =
-  | { found: true; preview: AdvancedTradePreview }
+  | { found: true; previews: AdvancedTradePreview[] }
   | { found: false; error?: string }
 
 export async function previewAdvancedTrade(
@@ -34,27 +35,35 @@ export async function previewAdvancedTrade(
     return { found: false, error: 'Você já tem uma troca avançada pendente.' }
   }
 
-  const proposal = await findBestAdvancedTrade(userId)
-  if (!proposal) return { found: false }
+  const proposals = await findAllAdvancedTrades(userId)
+  if (proposals.length === 0) return { found: false }
+
+  // Collect all unique user IDs to resolve names in one query
+  const allIds = new Set<string>()
+  for (const p of proposals) {
+    allIds.add(p.userAId)
+    allIds.add(p.userBId)
+    allIds.add(p.userCId)
+  }
 
   const { data: users } = await supabaseAdmin
     .from('users')
     .select('id, name')
-    .in('id', [proposal.userAId, proposal.userBId, proposal.userCId])
+    .in('id', [...allIds])
 
   const nameMap = Object.fromEntries(
     (users ?? []).map((u) => [u.id, formatName(u.name)])
   )
 
-  return {
-    found: true,
-    preview: {
-      userA: { id: proposal.userAId, name: nameMap[proposal.userAId] ?? 'Usuário' },
-      userB: { id: proposal.userBId, name: nameMap[proposal.userBId] ?? 'Usuário' },
-      userC: { id: proposal.userCId, name: nameMap[proposal.userCId] ?? 'Usuário' },
-      aGivesIds: proposal.aGivesIds,
-      bGivesIds: proposal.bGivesIds,
-      cGivesIds: proposal.cGivesIds,
-    },
-  }
+  const previews: AdvancedTradePreview[] = proposals.map((p) => ({
+    userA: { id: p.userAId, name: nameMap[p.userAId] ?? 'Usuário' },
+    userB: { id: p.userBId, name: nameMap[p.userBId] ?? 'Usuário' },
+    userC: { id: p.userCId, name: nameMap[p.userCId] ?? 'Usuário' },
+    aGivesIds: p.aGivesIds,
+    bGivesIds: p.bGivesIds,
+    cGivesIds: p.cGivesIds,
+    score: p.score,
+  }))
+
+  return { found: true, previews }
 }

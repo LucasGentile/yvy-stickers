@@ -238,8 +238,8 @@ export default function AdvancedTradeScreen() {
   const [trades, setTrades] = useState<AdvancedTradeView[]>([])
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
-  const [confirming, setConfirming] = useState(false)
-  const [preview, setPreview] = useState<AdvancedTradePreview | null>(null)
+  const [confirmingIdx, setConfirmingIdx] = useState<number | null>(null)
+  const [previews, setPreviews] = useState<AdvancedTradePreview[]>([])
   const [searchMsg, setSearchMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -267,11 +267,11 @@ export default function AdvancedTradeScreen() {
     if (!userId) return
     setSearching(true)
     setSearchMsg(null)
-    setPreview(null)
+    setPreviews([])
     try {
       const result = await previewAdvancedTrade(userId)
       if (result.found) {
-        setPreview(result.preview)
+        setPreviews(result.previews)
       } else {
         setSearchMsg(
           result.error ?? 'Nenhuma troca triangular disponível no momento. Tente mais tarde.'
@@ -284,14 +284,23 @@ export default function AdvancedTradeScreen() {
     }
   }
 
-  async function handleConfirm() {
+  async function handleConfirm(idx: number) {
     if (!userId) return
-    setConfirming(true)
+    const selected = previews[idx]
+    if (!selected) return
+    setConfirmingIdx(idx)
     setSearchMsg(null)
     try {
-      const result = await findAdvancedTrade(userId)
+      const result = await findAdvancedTrade(userId, {
+        userAId: selected.userA.id,
+        userBId: selected.userB.id,
+        userCId: selected.userC.id,
+        aGivesIds: selected.aGivesIds,
+        bGivesIds: selected.bGivesIds,
+        cGivesIds: selected.cGivesIds,
+      })
       if (result.found) {
-        setPreview(null)
+        setPreviews([])
         await loadTrades(userId)
       } else {
         setSearchMsg(
@@ -301,7 +310,7 @@ export default function AdvancedTradeScreen() {
     } catch {
       setSearchMsg('Erro inesperado. Tente novamente.')
     } finally {
-      setConfirming(false)
+      setConfirmingIdx(null)
     }
   }
 
@@ -350,7 +359,7 @@ export default function AdvancedTradeScreen() {
       )}
 
       {/* Search / Preview / Confirm */}
-      {pendingTrades.length === 0 && !preview && (
+      {pendingTrades.length === 0 && previews.length === 0 && (
         <div className="space-y-3">
           <div className="bg-yvy-bg rounded-xl p-4 space-y-3">
             <p className="text-xs text-yvy-muted leading-relaxed">
@@ -375,57 +384,77 @@ export default function AdvancedTradeScreen() {
         </div>
       )}
 
-      {/* Preview before confirming */}
-      {preview && (
+      {/* Preview all proposals ranked by score */}
+      {previews.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-base font-bold text-yvy-dark">Proposta encontrada</h3>
-          <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
-            <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
-              <p className="text-xs font-semibold text-yvy-dark">
-                Você dá para <span className="capitalize">{preview.userB.name}</span>
-              </p>
-              <StickerList ids={preview.aGivesIds} label="" />
-            </div>
-            <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
-              <p className="text-xs font-semibold text-yvy-dark">
-                Você recebe de <span className="capitalize">{preview.userC.name}</span>
-              </p>
-              <StickerList ids={preview.cGivesIds} label="" />
-            </div>
-            <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
-              <p className="text-xs font-semibold text-yvy-dark">
-                <span className="capitalize">{preview.userB.name}</span> dá para{' '}
-                <span className="capitalize">{preview.userC.name}</span>
-              </p>
-              <StickerList ids={preview.bGivesIds} label="" />
-            </div>
-
-            <p className="text-xs text-yvy-muted leading-relaxed">
-              Ao confirmar, os outros 2 participantes receberão a proposta e precisarão aprovar
-              para a troca acontecer.
-            </p>
-
-            {searchMsg && (
-              <p className="text-xs text-red-600">{searchMsg}</p>
-            )}
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => { setPreview(null); setSearchMsg(null) }}
-                disabled={confirming}
-                className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2.5 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleConfirm}
-                disabled={confirming}
-                className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
-              >
-                {confirming ? 'Enviando...' : 'Confirmar proposta'}
-              </button>
-            </div>
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-yvy-dark">
+              {previews.length === 1
+                ? 'Proposta encontrada'
+                : `${previews.length} propostas encontradas`}
+            </h3>
+            <button
+              onClick={() => { setPreviews([]); setSearchMsg(null) }}
+              className="text-xs text-yvy-muted underline"
+            >
+              Voltar
+            </button>
           </div>
+
+          {searchMsg && (
+            <p className="text-xs text-red-600 text-center">{searchMsg}</p>
+          )}
+
+          {previews.map((preview, idx) => (
+            <div
+              key={`${preview.userB.id}-${preview.userC.id}`}
+              className={`bg-yvy-surface rounded-xl border shadow-md p-4 space-y-3 ${
+                idx === 0 ? 'border-yvy-accent' : 'border-yvy-border'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wide text-yvy-muted">
+                  Opção {idx + 1}
+                </span>
+                <span className="text-[10px] font-bold text-yvy-accent bg-yvy-accent/10 px-2 py-0.5 rounded-full">
+                  {preview.score} figurinha{preview.score !== 1 ? 's' : ''} cada
+                </span>
+              </div>
+
+              <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
+                <p className="text-xs font-semibold text-yvy-dark">
+                  Você dá para <span className="capitalize">{preview.userB.name}</span>
+                </p>
+                <StickerList ids={preview.aGivesIds} label="" />
+              </div>
+              <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
+                <p className="text-xs font-semibold text-yvy-dark">
+                  Você recebe de <span className="capitalize">{preview.userC.name}</span>
+                </p>
+                <StickerList ids={preview.cGivesIds} label="" />
+              </div>
+              <div className="bg-yvy-bg rounded-lg p-3 space-y-2">
+                <p className="text-xs font-semibold text-yvy-dark">
+                  <span className="capitalize">{preview.userB.name}</span> dá para{' '}
+                  <span className="capitalize">{preview.userC.name}</span>
+                </p>
+                <StickerList ids={preview.bGivesIds} label="" />
+              </div>
+
+              <button
+                onClick={() => handleConfirm(idx)}
+                disabled={confirmingIdx !== null}
+                className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                {confirmingIdx === idx ? 'Enviando...' : 'Confirmar esta proposta'}
+              </button>
+            </div>
+          ))}
+
+          <p className="text-xs text-yvy-muted text-center leading-relaxed">
+            Ao confirmar, os outros 2 participantes receberão a proposta e precisarão aprovar
+            para a troca acontecer.
+          </p>
         </div>
       )}
 

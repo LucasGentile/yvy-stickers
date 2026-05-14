@@ -10,7 +10,8 @@ export type FindAdvancedTradeResult =
   | { found: false; error?: string }
 
 export async function findAdvancedTrade(
-  userId: string
+  userId: string,
+  selectedProposal?: AdvancedTradeProposal
 ): Promise<FindAdvancedTradeResult> {
   if (!userId) return { found: false, error: 'Usuário inválido.' }
 
@@ -36,8 +37,8 @@ export async function findAdvancedTrade(
       return { found: false, error: 'Você já tem uma troca avançada pendente.' }
     }
 
-    console.log('[findAdvancedTrade] No existing pending trades, searching for best match...')
-    const proposal = await findBestAdvancedTrade(userId)
+    console.log('[findAdvancedTrade] No existing pending trades, resolving proposal...')
+    const proposal = selectedProposal ?? await findBestAdvancedTrade(userId)
 
     if (!proposal) {
       console.log('[findAdvancedTrade] No valid cycle found')
