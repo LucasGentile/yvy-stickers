@@ -653,9 +653,16 @@ export default function AdvancedTradeScreen() {
                 <span className="text-[10px] font-bold uppercase tracking-wide text-yvy-muted">
                   Opção {idx + 1}
                 </span>
-                <span className="text-[10px] font-bold text-yvy-accent bg-yvy-accent/10 px-2 py-0.5 rounded-full">
-                  {preview.score} figurinha{preview.score !== 1 ? 's' : ''} cada
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {preview.previouslyCanceled && (
+                    <span className="text-[10px] font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+                      Cancelada anteriormente
+                    </span>
+                  )}
+                  <span className="text-[10px] font-bold text-yvy-accent bg-yvy-accent/10 px-2 py-0.5 rounded-full">
+                    {preview.score} figurinha{preview.score !== 1 ? 's' : ''} cada
+                  </span>
+                </div>
               </div>
 
               <div className="bg-rose-50/50 rounded-lg p-3 space-y-2 border border-rose-100">

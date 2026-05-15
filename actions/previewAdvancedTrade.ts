@@ -12,15 +12,14 @@ export type AdvancedTradePreview = {
   bGivesIds: string[]
   cGivesIds: string[]
   score: number
+  previouslyCanceled: boolean
 }
 
 export type PreviewAdvancedTradeResult =
   | { found: true; previews: AdvancedTradePreview[] }
   | { found: false; error?: string }
 
-export async function previewAdvancedTrade(
-  userId: string
-): Promise<PreviewAdvancedTradeResult> {
+export async function previewAdvancedTrade(userId: string): Promise<PreviewAdvancedTradeResult> {
   if (!userId) return { found: false, error: 'Usuário inválido.' }
 
   const proposals = await findAllAdvancedTrades(userId)
@@ -34,24 +33,42 @@ export async function previewAdvancedTrade(
     allIds.add(p.userCId)
   }
 
-  const { data: users } = await supabaseAdmin
-    .from('users')
-    .select('id, name')
-    .in('id', [...allIds])
+  const [{ data: users }, { data: canceledAdvanced }] = await Promise.all([
+    supabaseAdmin
+      .from('users')
+      .select('id, name')
+      .in('id', [...allIds]),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabaseAdmin as any)
+      .from('advanced_trades')
+      .select('user_a_id, user_b_id, user_c_id')
+      .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
+      .in('status', ['cancelled', 'rejected']),
+  ])
 
-  const nameMap = Object.fromEntries(
-    (users ?? []).map((u) => [u.id, formatName(u.name)])
+  const canceledTrios = new Set<string>(
+    (
+      (canceledAdvanced ?? []) as Array<{ user_a_id: string; user_b_id: string; user_c_id: string }>
+    ).map((t) => [t.user_a_id, t.user_b_id, t.user_c_id].sort().join(':'))
   )
 
-  const previews: AdvancedTradePreview[] = proposals.map((p) => ({
-    userA: { id: p.userAId, name: nameMap[p.userAId] ?? 'Usuário' },
-    userB: { id: p.userBId, name: nameMap[p.userBId] ?? 'Usuário' },
-    userC: { id: p.userCId, name: nameMap[p.userCId] ?? 'Usuário' },
-    aGivesIds: p.aGivesIds,
-    bGivesIds: p.bGivesIds,
-    cGivesIds: p.cGivesIds,
-    score: p.score,
-  }))
+  const nameMap = Object.fromEntries(
+    (users ?? []).map((u: { id: string; name: string }) => [u.id, formatName(u.name)])
+  )
+
+  const previews: AdvancedTradePreview[] = proposals.map((p) => {
+    const trioKey = [p.userAId, p.userBId, p.userCId].sort().join(':')
+    return {
+      userA: { id: p.userAId, name: nameMap[p.userAId] ?? 'Usuário' },
+      userB: { id: p.userBId, name: nameMap[p.userBId] ?? 'Usuário' },
+      userC: { id: p.userCId, name: nameMap[p.userCId] ?? 'Usuário' },
+      aGivesIds: p.aGivesIds,
+      bGivesIds: p.bGivesIds,
+      cGivesIds: p.cGivesIds,
+      score: p.score,
+      previouslyCanceled: canceledTrios.has(trioKey),
+    }
+  })
 
   return { found: true, previews }
 }

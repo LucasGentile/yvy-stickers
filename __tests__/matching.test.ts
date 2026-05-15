@@ -83,10 +83,28 @@ function setupMocks({
     return makeEqChain([])
   })
 
-  // Admin mock for pending_trades reservation query
-  mockAdminFrom.mockReturnValue({
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockResolvedValue({ data: pendingTrades, error: null }),
+  // Admin mock: called 3 times (pending_trades, advanced_trades, canceled_trades)
+  let adminCallCount = 0
+  mockAdminFrom.mockImplementation(() => {
+    adminCallCount++
+    if (adminCallCount === 1) {
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ data: pendingTrades, error: null }),
+      }
+    }
+    if (adminCallCount === 2) {
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+      }
+    }
+    return {
+      select: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnValue({
+        in: vi.fn().mockResolvedValue({ data: [], error: null }),
+      }),
+    }
   })
 }
 
