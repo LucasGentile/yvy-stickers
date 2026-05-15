@@ -1,10 +1,42 @@
 'use client'
 
 import { useState } from 'react'
-import type { MatchResult } from '@/lib/matching'
+import type { MatchResult, CanceledTradeDetail } from '@/lib/matching'
 import { createTradeRequest } from '@/actions/createTradeRequest'
 import { isChromeSticker } from '@/lib/stickers'
 import { StickerChip } from './StickerChip'
+
+function setsEqual(a: string[], b: string[]) {
+  if (a.length !== b.length) return false
+  const setB = new Set(b)
+  return a.every((id) => setB.has(id))
+}
+
+function matchesCanceledTrade(
+  giving: string[],
+  receiving: string[],
+  canceledTrades: CanceledTradeDetail[]
+) {
+  return canceledTrades.some(
+    (ct) => setsEqual(giving, ct.giving) && setsEqual(receiving, ct.receiving)
+  )
+}
+
+function hasCanceledTradeInAvailable(
+  matchStickers: string[],
+  reciprocalStickers: string[],
+  canceledTrades: CanceledTradeDetail[]
+) {
+  const availableToReceive = new Set(matchStickers)
+  const availableToGive = new Set(reciprocalStickers)
+  return canceledTrades.some(
+    (ct) =>
+      ct.giving.length > 0 &&
+      ct.receiving.length > 0 &&
+      ct.giving.every((id) => availableToGive.has(id)) &&
+      ct.receiving.every((id) => availableToReceive.has(id))
+  )
+}
 
 function DetailModal({
   match,
@@ -18,6 +50,7 @@ function DetailModal({
   const [receiving, setReceiving] = useState<Set<string>>(new Set())
   const [giving, setGiving] = useState<Set<string>>(new Set())
   const [confirming, setConfirming] = useState(false)
+  const [canceledWarning, setCanceledWarning] = useState(false)
   const [trading, setTrading] = useState(false)
   const [tradeMsg, setTradeMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -31,6 +64,14 @@ function DetailModal({
       }
       return next
     })
+  }
+
+  function handleConfirmTrade() {
+    if (matchesCanceledTrade([...giving], [...receiving], match.canceledTrades)) {
+      setCanceledWarning(true)
+      return
+    }
+    handleTrade()
   }
 
   async function handleTrade() {
@@ -82,13 +123,33 @@ function DetailModal({
           </button>
         </div>
 
-        {match.previouslyCanceled && (
-          <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
-            <span className="text-orange-500 text-sm shrink-0 mt-px">↩</span>
-            <p className="text-[11px] text-orange-800 leading-snug">
-              Uma troca com {match.name.split(' ')[0]} foi cancelada ou recusada anteriormente.
-              Confirme presencialmente antes de enviar novamente.
-            </p>
+        {canceledWarning && (
+          <div className="space-y-3">
+            <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+              <span className="text-orange-500 text-sm shrink-0 mt-px">⚠️</span>
+              <p className="text-[11px] text-orange-800 leading-snug">
+                Esta troca é idêntica a uma que foi cancelada ou recusada anteriormente com{' '}
+                {match.name.split(' ')[0]}. Tem certeza que deseja enviar novamente?
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCanceledWarning(false)}
+                className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2.5 rounded-xl text-sm transition-colors hover:bg-yvy-bg"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setCanceledWarning(false)
+                  handleTrade()
+                }}
+                disabled={trading}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+              >
+                {trading ? 'Enviando...' : 'Enviar mesmo assim'}
+              </button>
+            </div>
           </div>
         )}
 
@@ -136,7 +197,7 @@ function DetailModal({
                 Voltar
               </button>
               <button
-                onClick={handleTrade}
+                onClick={handleConfirmTrade}
                 disabled={trading}
                 className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
               >
@@ -344,7 +405,7 @@ export default function MatchCard({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {match.previouslyCanceled && (
+            {hasCanceledTradeInAvailable(match.matchStickers, match.reciprocalStickers, match.canceledTrades) && (
               <span className="text-[10px] font-semibold bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
                 Cancelada anteriormente
               </span>
