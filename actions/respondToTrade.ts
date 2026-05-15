@@ -145,16 +145,28 @@ export async function respondToTrade(
         receivingIds: effectiveReceivingIds,
       })
     } else if (action === 'reject') {
-      logAction(userId, 'trade_rejected', {
+      logAction(trade.receiver_id, 'trade_rejected', {
         partnerName: initiatorName,
         givingIds: trade.receiving_ids,
         receivingIds: trade.giving_ids,
       })
-    } else {
-      logAction(userId, 'trade_cancelled', {
+      logAction(trade.initiator_id, 'trade_rejected', {
         partnerName: receiverName,
         givingIds: trade.giving_ids,
         receivingIds: trade.receiving_ids,
+        rejectedBy: receiverName,
+      })
+    } else {
+      logAction(trade.initiator_id, 'trade_cancelled', {
+        partnerName: receiverName,
+        givingIds: trade.giving_ids,
+        receivingIds: trade.receiving_ids,
+      })
+      logAction(trade.receiver_id, 'trade_cancelled', {
+        partnerName: initiatorName,
+        givingIds: trade.receiving_ids,
+        receivingIds: trade.giving_ids,
+        cancelledBy: initiatorName,
       })
     }
   })()

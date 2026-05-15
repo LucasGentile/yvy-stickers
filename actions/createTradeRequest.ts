@@ -147,19 +147,27 @@ export async function createTradeRequest(
     return { success: false, error: 'Erro ao criar pedido de troca.' }
   }
 
-  // Fire-and-forget: look up receiver name and log
+  // Fire-and-forget: log for both parties
   ;(async () => {
-    const { data: receiver } = await supabaseAdmin
+    const { data: users } = await supabaseAdmin
       .from('users')
-      .select('name')
-      .eq('id', receiverId)
-      .maybeSingle()
+      .select('id, name')
+      .in('id', [initiatorId, receiverId])
+    const initiatorName = formatName(users?.find((u) => u.id === initiatorId)?.name ?? 'Usuário')
+    const receiverName = formatName(users?.find((u) => u.id === receiverId)?.name ?? 'Usuário')
     logAction(initiatorId, 'trade_sent', {
-      partnerName: formatName(receiver?.name ?? 'Usuário'),
+      partnerName: receiverName,
       givingIds,
       receivingIds,
       givingCount: givingIds.length,
       receivingCount: receivingIds.length,
+    })
+    logAction(receiverId, 'trade_received', {
+      partnerName: initiatorName,
+      givingIds: receivingIds,
+      receivingIds: givingIds,
+      givingCount: receivingIds.length,
+      receivingCount: givingIds.length,
     })
   })()
 
