@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { getMuralInsights, Insight } from '@/actions/getMuralInsights'
+import PanelinhasSection from '@/components/PanelinhasSection'
 
 const COLOR_MAP: Record<
   Insight['color'],
@@ -154,6 +155,27 @@ export default function MuralScreen() {
       <p className="text-center text-[10px] text-yvy-muted pt-2">
         Atualizado com base nos dados mais recentes · Sem julgamentos (mentira)
       </p>
+
+      {/* Panelinhas section */}
+      <div className="border-t border-yvy-border pt-6 mt-6 space-y-3">
+        <div>
+          <h3 className="text-base font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+            Panelinhas do YVYs
+          </h3>
+          <p className="text-xs text-yvy-muted mt-0.5 pl-2.5">
+            Os pares que mais trocam figurinhas entre si 🤝
+          </p>
+        </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <p className="text-xs text-amber-900 leading-relaxed">
+            Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais
+            inseparáveis — e mais suspeitos de panelinha!
+          </p>
+        </div>
+
+        <PanelinhasSection />
+      </div>
     </div>
   )
 }

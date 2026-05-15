@@ -1,7 +1,7 @@
-import PanelinhasScreen from '@/components/PanelinhasScreen'
+import { redirect } from 'next/navigation'
 
 export const metadata = { title: 'Panelinhas do YVYs' }
 
 export default function PanelinhasPage() {
-  return <PanelinhasScreen />
+  redirect('/mural')
 }
