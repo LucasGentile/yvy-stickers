@@ -1,11 +1,47 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { getMatches, MatchResult } from '@/lib/matching'
 import { getPendingTrades, PendingTrade } from '@/actions/getPendingTrades'
 import MatchCard from './MatchCard'
 import PendingTradesSection from './PendingTradesSection'
 import { ColorLegend } from './trades/ColorLegend'
+
+function CollapsibleMatchSection({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description: string
+  children: ReactNode
+}) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex items-center gap-2 w-full text-left"
+      >
+        <span
+          className="text-[10px] text-yvy-muted transition-transform"
+          style={{ transform: expanded ? 'rotate(90deg)' : undefined }}
+        >
+          ▶
+        </span>
+        <h3 className="text-sm font-bold text-yvy-muted">{title}</h3>
+      </button>
+
+      {expanded && (
+        <div className="space-y-3">
+          <p className="text-xs text-yvy-muted leading-relaxed pl-4">{description}</p>
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function MatchesScreen() {
   const [matches, setMatches] = useState<MatchResult[]>([])
@@ -157,9 +193,7 @@ export default function MatchesScreen() {
           {(() => {
             const NEAR_COMPLETE_THRESHOLD = 85
             const nearCompleteMatches = matches
-              .filter(
-                (m) => m.completionPct >= NEAR_COMPLETE_THRESHOLD && m.mutualScore >= 1
-              )
+              .filter((m) => m.completionPct >= NEAR_COMPLETE_THRESHOLD && m.mutualScore >= 1)
               .sort((a, b) => {
                 if (b.completionPct !== a.completionPct) return b.completionPct - a.completionPct
                 return b.reciprocalScore - a.reciprocalScore
@@ -196,32 +230,80 @@ export default function MatchesScreen() {
                   </>
                 )}
 
-                {regularMatches.length > 0 && (
-                  <>
-                    {nearCompleteMatches.length > 0 && (
-                      <h3 className="text-sm font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5">
-                        Ranking de Compatibilidade
-                      </h3>
-                    )}
-                    <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-3 text-xs text-yvy-muted leading-relaxed">
-                      Quem aparece primeiro é quem mais tem figurinhas para trocar{' '}
-                      <strong className="text-yvy-dark">com você</strong>, e você com ele/ela ao
-                      mesmo tempo. Toque em{' '}
-                      <strong className="text-yvy-dark">Realizar Troca</strong> para enviar um
-                      pedido.
-                    </div>
-                    <div className="space-y-3">
-                      {regularMatches.map((m, i) => (
-                        <MatchCard
-                          key={m.userId}
-                          match={m}
-                          rank={i + 1}
-                          onTradeCreated={() => userId && refreshMatches(userId)}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
+                {(() => {
+                  const mutualMatches = regularMatches.filter(
+                    (m) => m.matchScore > 0 && m.reciprocalScore > 0
+                  )
+                  const theyHaveForMe = regularMatches.filter(
+                    (m) => m.matchScore > 0 && m.reciprocalScore === 0
+                  )
+                  const iHaveForThem = regularMatches.filter(
+                    (m) => m.reciprocalScore > 0 && m.matchScore === 0
+                  )
+
+                  return (
+                    <>
+                      {mutualMatches.length > 0 && (
+                        <>
+                          {nearCompleteMatches.length > 0 && (
+                            <h3 className="text-sm font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5">
+                              Ranking de Compatibilidade
+                            </h3>
+                          )}
+                          <div className="bg-yvy-bg rounded-xl border border-yvy-border px-4 py-3 text-xs text-yvy-muted leading-relaxed">
+                            Quem aparece primeiro é quem mais tem figurinhas para trocar{' '}
+                            <strong className="text-yvy-dark">com você</strong>, e você com ele/ela
+                            ao mesmo tempo. Toque em{' '}
+                            <strong className="text-yvy-dark">Realizar Troca</strong> para enviar um
+                            pedido.
+                          </div>
+                          <div className="space-y-3">
+                            {mutualMatches.map((m, i) => (
+                              <MatchCard
+                                key={m.userId}
+                                match={m}
+                                rank={i + 1}
+                                onTradeCreated={() => userId && refreshMatches(userId)}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      {theyHaveForMe.length > 0 && (
+                        <CollapsibleMatchSection
+                          title={`Têm para mim, mas não preciso das minhas (${theyHaveForMe.length})`}
+                          description="Estes moradores têm figurinhas que você precisa, mas você não tem nenhuma repetida que eles precisam no momento."
+                        >
+                          {theyHaveForMe.map((m, i) => (
+                            <MatchCard
+                              key={m.userId}
+                              match={m}
+                              rank={i + 1}
+                              onTradeCreated={() => userId && refreshMatches(userId)}
+                            />
+                          ))}
+                        </CollapsibleMatchSection>
+                      )}
+
+                      {iHaveForThem.length > 0 && (
+                        <CollapsibleMatchSection
+                          title={`Preciso das minhas, mas não têm para mim (${iHaveForThem.length})`}
+                          description="Você tem repetidas que estes moradores precisam, mas eles não têm nenhuma figurinha que você precisa no momento."
+                        >
+                          {iHaveForThem.map((m, i) => (
+                            <MatchCard
+                              key={m.userId}
+                              match={m}
+                              rank={i + 1}
+                              onTradeCreated={() => userId && refreshMatches(userId)}
+                            />
+                          ))}
+                        </CollapsibleMatchSection>
+                      )}
+                    </>
+                  )
+                })()}
               </>
             )
           })()}
