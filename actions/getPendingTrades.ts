@@ -50,7 +50,7 @@ export async function getPendingTrades(userId: string): Promise<{
         (supabaseAdmin as any)
           .from('pending_trades')
           .select(
-            'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids'
+            'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids, verified_at'
           )
           .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
           .eq('status', 'accepted')
