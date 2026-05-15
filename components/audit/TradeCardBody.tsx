@@ -62,8 +62,8 @@ export function TradeCardBody({
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500 mb-1">
                   {entry.action === 'trade_rolled_back'
-                    ? 'Você recuperou ←'
-                    : `Você ${isAccepted || isAdvancedExecuted ? 'deu' : 'dá'} para ${isAdvancedExecuted ? (entry.metadata.giveToName as string) : ''} →`}
+                    ? `Você recuperou ${givingIds.length} ←`
+                    : `Você ${isAccepted || isAdvancedExecuted ? 'deu' : 'dá'} ${givingIds.length} para ${isAdvancedExecuted ? (entry.metadata.giveToName as string) : ''} →`}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {givingIds.map((id) => (
@@ -80,8 +80,8 @@ export function TradeCardBody({
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-green-600 mb-1">
                   {entry.action === 'trade_rolled_back'
-                    ? '→ Você devolveu'
-                    : `← Você ${isAccepted || isAdvancedExecuted ? 'recebeu' : 'recebe'} de ${isAdvancedExecuted ? (entry.metadata.receiveFromName as string) : ''}`}
+                    ? `→ Você devolveu ${receivingIds.length}`
+                    : `← Você ${isAccepted || isAdvancedExecuted ? 'recebeu' : 'recebe'} ${receivingIds.length} de ${isAdvancedExecuted ? (entry.metadata.receiveFromName as string) : ''}`}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {receivingIds.map((id) => (
@@ -98,7 +98,8 @@ export function TradeCardBody({
               ((entry.metadata.thirdPartyIds as string[] | undefined) ?? []).length > 0 && (
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 mb-1">
-                    {entry.metadata.thirdPartyFromName as string} dá para{' '}
+                    {entry.metadata.thirdPartyFromName as string} dá{' '}
+                    {((entry.metadata.thirdPartyIds as string[]) ?? []).length} para{' '}
                     {entry.metadata.thirdPartyToName as string}
                   </p>
                   <div className="flex flex-wrap gap-1">

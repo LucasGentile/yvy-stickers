@@ -6,8 +6,10 @@ import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibili
 import { findAdvancedTrade } from '@/actions/findAdvancedTrade'
 import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previewAdvancedTrade'
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
+import { verifyTrade } from '@/actions/verifyTrade'
 import { StickerList } from '@/components/trades/StickerList'
 import { ColorLegend } from '@/components/trades/ColorLegend'
+import { TradeAssistant } from '@/components/audit/TradeAssistant'
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'approved') {
@@ -43,6 +45,8 @@ function TradeCard({
   const [loading, setLoading] = useState<'approve' | 'reject' | 'cancel' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [confirming, setConfirming] = useState<'approve' | 'reject' | 'cancel' | null>(null)
+  const [assistantOpen, setAssistantOpen] = useState(false)
+  const [verified, setVerified] = useState(trade.verified)
 
   async function handle(action: 'approve' | 'reject' | 'cancel') {
     setLoading(action)
@@ -77,7 +81,8 @@ function TradeCard({
           Troca Triangular
         </p>
         {isAccepted && (
-          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+          <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+            {verified && <span className="text-emerald-500">✓</span>}
             Concluída
           </span>
         )}
@@ -87,21 +92,24 @@ function TradeCard({
       <div className="space-y-2">
         <div className="bg-rose-50/50 rounded-lg p-3 space-y-2 border border-rose-100">
           <p className="text-xs font-semibold text-rose-700">
-            Você dá para <span className="capitalize">{trade.giveTo.name}</span> →
+            Você dá {trade.myGivingIds.length} para{' '}
+            <span className="capitalize">{trade.giveTo.name}</span> →
           </p>
           <StickerList ids={trade.myGivingIds} label="" variant="giving" />
         </div>
 
         <div className="bg-green-50/50 rounded-lg p-3 space-y-2 border border-green-100">
           <p className="text-xs font-semibold text-green-700">
-            ← Você recebe de <span className="capitalize">{trade.receiveFrom.name}</span>
+            ← Você recebe {trade.myReceivingIds.length} de{' '}
+            <span className="capitalize">{trade.receiveFrom.name}</span>
           </p>
           <StickerList ids={trade.myReceivingIds} label="" variant="receiving" />
         </div>
 
         <div className="bg-sky-50/50 rounded-lg p-3 space-y-2 border border-sky-100">
           <p className="text-xs font-semibold text-sky-700">
-            <span className="capitalize">{trade.thirdParty.name}</span> dá para{' '}
+            <span className="capitalize">{trade.thirdParty.name}</span> dá{' '}
+            {trade.thirdParty.givesIds.length} para{' '}
             <span className="capitalize">{trade.thirdParty.givesToName}</span>
           </p>
           <StickerList ids={trade.thirdParty.givesIds} label="" variant="third-party" />
@@ -118,6 +126,38 @@ function TradeCard({
           </div>
         ))}
       </div>
+
+      {isAccepted && (
+        <>
+          <button
+            onClick={() => setAssistantOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+          >
+            <span>📋</span>
+            Assistente de troca
+          </button>
+          {assistantOpen && (
+            <TradeAssistant
+              partnerName={`${trade.giveTo.name} e ${trade.receiveFrom.name}`}
+              givingIds={trade.myGivingIds}
+              receivingIds={trade.myReceivingIds}
+              onClose={() => setAssistantOpen(false)}
+              onVerify={
+                verified
+                  ? undefined
+                  : async () => {
+                      const result = await verifyTrade(trade.id, userId, 'advanced')
+                      if (result.success) {
+                        setVerified(true)
+                      } else {
+                        throw new Error(result.error)
+                      }
+                    }
+              }
+            />
+          )}
+        </>
+      )}
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 
@@ -670,19 +710,22 @@ export default function AdvancedTradeScreen() {
 
               <div className="bg-rose-50/50 rounded-lg p-3 space-y-2 border border-rose-100">
                 <p className="text-xs font-semibold text-rose-700">
-                  Você dá para <span className="capitalize">{preview.userB.name}</span> →
+                  Você dá {preview.aGivesIds.length} para{' '}
+                  <span className="capitalize">{preview.userB.name}</span> →
                 </p>
                 <StickerList ids={preview.aGivesIds} label="" variant="giving" />
               </div>
               <div className="bg-green-50/50 rounded-lg p-3 space-y-2 border border-green-100">
                 <p className="text-xs font-semibold text-green-700">
-                  ← Você recebe de <span className="capitalize">{preview.userC.name}</span>
+                  ← Você recebe {preview.cGivesIds.length} de{' '}
+                  <span className="capitalize">{preview.userC.name}</span>
                 </p>
                 <StickerList ids={preview.cGivesIds} label="" variant="receiving" />
               </div>
               <div className="bg-sky-50/50 rounded-lg p-3 space-y-2 border border-sky-100">
                 <p className="text-xs font-semibold text-sky-700">
-                  <span className="capitalize">{preview.userB.name}</span> dá para{' '}
+                  <span className="capitalize">{preview.userB.name}</span> dá{' '}
+                  {preview.bGivesIds.length} para{' '}
                   <span className="capitalize">{preview.userC.name}</span>
                 </p>
                 <StickerList ids={preview.bGivesIds} label="" variant="third-party" />

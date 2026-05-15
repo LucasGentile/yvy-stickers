@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import type { RecentTrade } from '@/actions/getPendingTrades'
 import { rollbackTrade } from '@/actions/rollbackTrade'
+import { verifyTrade } from '@/actions/verifyTrade'
 import { StickerList, StickerToggle } from './StickerList'
+import { TradeAssistant } from '../audit/TradeAssistant'
 
 type RevertStep = 'idle' | 'choose-mode' | 'select-stickers'
 
@@ -23,6 +25,8 @@ export function RecentTradeCard({
   const [revertStep, setRevertStep] = useState<RevertStep>('idle')
   const [selectedGiving, setSelectedGiving] = useState<Set<string>>(new Set())
   const [selectedReceiving, setSelectedReceiving] = useState<Set<string>>(new Set())
+  const [assistantOpen, setAssistantOpen] = useState(false)
+  const [verified, setVerified] = useState(trade.verified)
 
   const iRequested = trade.rollbackRequestedBy === userId
   const otherRequested = trade.rollbackRequestedBy !== null && trade.rollbackRequestedBy !== userId
@@ -88,13 +92,51 @@ export function RecentTradeCard({
     <div className="bg-yvy-surface rounded-xl border border-amber-200 shadow-md p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-yvy-dark capitalize">{trade.otherUserName}</p>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+        <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+          {verified && <span className="text-emerald-500">✓</span>}
           Troca concluída
         </span>
       </div>
 
-      <StickerList ids={trade.myReceivingIds} label="Você recebeu" variant="receiving" />
-      <StickerList ids={trade.myGivingIds} label="Você deu" variant="giving" />
+      <StickerList
+        ids={trade.myReceivingIds}
+        label={`Você recebeu ${trade.myReceivingIds.length}`}
+        variant="receiving"
+      />
+      <StickerList
+        ids={trade.myGivingIds}
+        label={`Você deu ${trade.myGivingIds.length}`}
+        variant="giving"
+      />
+
+      <button
+        onClick={() => setAssistantOpen(true)}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+      >
+        <span>📋</span>
+        Assistente de troca
+      </button>
+
+      {assistantOpen && (
+        <TradeAssistant
+          partnerName={trade.otherUserName}
+          givingIds={trade.myGivingIds}
+          receivingIds={trade.myReceivingIds}
+          onClose={() => setAssistantOpen(false)}
+          onVerify={
+            verified
+              ? undefined
+              : async () => {
+                  const result = await verifyTrade(trade.id, userId, 'normal')
+                  if (result.success) {
+                    setVerified(true)
+                  } else {
+                    throw new Error(result.error)
+                  }
+                }
+          }
+        />
+      )}
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 

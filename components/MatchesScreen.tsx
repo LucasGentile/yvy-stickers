@@ -273,7 +273,7 @@ export default function MatchesScreen() {
 
                       {theyHaveForMe.length > 0 && (
                         <CollapsibleMatchSection
-                          title={`Têm para mim, mas não preciso das minhas (${theyHaveForMe.length})`}
+                          title={`Têm para mim, mas não precisa das minhas (${theyHaveForMe.length})`}
                           description="Estes moradores têm figurinhas que você precisa, mas você não tem nenhuma repetida que eles precisam no momento."
                         >
                           {theyHaveForMe.map((m, i) => (
@@ -289,7 +289,7 @@ export default function MatchesScreen() {
 
                       {iHaveForThem.length > 0 && (
                         <CollapsibleMatchSection
-                          title={`Preciso das minhas, mas não têm para mim (${iHaveForThem.length})`}
+                          title={`Precisa das minhas, mas não têm para mim (${iHaveForThem.length})`}
                           description="Você tem repetidas que estes moradores precisam, mas eles não têm nenhuma figurinha que você precisa no momento."
                         >
                           {iHaveForThem.map((m, i) => (
