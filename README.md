@@ -161,6 +161,7 @@ Seção de trocas (paginada em 3/página) e seção de atividade geral do app. A
 - Toque em _"Abrir assistente de troca"_ em qualquer troca concluída para abrir um guia interativo — marque cada figurinha conforme for separando fisicamente, sem precisar decorar os códigos
 - O pin ⚑ aparece apenas para ações das últimas 12h, evitando alertas desnecessários sobre eventos antigos
 - Múltiplas ações do mesmo tipo no mesmo dia são consolidadas em uma única entrada
+- Toque no horário de qualquer entrada de troca para abrir a _linha do tempo_ — uma visualização cronológica com todos os eventos relacionados àquela troca (envio, aceite, desfazimento etc.), com destaque no evento selecionado
 
 ➖➖➖➖➖➖➖➖➖
 
@@ -235,22 +236,23 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 
 ### Telas e rotas
 
-| Rota          | Tela                                          |
-| ------------- | --------------------------------------------- |
-| `/`           | Cadastro / login                              |
-| `/stickers`   | Minhas Figurinhas                             |
-| `/duplicates` | Repetidas                                     |
-| `/missing`    | Faltantes                                     |
-| `/matches`    | Ranking de Trocas + Pedidos pendentes         |
-| `/advanced-trade` | Troca Avançada (triangular, 3 moradores)  |
-| `/verificar`  | Verificar Figurinha (disponibilidade externa) |
-| `/historico`  | Histórico de ações + assistente de troca      |
-| `/ranking`    | Ranking do Álbum                              |
-| `/perfil`     | Meu Perfil (estatísticas pessoais)            |
-| `/panelinhas` | Panelinhas do YVYs                            |
-| `/mural`      | Mural do YVY (insights humorísticos)          |
-| `/admin`      | Aprovações pendentes (visível só para admins) |
-| `/group`      | Redireciona para o grupo do WhatsApp          |
+| Rota              | Tela                                          |
+| ----------------- | --------------------------------------------- |
+| `/`               | Cadastro / login                              |
+| `/stickers`       | Minhas Figurinhas                             |
+| `/duplicates`     | Repetidas                                     |
+| `/missing`        | Faltantes                                     |
+| `/matches`        | Ranking de Trocas + Pedidos pendentes         |
+| `/advanced-trade` | Troca Avançada (triangular, 3 moradores)      |
+| `/verificar`      | Verificar Figurinha (disponibilidade externa) |
+| `/historico`      | Histórico de ações + assistente de troca      |
+| `/history/[id]`   | Linha do tempo de uma troca (timeline)        |
+| `/ranking`        | Ranking do Álbum                              |
+| `/perfil`         | Meu Perfil (estatísticas pessoais)            |
+| `/panelinhas`     | Panelinhas do YVYs                            |
+| `/mural`          | Mural do YVY (insights humorísticos)          |
+| `/admin`          | Aprovações pendentes (visível só para admins) |
+| `/group`          | Redireciona para o grupo do WhatsApp          |
 
 ### Testes
 
@@ -278,16 +280,17 @@ Arquivos em `supabase/migrations/` — rodar após cada novo arquivo:
 supabase db push
 ```
 
-| Migração                   | Descrição                                                                                    |
-| -------------------------- | -------------------------------------------------------------------------------------------- |
-| 001–006                    | Schema inicial (usuários, figurinhas, repetidas, trocas)                                     |
-| 007_audit_log              | Tabela `audit_log` para o Histórico de ações                                                 |
-| 008_admin_role             | Coluna `is_admin` na tabela `users`                                                          |
-| 009_sticker_count_rpc      | RPC `get_sticker_counts_by_user` (contorna limite PostgREST)                                 |
-| 010_trade_rollback         | Colunas `accepted_at` e `rollback_requested_by` em `pending_trades`; status `rolled_back`    |
-| 011_trade_rollback_partial | Colunas `rollback_giving_ids` e `rollback_receiving_ids` para desfazimento parcial de trocas |
-| 012_deactivate_visitantes  | Desativa (`approved = false`) usuários com "visitante" no nome                               |
-| 013_advanced_trade         | Tabela `advanced_trades` para trocas triangulares (3 participantes, ciclo A→B→C→A)           |
+| Migração                    | Descrição                                                                                       |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| 001–006                     | Schema inicial (usuários, figurinhas, repetidas, trocas)                                        |
+| 007_audit_log               | Tabela `audit_log` para o Histórico de ações                                                    |
+| 008_admin_role              | Coluna `is_admin` na tabela `users`                                                             |
+| 009_sticker_count_rpc       | RPC `get_sticker_counts_by_user` (contorna limite PostgREST)                                    |
+| 010_trade_rollback          | Colunas `accepted_at` e `rollback_requested_by` em `pending_trades`; status `rolled_back`       |
+| 011_trade_rollback_partial  | Colunas `rollback_giving_ids` e `rollback_receiving_ids` para desfazimento parcial de trocas    |
+| 012_deactivate_visitantes   | Desativa (`approved = false`) usuários com "visitante" no nome                                  |
+| 013_advanced_trade          | Tabela `advanced_trades` para trocas triangulares (3 participantes, ciclo A→B→C→A)              |
+| 014_backfill_audit_trade_id | Backfill `tradeId` em `metadata` de entradas antigas + índice parcial em `metadata->>'tradeId'` |
 
 ### Variáveis de ambiente
 

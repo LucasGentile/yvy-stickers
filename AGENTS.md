@@ -6,6 +6,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 <!-- END:nextjs-agent-rules -->
 
+# Component architecture notes
+
+## Trade card rendering (`components/audit/`)
+
+- **`TradeCardBody`** is the single source of truth for rendering a trade event card (icon circle, label, sticker chips with give/receive colors). It is used by both:
+  - `EventCard` — the history page (`/historico`), adds trade assistant, rollback controls, and links timestamps to the timeline detail page
+  - `TimelineEntry` — the timeline detail page (`/history/[id]`), applies focused-entry styling (accent border) for the entry the user navigated from
+- When modifying trade card visuals, update `TradeCardBody`. Context-specific behavior (assistants, rollback, linking) belongs in the consumer components.
+
 # Database safety rules
 
 These apply to every migration and every server action — no exceptions.
