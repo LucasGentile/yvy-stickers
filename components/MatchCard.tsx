@@ -82,7 +82,7 @@ function DetailModal({
           </button>
         </div>
 
-        {match.previouslyCanceled && (
+        {match.previouslyCanceled && match.matchScore > 0 && match.reciprocalScore > 0 && (
           <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
             <span className="text-orange-500 text-sm shrink-0 mt-px">↩</span>
             <p className="text-[11px] text-orange-800 leading-snug">
@@ -344,7 +344,7 @@ export default function MatchCard({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {match.previouslyCanceled && (
+            {match.previouslyCanceled && match.matchScore > 0 && match.reciprocalScore > 0 && (
               <span className="text-[10px] font-semibold bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
                 Cancelada anteriormente
               </span>
