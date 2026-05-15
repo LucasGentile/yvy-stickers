@@ -6,10 +6,10 @@ import type { AuditEntry } from '@/actions/getAuditLog'
 import { sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
 import { formatName } from '@/lib/format'
-import { StickerChip } from '../StickerChip'
 import { RollbackControl } from './RollbackControl'
 import { ImportAssistant } from './ImportAssistant'
 import { TradeAssistant } from './TradeAssistant'
+import { TradeCardBody } from './TradeCardBody'
 import { EVENT_CONFIG, TRADE_ACTIONS, relativeTime, absoluteTime, isRecent } from './eventConfig'
 
 export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
@@ -25,16 +25,14 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
   const isAccepted = entry.action === 'trade_accepted'
   const isAdvancedExecuted = entry.action === 'advanced_trade_executed'
 
-  const normalizedMetadata = entry.metadata.partnerName
-    ? {
-        ...entry.metadata,
-        partnerName: formatName(formatName(entry.metadata.partnerName as string)),
-      }
-    : entry.metadata
-
-  const label = cfg.label(normalizedMetadata)
-  const detail = cfg.detail(normalizedMetadata)
-  const hint = cfg.realLifeHint?.(normalizedMetadata)
+  const hint = cfg.realLifeHint?.(
+    entry.metadata.partnerName
+      ? {
+          ...entry.metadata,
+          partnerName: formatName(formatName(entry.metadata.partnerName as string)),
+        }
+      : entry.metadata
+  )
 
   const tradeId = isAccepted ? (entry.metadata.tradeId as string | undefined) : undefined
 
@@ -43,6 +41,8 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
   const hasTradeStickers = isTrade && (givingIds.length > 0 || receivingIds.length > 0)
 
   if (!isTrade) {
+    const label = cfg.label(entry.metadata)
+    const detail = cfg.detail(entry.metadata)
     const importAlbumIds =
       entry.action === 'file_import'
         ? ((entry.metadata.addedToAlbumIds as string[] | undefined) ?? [])
@@ -99,113 +99,50 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
     )
   }
 
-  return (
-    <div
-      className={`flex gap-3 pl-3 py-2 rounded-r-md ${
-        isAccepted || isAdvancedExecuted
-          ? 'border-l-[4px] border-l-[#16a34a] bg-green-50/50'
-          : `border-l-[3px] ${cfg.borderColor}`
-      }`}
+  const borderClass =
+    isAccepted || isAdvancedExecuted
+      ? 'border-l-[4px] border-l-[#16a34a] bg-green-50/50'
+      : `border-l-[3px] ${cfg.borderColor}`
+
+  const timeSlot = (
+    <Link
+      href={`/history/${entry.id}`}
+      className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5 hover:opacity-70 transition-opacity"
     >
-      <div
-        className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${cfg.iconBg} ${cfg.iconColor}`}
-      >
-        {cfg.icon}
-      </div>
+      <span className="text-[10px] text-yvy-muted">{relativeTime(entry.created_at)}</span>
+      <span className="text-[10px] text-yvy-muted/60">{absoluteTime(entry.created_at)}</span>
+    </Link>
+  )
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-semibold text-yvy-dark leading-snug">{label}</p>
-          <Link
-            href={`/history/${entry.id}`}
-            className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5 hover:opacity-70 transition-opacity"
-          >
-            <span className="text-[10px] text-yvy-muted">{relativeTime(entry.created_at)}</span>
-            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(entry.created_at)}</span>
-          </Link>
-        </div>
-        <p className="text-xs text-yvy-muted mt-0.5">{detail}</p>
-
-        {hasTradeStickers && (
-          <div className="mt-2 space-y-2.5">
-            {isRecent(entry.created_at) && isAccepted && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
-                <span className="text-[11px] text-amber-700 font-medium">
-                  Combine com {formatName(entry.metadata.partnerName as string)} para trocar
-                  fisicamente
-                </span>
-              </div>
-            )}
-            {isRecent(entry.created_at) && isAdvancedExecuted && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
-                <span className="text-[11px] text-amber-700 font-medium">
-                  Combine com {((entry.metadata.partners as string[]) ?? []).join(' e ')} para
-                  trocar fisicamente
-                </span>
-              </div>
-            )}
-            {givingIds.length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500 mb-1.5">
-                  {entry.action === 'trade_rolled_back'
-                    ? 'Você recuperou ←'
-                    : `Você ${isAccepted || isAdvancedExecuted ? 'deu' : 'dá'} para ${isAdvancedExecuted ? (entry.metadata.giveToName as string) : ''} →`}
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {givingIds.map((id) => (
-                    <StickerChip
-                      key={id}
-                      id={id}
-                      variant={entry.action === 'trade_rolled_back' ? 'receiving' : 'giving'}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            {receivingIds.length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-green-600 mb-1.5">
-                  {entry.action === 'trade_rolled_back'
-                    ? '→ Você devolveu'
-                    : `← Você ${isAccepted || isAdvancedExecuted ? 'recebeu' : 'recebe'} de ${isAdvancedExecuted ? (entry.metadata.receiveFromName as string) : ''}`}
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {receivingIds.map((id) => (
-                    <StickerChip
-                      key={id}
-                      id={id}
-                      variant={entry.action === 'trade_rolled_back' ? 'giving' : 'receiving'}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-            {isAdvancedExecuted &&
-              ((entry.metadata.thirdPartyIds as string[] | undefined) ?? []).length > 0 && (
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 mb-1.5">
-                    {entry.metadata.thirdPartyFromName as string} dá para{' '}
-                    {entry.metadata.thirdPartyToName as string}
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {sort((entry.metadata.thirdPartyIds as string[]) ?? []).map((id) => (
-                      <StickerChip key={id} id={id} variant="third-party" />
-                    ))}
-                  </div>
-                </div>
-              )}
-            <button
-              onClick={() => setAssistantOpen(true)}
-              className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
-            >
-              <span>📋</span>
-              Assistente de troca
-            </button>
+  return (
+    <>
+      <TradeCardBody entry={entry} borderClass={borderClass} timeSlot={timeSlot}>
+        {hasTradeStickers && isRecent(entry.created_at) && isAccepted && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
+            <span className="text-[11px] text-amber-700 font-medium">
+              Combine com {formatName(entry.metadata.partnerName as string)} para trocar fisicamente
+            </span>
           </div>
         )}
-
+        {hasTradeStickers && isRecent(entry.created_at) && isAdvancedExecuted && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
+            <span className="text-[11px] text-amber-700 font-medium">
+              Combine com {((entry.metadata.partners as string[]) ?? []).join(' e ')} para trocar
+              fisicamente
+            </span>
+          </div>
+        )}
+        {hasTradeStickers && (
+          <button
+            onClick={() => setAssistantOpen(true)}
+            className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+          >
+            <span>📋</span>
+            Assistente de troca
+          </button>
+        )}
         {hint && !hasTradeStickers && isRecent(entry.created_at) && (
           <div className="mt-1.5 flex items-start gap-1.5">
             <span className="text-amber-500 text-[10px] shrink-0 mt-px">⚑</span>
@@ -214,7 +151,6 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
             </p>
           </div>
         )}
-
         {tradeId && (
           <RollbackControl
             tradeId={tradeId}
@@ -224,7 +160,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
             receivingIds={receivingIds}
           />
         )}
-      </div>
+      </TradeCardBody>
 
       {assistantOpen && hasTradeStickers && (
         <TradeAssistant
@@ -234,6 +170,6 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
           onClose={() => setAssistantOpen(false)}
         />
       )}
-    </div>
+    </>
   )
 }
