@@ -21,7 +21,6 @@ const MAIN_NAV = [
 
 const SOCIAL_NAV = [
   { href: '/perfil', label: 'Meu Perfil' },
-  { href: '/panelinhas', label: 'Panelinhas do YVYs' },
   { href: '/mural', label: 'Mural do YVY' },
 ]
 
