@@ -11,10 +11,12 @@ export function RecentTradeCard({
   trade,
   userId,
   onDone,
+  hideRollback = false,
 }: {
   trade: RecentTrade
   userId: string
   onDone: () => void
+  hideRollback?: boolean
 }) {
   const [loading, setLoading] = useState<'request' | 'confirm' | 'deny' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
@@ -155,7 +157,7 @@ export function RecentTradeCard({
         </div>
       )}
 
-      {!trade.rollbackRequestedBy && revertStep === 'idle' && (
+      {!hideRollback && !trade.rollbackRequestedBy && revertStep === 'idle' && (
         <button
           onClick={() => setRevertStep('choose-mode')}
           disabled={loading !== null}
@@ -165,7 +167,7 @@ export function RecentTradeCard({
         </button>
       )}
 
-      {!trade.rollbackRequestedBy && revertStep === 'choose-mode' && (
+      {!hideRollback && !trade.rollbackRequestedBy && revertStep === 'choose-mode' && (
         <div className="space-y-2 pt-0.5">
           <p className="text-xs font-medium text-yvy-dark">Como deseja desfazer?</p>
           <div className="flex gap-2">
@@ -194,7 +196,7 @@ export function RecentTradeCard({
         </div>
       )}
 
-      {!trade.rollbackRequestedBy && revertStep === 'select-stickers' && (
+      {!hideRollback && !trade.rollbackRequestedBy && revertStep === 'select-stickers' && (
         <div className="space-y-3 pt-0.5">
           <p className="text-xs text-yvy-muted">Selecione as figurinhas que deseja desfazer:</p>
           <StickerToggle

@@ -5,6 +5,7 @@ import { getMatches, MatchResult } from '@/lib/matching'
 import { getPendingTrades, PendingTrade } from '@/actions/getPendingTrades'
 import MatchCard from './MatchCard'
 import PendingTradesSection from './PendingTradesSection'
+import { CompletedTradesSection } from './CompletedTradesSection'
 import { ColorLegend } from './trades/ColorLegend'
 
 function CollapsibleMatchSection({
@@ -165,14 +166,16 @@ export default function MatchesScreen() {
 
       {userId &&
         (() => {
+          const rollbackTrades = pending.recentlyAccepted.filter(
+            (t) => t.rollbackRequestedBy !== null
+          )
           const hasPending = pending.received.length > 0 || pending.sent.length > 0
-          const hasAccepted = pending.recentlyAccepted.length > 0
-          if (!hasPending && !hasAccepted) return null
+          if (!hasPending && rollbackTrades.length === 0) return null
           return (
             <PendingTradesSection
               received={pending.received}
               sent={pending.sent}
-              recentlyAccepted={pending.recentlyAccepted}
+              recentlyAccepted={rollbackTrades}
               userId={userId}
               onRefresh={() => refreshMatches(userId)}
             />
@@ -306,6 +309,14 @@ export default function MatchesScreen() {
             )
           })()}
         </>
+      )}
+
+      {userId && pending.recentlyAccepted.length > 0 && (
+        <CompletedTradesSection
+          trades={pending.recentlyAccepted}
+          userId={userId}
+          onRefresh={() => refreshMatches(userId)}
+        />
       )}
     </div>
   )
