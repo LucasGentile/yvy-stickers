@@ -101,7 +101,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
 
   return (
     <div
-      className={`flex gap-3 pl-3 py-2 rounded-r-md ${
+      className={`flex gap-3 pl-3 pr-3 py-2 rounded-r-md ${
         isAccepted || isAdvancedExecuted
           ? 'border-l-[4px] border-l-[#16a34a] bg-green-50/50'
           : `border-l-[3px] ${cfg.borderColor}`
