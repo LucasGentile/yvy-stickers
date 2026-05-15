@@ -92,21 +92,24 @@ function TradeCard({
       <div className="space-y-2">
         <div className="bg-rose-50/50 rounded-lg p-3 space-y-2 border border-rose-100">
           <p className="text-xs font-semibold text-rose-700">
-            Você dá para <span className="capitalize">{trade.giveTo.name}</span> →
+            Você dá {trade.myGivingIds.length} para{' '}
+            <span className="capitalize">{trade.giveTo.name}</span> →
           </p>
           <StickerList ids={trade.myGivingIds} label="" variant="giving" />
         </div>
 
         <div className="bg-green-50/50 rounded-lg p-3 space-y-2 border border-green-100">
           <p className="text-xs font-semibold text-green-700">
-            ← Você recebe de <span className="capitalize">{trade.receiveFrom.name}</span>
+            ← Você recebe {trade.myReceivingIds.length} de{' '}
+            <span className="capitalize">{trade.receiveFrom.name}</span>
           </p>
           <StickerList ids={trade.myReceivingIds} label="" variant="receiving" />
         </div>
 
         <div className="bg-sky-50/50 rounded-lg p-3 space-y-2 border border-sky-100">
           <p className="text-xs font-semibold text-sky-700">
-            <span className="capitalize">{trade.thirdParty.name}</span> dá para{' '}
+            <span className="capitalize">{trade.thirdParty.name}</span> dá{' '}
+            {trade.thirdParty.givesIds.length} para{' '}
             <span className="capitalize">{trade.thirdParty.givesToName}</span>
           </p>
           <StickerList ids={trade.thirdParty.givesIds} label="" variant="third-party" />
@@ -707,19 +710,22 @@ export default function AdvancedTradeScreen() {
 
               <div className="bg-rose-50/50 rounded-lg p-3 space-y-2 border border-rose-100">
                 <p className="text-xs font-semibold text-rose-700">
-                  Você dá para <span className="capitalize">{preview.userB.name}</span> →
+                  Você dá {preview.aGivesIds.length} para{' '}
+                  <span className="capitalize">{preview.userB.name}</span> →
                 </p>
                 <StickerList ids={preview.aGivesIds} label="" variant="giving" />
               </div>
               <div className="bg-green-50/50 rounded-lg p-3 space-y-2 border border-green-100">
                 <p className="text-xs font-semibold text-green-700">
-                  ← Você recebe de <span className="capitalize">{preview.userC.name}</span>
+                  ← Você recebe {preview.cGivesIds.length} de{' '}
+                  <span className="capitalize">{preview.userC.name}</span>
                 </p>
                 <StickerList ids={preview.cGivesIds} label="" variant="receiving" />
               </div>
               <div className="bg-sky-50/50 rounded-lg p-3 space-y-2 border border-sky-100">
                 <p className="text-xs font-semibold text-sky-700">
-                  <span className="capitalize">{preview.userB.name}</span> dá para{' '}
+                  <span className="capitalize">{preview.userB.name}</span> dá{' '}
+                  {preview.bGivesIds.length} para{' '}
                   <span className="capitalize">{preview.userC.name}</span>
                 </p>
                 <StickerList ids={preview.bGivesIds} label="" variant="third-party" />

@@ -98,8 +98,16 @@ export function RecentTradeCard({
         </span>
       </div>
 
-      <StickerList ids={trade.myReceivingIds} label="Você recebeu" variant="receiving" />
-      <StickerList ids={trade.myGivingIds} label="Você deu" variant="giving" />
+      <StickerList
+        ids={trade.myReceivingIds}
+        label={`Você recebeu ${trade.myReceivingIds.length}`}
+        variant="receiving"
+      />
+      <StickerList
+        ids={trade.myGivingIds}
+        label={`Você deu ${trade.myGivingIds.length}`}
+        variant="giving"
+      />
 
       <button
         onClick={() => setAssistantOpen(true)}
