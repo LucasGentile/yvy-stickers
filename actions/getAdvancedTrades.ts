@@ -32,7 +32,7 @@ export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeVi
   const { data: trades } = await (supabaseAdmin as any)
     .from('advanced_trades')
     .select(
-      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status, created_at, accepted_at, requested_by'
+      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status, created_at, accepted_at, requested_by, verified_at'
     )
     .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
     .in('status', ['pending', 'accepted'])
