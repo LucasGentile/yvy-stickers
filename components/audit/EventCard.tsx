@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import type { AuditEntry } from '@/actions/getAuditLog'
 import { sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
@@ -9,13 +10,7 @@ import { StickerChip } from '../StickerChip'
 import { RollbackControl } from './RollbackControl'
 import { ImportAssistant } from './ImportAssistant'
 import { TradeAssistant } from './TradeAssistant'
-import {
-  EVENT_CONFIG,
-  TRADE_ACTIONS,
-  relativeTime,
-  absoluteTime,
-  isRecent,
-} from './eventConfig'
+import { EVENT_CONFIG, TRADE_ACTIONS, relativeTime, absoluteTime, isRecent } from './eventConfig'
 
 export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string }) {
   const cfg = EVENT_CONFIG[entry.action]
@@ -27,6 +22,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
   const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
 
   const isTrade = TRADE_ACTIONS.has(entry.action)
+  const hasTradeId = !!(entry.metadata.tradeId as string | undefined)
   const isAccepted = entry.action === 'trade_accepted'
   const isAdvancedExecuted = entry.action === 'advanced_trade_executed'
 
@@ -48,12 +44,14 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
   const hasTradeStickers = isTrade && (givingIds.length > 0 || receivingIds.length > 0)
 
   if (!isTrade) {
-    const importAlbumIds = entry.action === 'file_import'
-      ? ((entry.metadata.addedToAlbumIds as string[] | undefined) ?? [])
-      : []
-    const importDupeIds = entry.action === 'file_import'
-      ? ((entry.metadata.duplicateIds as string[] | undefined) ?? [])
-      : []
+    const importAlbumIds =
+      entry.action === 'file_import'
+        ? ((entry.metadata.addedToAlbumIds as string[] | undefined) ?? [])
+        : []
+    const importDupeIds =
+      entry.action === 'file_import'
+        ? ((entry.metadata.duplicateIds as string[] | undefined) ?? [])
+        : []
     const hasImportStickers = importAlbumIds.length > 0 || importDupeIds.length > 0
 
     return (
@@ -71,12 +69,15 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
         </div>
         {hint &&
           isRecent(entry.created_at) &&
-          hint.split('\n').filter(Boolean).map((h, i) => (
-            <div key={i} className="flex items-start gap-1 pl-5">
-              <span className="text-amber-400 text-[10px] shrink-0 mt-px">⚑</span>
-              <p className="text-[11px] text-amber-600 leading-snug">{h}</p>
-            </div>
-          ))}
+          hint
+            .split('\n')
+            .filter(Boolean)
+            .map((h, i) => (
+              <div key={i} className="flex items-start gap-1 pl-5">
+                <span className="text-amber-400 text-[10px] shrink-0 mt-px">⚑</span>
+                <p className="text-[11px] text-amber-600 leading-snug">{h}</p>
+              </div>
+            ))}
         {hasImportStickers && (
           <div className="pl-5 pt-0.5">
             <button
@@ -116,10 +117,26 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-semibold text-yvy-dark leading-snug">{label}</p>
-          <div className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5">
-            <span className="text-[10px] text-yvy-muted">{relativeTime(entry.created_at)}</span>
-            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(entry.created_at)}</span>
-          </div>
+          {hasTradeId ? (
+            <Link
+              href={`/history/${entry.id}`}
+              className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5 hover:opacity-70 transition-opacity"
+            >
+              <span className="text-[10px] text-yvy-accent underline">
+                {relativeTime(entry.created_at)}
+              </span>
+              <span className="text-[10px] text-yvy-accent/60">
+                {absoluteTime(entry.created_at)}
+              </span>
+            </Link>
+          ) : (
+            <div className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5">
+              <span className="text-[10px] text-yvy-muted">{relativeTime(entry.created_at)}</span>
+              <span className="text-[10px] text-yvy-muted/60">
+                {absoluteTime(entry.created_at)}
+              </span>
+            </div>
+          )}
         </div>
         <p className="text-xs text-yvy-muted mt-0.5">{detail}</p>
 
@@ -129,7 +146,8 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
               <div className="flex items-center gap-1.5">
                 <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
                 <span className="text-[11px] text-amber-700 font-medium">
-                  Combine com {formatName(entry.metadata.partnerName as string)} para trocar fisicamente
+                  Combine com {formatName(entry.metadata.partnerName as string)} para trocar
+                  fisicamente
                 </span>
               </div>
             )}
@@ -137,7 +155,8 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
               <div className="flex items-center gap-1.5">
                 <span className="text-amber-500 text-[10px] shrink-0">⚑</span>
                 <span className="text-[11px] text-amber-700 font-medium">
-                  Combine com {((entry.metadata.partners as string[]) ?? []).join(' e ')} para trocar fisicamente
+                  Combine com {((entry.metadata.partners as string[]) ?? []).join(' e ')} para
+                  trocar fisicamente
                 </span>
               </div>
             )}
@@ -150,7 +169,11 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {givingIds.map((id) => (
-                    <StickerChip key={id} id={id} variant={entry.action === 'trade_rolled_back' ? 'receiving' : 'giving'} />
+                    <StickerChip
+                      key={id}
+                      id={id}
+                      variant={entry.action === 'trade_rolled_back' ? 'receiving' : 'giving'}
+                    />
                   ))}
                 </div>
               </div>
@@ -164,23 +187,29 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {receivingIds.map((id) => (
-                    <StickerChip key={id} id={id} variant={entry.action === 'trade_rolled_back' ? 'giving' : 'receiving'} />
+                    <StickerChip
+                      key={id}
+                      id={id}
+                      variant={entry.action === 'trade_rolled_back' ? 'giving' : 'receiving'}
+                    />
                   ))}
                 </div>
               </div>
             )}
-            {isAdvancedExecuted && ((entry.metadata.thirdPartyIds as string[] | undefined) ?? []).length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 mb-1.5">
-                  {entry.metadata.thirdPartyFromName as string} dá para {entry.metadata.thirdPartyToName as string}
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {sort((entry.metadata.thirdPartyIds as string[]) ?? []).map((id) => (
-                    <StickerChip key={id} id={id} variant="third-party" />
-                  ))}
+            {isAdvancedExecuted &&
+              ((entry.metadata.thirdPartyIds as string[] | undefined) ?? []).length > 0 && (
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 mb-1.5">
+                    {entry.metadata.thirdPartyFromName as string} dá para{' '}
+                    {entry.metadata.thirdPartyToName as string}
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {sort((entry.metadata.thirdPartyIds as string[]) ?? []).map((id) => (
+                      <StickerChip key={id} id={id} variant="third-party" />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             <button
               onClick={() => setAssistantOpen(true)}
               className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
