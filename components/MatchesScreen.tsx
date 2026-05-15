@@ -165,16 +165,14 @@ export default function MatchesScreen() {
 
       {userId &&
         (() => {
-          const rollbackRequests = pending.recentlyAccepted.filter(
-            (t) => t.rollbackRequestedBy !== null
-          )
           const hasPending = pending.received.length > 0 || pending.sent.length > 0
-          if (!hasPending && rollbackRequests.length === 0) return null
+          const hasAccepted = pending.recentlyAccepted.length > 0
+          if (!hasPending && !hasAccepted) return null
           return (
             <PendingTradesSection
               received={pending.received}
               sent={pending.sent}
-              recentlyAccepted={rollbackRequests}
+              recentlyAccepted={pending.recentlyAccepted}
               userId={userId}
               onRefresh={() => refreshMatches(userId)}
             />
