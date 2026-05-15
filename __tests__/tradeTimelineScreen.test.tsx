@@ -82,10 +82,9 @@ describe('TradeTimelineScreen', () => {
     render(<TradeTimelineScreen entryId="entry-2" />)
     expect(await screen.findByText(/Troca concluída com Ana/i)).toBeInTheDocument()
     expect(screen.getByText(/Pedido de troca enviado/i)).toBeInTheDocument()
-    expect(screen.getByText('Evento selecionado')).toBeInTheDocument()
   })
 
-  it('highlights only the focused entry', async () => {
+  it('highlights only the focused entry with data-focused', async () => {
     localStorageMock.setItem('userId', 'user-1')
     mockGetTradeTimeline.mockResolvedValue({
       entries: [
@@ -113,7 +112,7 @@ describe('TradeTimelineScreen', () => {
     })
 
     render(<TradeTimelineScreen entryId="entry-2" />)
-    await screen.findByText('Evento selecionado')
+    await screen.findByText(/Pedido de troca recebido/i)
 
     const focusedElements = document.querySelectorAll('[data-focused]')
     expect(focusedElements).toHaveLength(1)
@@ -140,7 +139,7 @@ describe('TradeTimelineScreen', () => {
     })
 
     const { container } = render(<TradeTimelineScreen entryId="entry-1" />)
-    await screen.findByText('Evento selecionado')
+    await screen.findByText(/Troca concluída com Ana/i)
     expect(container.textContent).toContain('BRA1')
     expect(container.textContent).toContain('ARG2')
     expect(container.textContent).toContain('ESP3')

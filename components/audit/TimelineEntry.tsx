@@ -33,98 +33,86 @@ export function TimelineEntry({ entry, isFocused }: { entry: AuditEntry; isFocus
 
   return (
     <div
-      className={`relative pl-10 py-4 first:pt-0 last:pb-0 ${
-        isFocused ? 'bg-green-50 -mx-2 px-12 rounded-xl border border-yvy-accent/30' : ''
+      className={`flex gap-3 pl-3 pr-3 py-3 rounded-r-md ${
+        isFocused
+          ? 'border-l-[4px] border-l-yvy-accent bg-yvy-accent/5'
+          : isAccepted || isAdvancedExecuted
+            ? 'border-l-[4px] border-l-[#16a34a] bg-green-50/50'
+            : `border-l-[3px] ${cfg.borderColor}`
       }`}
       data-focused={isFocused || undefined}
     >
-      {/* Timeline dot */}
       <div
-        className={`absolute left-[13px] top-3 w-[11px] h-[11px] rounded-full border-2 ${
-          isFocused ? 'border-yvy-accent bg-yvy-accent' : 'border-yvy-border bg-yvy-surface'
-        }`}
-      />
-
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-base shrink-0">{cfg.icon}</span>
-          <p className="text-sm font-semibold text-yvy-dark leading-snug truncate">{label}</p>
-        </div>
-        <div className="flex flex-col items-end shrink-0 gap-0.5">
-          <span className="text-[10px] text-yvy-muted">{relativeTime(entry.created_at)}</span>
-          <span className="text-[10px] text-yvy-muted/60">{absoluteTime(entry.created_at)}</span>
-        </div>
+        className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${cfg.iconBg} ${cfg.iconColor}`}
+      >
+        {cfg.icon}
       </div>
 
-      {/* Detail */}
-      <p className="text-xs text-yvy-muted mt-0.5 ml-7">{detail}</p>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm font-semibold text-yvy-dark leading-snug">{label}</p>
+          <div className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5 pl-2">
+            <span className="text-[10px] text-yvy-muted">{relativeTime(entry.created_at)}</span>
+            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(entry.created_at)}</span>
+          </div>
+        </div>
+        <p className="text-xs text-yvy-muted mt-0.5">{detail}</p>
 
-      {/* Stickers */}
-      {hasStickers && (
-        <div className="mt-2 ml-7 space-y-2">
-          {givingIds.length > 0 && (
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500 mb-1">
-                {entry.action === 'trade_rolled_back'
-                  ? 'Recuperou ←'
-                  : `${isAccepted || isAdvancedExecuted ? 'Deu' : 'Dá'} →`}
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {givingIds.map((id) => (
-                  <StickerChip
-                    key={id}
-                    id={id}
-                    variant={entry.action === 'trade_rolled_back' ? 'receiving' : 'giving'}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          {receivingIds.length > 0 && (
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-green-600 mb-1">
-                {entry.action === 'trade_rolled_back'
-                  ? '→ Devolveu'
-                  : `← ${isAccepted || isAdvancedExecuted ? 'Recebeu' : 'Recebe'}`}
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {receivingIds.map((id) => (
-                  <StickerChip
-                    key={id}
-                    id={id}
-                    variant={entry.action === 'trade_rolled_back' ? 'giving' : 'receiving'}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          {isAdvancedExecuted &&
-            ((entry.metadata.thirdPartyIds as string[] | undefined) ?? []).length > 0 && (
+        {hasStickers && (
+          <div className="mt-2 space-y-2">
+            {givingIds.length > 0 && (
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 mb-1">
-                  {entry.metadata.thirdPartyFromName as string} →{' '}
-                  {entry.metadata.thirdPartyToName as string}
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500 mb-1">
+                  {entry.action === 'trade_rolled_back'
+                    ? 'Recuperou ←'
+                    : `${isAccepted || isAdvancedExecuted ? 'Deu' : 'Dá'} →`}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {sort((entry.metadata.thirdPartyIds as string[]) ?? []).map((id) => (
-                    <StickerChip key={id} id={id} variant="third-party" />
+                  {givingIds.map((id) => (
+                    <StickerChip
+                      key={id}
+                      id={id}
+                      variant={entry.action === 'trade_rolled_back' ? 'receiving' : 'giving'}
+                    />
                   ))}
                 </div>
               </div>
             )}
-        </div>
-      )}
-
-      {/* Focused indicator */}
-      {isFocused && (
-        <div className="mt-2 ml-7">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yvy-accent/10 text-yvy-accent text-[10px] font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-yvy-accent" />
-            Evento selecionado
-          </span>
-        </div>
-      )}
+            {receivingIds.length > 0 && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-green-600 mb-1">
+                  {entry.action === 'trade_rolled_back'
+                    ? '→ Devolveu'
+                    : `← ${isAccepted || isAdvancedExecuted ? 'Recebeu' : 'Recebe'}`}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {receivingIds.map((id) => (
+                    <StickerChip
+                      key={id}
+                      id={id}
+                      variant={entry.action === 'trade_rolled_back' ? 'giving' : 'receiving'}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            {isAdvancedExecuted &&
+              ((entry.metadata.thirdPartyIds as string[] | undefined) ?? []).length > 0 && (
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 mb-1">
+                    {entry.metadata.thirdPartyFromName as string} →{' '}
+                    {entry.metadata.thirdPartyToName as string}
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {sort((entry.metadata.thirdPartyIds as string[]) ?? []).map((id) => (
+                      <StickerChip key={id} id={id} variant="third-party" />
+                    ))}
+                  </div>
+                </div>
+              )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
