@@ -45,7 +45,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
 
   const givingIds = sort((entry.metadata.givingIds as string[] | undefined) ?? [])
   const receivingIds = sort((entry.metadata.receivingIds as string[] | undefined) ?? [])
-  const hasTradeStickers = (isAccepted || isAdvancedExecuted) && (givingIds.length > 0 || receivingIds.length > 0)
+  const hasTradeStickers = isTrade && (givingIds.length > 0 || receivingIds.length > 0)
 
   if (!isTrade) {
     const importAlbumIds = entry.action === 'file_import'
@@ -144,11 +144,13 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
             {givingIds.length > 0 && (
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500 mb-1.5">
-                  Você dá para {isAdvancedExecuted ? (entry.metadata.giveToName as string) : ''} →
+                  {entry.action === 'trade_rolled_back'
+                    ? 'Você recuperou ←'
+                    : `Você ${isAccepted || isAdvancedExecuted ? 'deu' : 'dá'} para ${isAdvancedExecuted ? (entry.metadata.giveToName as string) : ''} →`}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {givingIds.map((id) => (
-                    <StickerChip key={id} id={id} variant="giving" />
+                    <StickerChip key={id} id={id} variant={entry.action === 'trade_rolled_back' ? 'receiving' : 'giving'} />
                   ))}
                 </div>
               </div>
@@ -156,11 +158,13 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
             {receivingIds.length > 0 && (
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-green-600 mb-1.5">
-                  ← Você recebe de {isAdvancedExecuted ? (entry.metadata.receiveFromName as string) : ''}
+                  {entry.action === 'trade_rolled_back'
+                    ? '→ Você devolveu'
+                    : `← Você ${isAccepted || isAdvancedExecuted ? 'recebeu' : 'recebe'} de ${isAdvancedExecuted ? (entry.metadata.receiveFromName as string) : ''}`}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {receivingIds.map((id) => (
-                    <StickerChip key={id} id={id} variant="receiving" />
+                    <StickerChip key={id} id={id} variant={entry.action === 'trade_rolled_back' ? 'giving' : 'receiving'} />
                   ))}
                 </div>
               </div>
