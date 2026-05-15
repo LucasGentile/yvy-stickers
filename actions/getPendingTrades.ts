@@ -24,7 +24,7 @@ export type RecentTrade = {
   acceptedAt: string
   rollbackRequestedBy: string | null
   isSender: boolean
-  // Subset of myGivingIds/myReceivingIds being reverted. null = all (full revert).
+  verified: boolean
   rollbackMyGivingIds: string[] | null
   rollbackMyReceivingIds: string[] | null
 }
@@ -50,7 +50,7 @@ export async function getPendingTrades(userId: string): Promise<{
         (supabaseAdmin as any)
           .from('pending_trades')
           .select(
-            'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids'
+            'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids, verified_at'
           )
           .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
           .eq('status', 'accepted')
@@ -121,6 +121,7 @@ export async function getPendingTrades(userId: string): Promise<{
         acceptedAt: trade.accepted_at,
         rollbackRequestedBy: trade.rollback_requested_by ?? null,
         isSender: isInitiator,
+        verified: !!trade.verified_at,
         rollbackMyGivingIds,
         rollbackMyReceivingIds,
       })

@@ -20,6 +20,8 @@
 
 - **Trocas concluidas na pagina de matches**: A tela de trocas agora mostra todas as suas trocas concluidas em uma secao recolhivel no final da pagina, paginada de 3 em 3, da mais recente para a mais antiga. O botao "Desfazer troca" nao aparece aqui — para desfazer, acesse pelo historico.
 
+- **Verificacao de troca fisica**: Dentro do Assistente de Troca, um novo botao "Completar" permite marcar que a troca fisica foi realizada. Apos confirmacao, o card da troca concluida exibe um indicador verde ao lado de "Troca concluida", facilitando saber quais trocas ja foram entregues pessoalmente.
+
 ## Melhorias
 
 - **Aprovacoes de trocas avancadas na timeline**: Todas as aprovacoes individuais de participantes agora aparecem na timeline, inclusive a do ultimo aprovador que dispara a execucao da troca.

@@ -10,24 +10,29 @@ export type AdvancedTradeView = {
   myReceivingIds: string[]
   giveTo: { id: string; name: string }
   receiveFrom: { id: string; name: string }
-  thirdParty: { id: string; name: string; givesIds: string[]; givesToName: string; receivesIds: string[] }
+  thirdParty: {
+    id: string
+    name: string
+    givesIds: string[]
+    givesToName: string
+    receivesIds: string[]
+  }
   myApprovalStatus: string
   otherStatuses: Array<{ name: string; status: string }>
   createdAt: string
   acceptedAt: string | null
   isRequester: boolean
+  verified: boolean
 }
 
-export async function getAdvancedTrades(
-  userId: string
-): Promise<AdvancedTradeView[]> {
+export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeView[]> {
   if (!userId) return []
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: trades } = await (supabaseAdmin as any)
     .from('advanced_trades')
     .select(
-      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status, created_at, accepted_at, requested_by'
+      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status, created_at, accepted_at, requested_by, verified_at'
     )
     .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
     .in('status', ['pending', 'accepted'])
@@ -47,9 +52,7 @@ export async function getAdvancedTrades(
     .select('id, name')
     .in('id', [...allUserIds])
 
-  const nameMap = Object.fromEntries(
-    (users ?? []).map((u) => [u.id, formatName(u.name)])
-  )
+  const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
 
   return trades.map((t: Record<string, unknown>) => {
     const trade = t as {
@@ -67,6 +70,7 @@ export async function getAdvancedTrades(
       created_at: string
       accepted_at: string | null
       requested_by: string
+      verified_at: string | null
     }
 
     // Cycle: A→B→C→A. Determine my position.
@@ -148,6 +152,7 @@ export async function getAdvancedTrades(
       createdAt: trade.created_at,
       acceptedAt: trade.accepted_at,
       isRequester: trade.requested_by === userId,
+      verified: !!trade.verified_at,
     }
   })
 }
