@@ -61,6 +61,7 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
     { data: stickers },
     { data: duplicates },
     { data: trades },
+    { data: advancedTrades },
   ] = await Promise.all([
     supabaseAdmin
       .from('users')
@@ -79,6 +80,12 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
       .from('pending_trades')
       .select('initiator_id, receiver_id, giving_ids, receiving_ids')
       .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
+      .eq('status', 'accepted'),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabaseAdmin as any)
+      .from('advanced_trades')
+      .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
+      .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
       .eq('status', 'accepted'),
   ])
 
@@ -111,7 +118,35 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
     if (partner) partnerCounts[partner] = (partnerCounts[partner] ?? 0) + 1
   }
 
-  const completedTrades = (trades ?? []).length
+  // Include advanced trades (cycle: A→B→C→A)
+  for (const at of (advancedTrades ?? []) as Array<{
+    user_a_id: string; user_b_id: string; user_c_id: string
+    a_gives_ids: string[]; b_gives_ids: string[]; c_gives_ids: string[]
+  }>) {
+    let myGiving: string[] = []
+    let myReceiving: string[] = []
+    const partners: string[] = []
+
+    if (at.user_a_id === userId) {
+      myGiving = at.a_gives_ids
+      myReceiving = at.c_gives_ids
+      partners.push(at.user_b_id, at.user_c_id)
+    } else if (at.user_b_id === userId) {
+      myGiving = at.b_gives_ids
+      myReceiving = at.a_gives_ids
+      partners.push(at.user_a_id, at.user_c_id)
+    } else if (at.user_c_id === userId) {
+      myGiving = at.c_gives_ids
+      myReceiving = at.b_gives_ids
+      partners.push(at.user_a_id, at.user_b_id)
+    }
+
+    for (const id of myReceiving) receivedFromTrade.add(id)
+    stickersGiven += myGiving.length
+    for (const pid of partners) partnerCounts[pid] = (partnerCounts[pid] ?? 0) + 1
+  }
+
+  const completedTrades = (trades ?? []).length + (advancedTrades ?? []).length
   const fromTradeCount = receivedFromTrade.size
   const stickersReceived = receivedFromTrade.size
 
