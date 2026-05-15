@@ -24,6 +24,8 @@
 
 ## Melhorias
 
+- **Contagem de figurinhas nos rotulos**: Todos os rotulos de listas de figurinhas agora mostram o total envolvido (ex: "Voce recebeu 10", "Voce deu 12"), facilitando a conferencia rapida sem precisar contar os chips.
+
 - **Aprovacoes de trocas avancadas na timeline**: Todas as aprovacoes individuais de participantes agora aparecem na timeline, inclusive a do ultimo aprovador que dispara a execucao da troca.
 
 - **Estatisticas do perfil com dados historicos**: Os numeros de duplicatas, trocas e insights do perfil agora consideram figurinhas ja negociadas e trocas avancadas, refletindo o historico completo.
