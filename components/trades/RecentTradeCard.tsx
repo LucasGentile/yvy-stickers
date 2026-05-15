@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { RecentTrade } from '@/actions/getPendingTrades'
 import { rollbackTrade } from '@/actions/rollbackTrade'
 import { StickerList, StickerToggle } from './StickerList'
+import { TradeAssistant } from '../audit/TradeAssistant'
 
 type RevertStep = 'idle' | 'choose-mode' | 'select-stickers'
 
@@ -20,6 +21,7 @@ export function RecentTradeCard({
 }) {
   const [loading, setLoading] = useState<'request' | 'confirm' | 'deny' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  const [assistantOpen, setAssistantOpen] = useState(false)
   const [revertStep, setRevertStep] = useState<RevertStep>('idle')
   const [selectedGiving, setSelectedGiving] = useState<Set<string>>(new Set())
   const [selectedReceiving, setSelectedReceiving] = useState<Set<string>>(new Set())
@@ -95,6 +97,23 @@ export function RecentTradeCard({
 
       <StickerList ids={trade.myReceivingIds} label="Você recebeu" variant="receiving" />
       <StickerList ids={trade.myGivingIds} label="Você deu" variant="giving" />
+
+      <button
+        onClick={() => setAssistantOpen(true)}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+      >
+        <span>📋</span>
+        Assistente de troca
+      </button>
+
+      {assistantOpen && (
+        <TradeAssistant
+          partnerName={trade.otherUserName}
+          givingIds={trade.myGivingIds}
+          receivingIds={trade.myReceivingIds}
+          onClose={() => setAssistantOpen(false)}
+        />
+      )}
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 

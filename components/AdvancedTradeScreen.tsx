@@ -8,6 +8,7 @@ import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previ
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
 import { StickerList } from '@/components/trades/StickerList'
 import { ColorLegend } from '@/components/trades/ColorLegend'
+import { TradeAssistant } from '@/components/audit/TradeAssistant'
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'approved') {
@@ -43,6 +44,7 @@ function TradeCard({
   const [loading, setLoading] = useState<'approve' | 'reject' | 'cancel' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [confirming, setConfirming] = useState<'approve' | 'reject' | 'cancel' | null>(null)
+  const [assistantOpen, setAssistantOpen] = useState(false)
 
   async function handle(action: 'approve' | 'reject' | 'cancel') {
     setLoading(action)
@@ -118,6 +120,26 @@ function TradeCard({
           </div>
         ))}
       </div>
+
+      {isAccepted && (
+        <>
+          <button
+            onClick={() => setAssistantOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+          >
+            <span>📋</span>
+            Assistente de troca
+          </button>
+          {assistantOpen && (
+            <TradeAssistant
+              partnerName={`${trade.giveTo.name} e ${trade.receiveFrom.name}`}
+              givingIds={trade.myGivingIds}
+              receivingIds={trade.myReceivingIds}
+              onClose={() => setAssistantOpen(false)}
+            />
+          )}
+        </>
+      )}
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 
