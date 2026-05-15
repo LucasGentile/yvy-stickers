@@ -18,6 +18,8 @@
 
 - **Protecao contra duplo clique**: Botoes de acao (importar figurinhas, enviar proposta, confirmar troca avancada, salvar duplicatas) agora ficam desabilitados enquanto a acao anterior esta sendo processada, evitando envios duplicados.
 
+- **Trocas concluidas na pagina de matches**: A tela de trocas agora mostra todas as suas trocas concluidas em uma secao recolhivel no final da pagina, paginada de 3 em 3, da mais recente para a mais antiga. O botao "Desfazer troca" nao aparece aqui — para desfazer, acesse pelo historico.
+
 ## Melhorias
 
 - **Aprovacoes de trocas avancadas na timeline**: Todas as aprovacoes individuais de participantes agora aparecem na timeline, inclusive a do ultimo aprovador que dispara a execucao da troca.
@@ -28,4 +30,8 @@
 
 - **Indicador cancelado mais preciso**: O badge de "ja cancelada" agora so aparece quando a combinacao exata de figurinhas coincide com uma troca anterior cancelada, e nao apenas por ser o mesmo usuario.
 
-- **Ajustes visuais no historico detalhado**: Padronizacao de espacamento, bordas e fundo nos cards da timeline e do historico para manter consistencia visual entre as paginas.
+- **Label de aprovacao corrigido**: Corrigido o label "undefined aprovou a troca triangular" que aparecia quando o aprovador nao era encontrado no mapa de nomes.
+
+- **Botao de assistente oculto em trocas canceladas**: O botao "Assistente de troca" nao aparece mais em entradas de historico de trocas canceladas ou rejeitadas, ja que nao ha figurinhas fisicas para trocar.
+
+- **Ajustes visuais no historico detalhado**: Padronizacao de espacamento, bordas e fundo nos cards da timeline e do historico para manter consistencia visual entre as paginas. Componente compartilhado (TradeCardBody) garante que ambas as telas sejam sempre identicas.

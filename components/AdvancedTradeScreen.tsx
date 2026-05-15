@@ -219,9 +219,12 @@ function CompletedTradesSection({
   const [expanded, setExpanded] = useState(false)
   const [page, setPage] = useState(0)
 
-  const totalPages = Math.ceil(trades.length / COMPLETED_PAGE_SIZE)
+  const sorted = [...trades].sort(
+    (a, b) => new Date(b.acceptedAt ?? 0).getTime() - new Date(a.acceptedAt ?? 0).getTime()
+  )
+  const totalPages = Math.ceil(sorted.length / COMPLETED_PAGE_SIZE)
   const visible = expanded
-    ? trades.slice(page * COMPLETED_PAGE_SIZE, (page + 1) * COMPLETED_PAGE_SIZE)
+    ? sorted.slice(page * COMPLETED_PAGE_SIZE, (page + 1) * COMPLETED_PAGE_SIZE)
     : []
 
   return (

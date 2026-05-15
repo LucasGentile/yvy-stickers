@@ -105,6 +105,7 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Pedidos recebidos mostram quantas figurinhas estão envolvidas e alertam se houver uma troca mais vantajosa com outro morador
 - Antes de aceitar, o app lembra de confirmar presencialmente com o outro morador
 - Figurinhas nos cards de troca são coloridas: _vermelho_ = você dá, _verde_ = você recebe (com setas indicando direção)
+- Trocas concluídas ficam no final da página em uma seção recolhível e paginada (3 por vez), ordenadas da mais recente para a mais antiga
 
 🔄 _5. Troca Avançada (Triangular)_
 Quando uma troca direta não é possível, o app busca automaticamente ciclos de 3 moradores onde todos se beneficiam.
