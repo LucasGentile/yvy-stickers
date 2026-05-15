@@ -22,7 +22,6 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
   const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
 
   const isTrade = TRADE_ACTIONS.has(entry.action)
-  const hasTradeId = !!(entry.metadata.tradeId as string | undefined)
   const isAccepted = entry.action === 'trade_accepted'
   const isAdvancedExecuted = entry.action === 'advanced_trade_executed'
 
@@ -117,26 +116,13 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-semibold text-yvy-dark leading-snug">{label}</p>
-          {hasTradeId ? (
-            <Link
-              href={`/history/${entry.id}`}
-              className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5 hover:opacity-70 transition-opacity"
-            >
-              <span className="text-[10px] text-yvy-accent underline">
-                {relativeTime(entry.created_at)}
-              </span>
-              <span className="text-[10px] text-yvy-accent/60">
-                {absoluteTime(entry.created_at)}
-              </span>
-            </Link>
-          ) : (
-            <div className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5">
-              <span className="text-[10px] text-yvy-muted">{relativeTime(entry.created_at)}</span>
-              <span className="text-[10px] text-yvy-muted/60">
-                {absoluteTime(entry.created_at)}
-              </span>
-            </div>
-          )}
+          <Link
+            href={`/history/${entry.id}`}
+            className="flex flex-col items-end shrink-0 mt-0.5 gap-0.5 hover:opacity-70 transition-opacity"
+          >
+            <span className="text-[10px] text-yvy-muted">{relativeTime(entry.created_at)}</span>
+            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(entry.created_at)}</span>
+          </Link>
         </div>
         <p className="text-xs text-yvy-muted mt-0.5">{detail}</p>
 

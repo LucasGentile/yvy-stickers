@@ -35,7 +35,7 @@ describe('getTradeTimeline', () => {
     expect(result).toBeNull()
   })
 
-  it('returns null when entry has no tradeId in metadata', async () => {
+  it('returns single entry when entry has no tradeId in metadata', async () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
@@ -51,7 +51,11 @@ describe('getTradeTimeline', () => {
     })
 
     const result = await getTradeTimeline('entry-1', 'user-1')
-    expect(result).toBeNull()
+    expect(result).not.toBeNull()
+    expect(result!.entries).toHaveLength(1)
+    expect(result!.entries[0].id).toBe('entry-1')
+    expect(result!.focusedEntryId).toBe('entry-1')
+    expect(result!.tradeId).toBeNull()
   })
 
   it('fetches all related entries by tradeId and returns timeline', async () => {

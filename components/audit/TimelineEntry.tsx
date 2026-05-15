@@ -34,7 +34,7 @@ export function TimelineEntry({ entry, isFocused }: { entry: AuditEntry; isFocus
   return (
     <div
       className={`relative pl-10 pb-6 last:pb-0 ${
-        isFocused ? 'bg-yvy-accent/5 -mx-2 px-12 py-3 rounded-xl border border-yvy-accent/20' : ''
+        isFocused ? 'bg-green-50 -mx-2 px-12 py-3 rounded-xl border border-yvy-accent/30' : ''
       }`}
       data-focused={isFocused || undefined}
     >
