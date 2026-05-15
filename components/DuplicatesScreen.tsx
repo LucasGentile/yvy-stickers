@@ -41,6 +41,7 @@ export default function DuplicatesScreen() {
     owned: string[]
     invalid: string[]
   } | null>(null)
+  const [checking, setChecking] = useState(false)
   const [toast, setToast] = useState<{ message: string; onUndo: () => Promise<void> } | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -90,7 +91,7 @@ export default function DuplicatesScreen() {
 
   // Add / update from the picker form
   const handleAdd = useCallback(async () => {
-    if (!userId || !selectedSticker) return
+    if (!userId || !selectedSticker || saving) return
     setSaving(true)
     setMsg(null)
     const result = await upsertDuplicate(userId, selectedSticker, addCount)
@@ -106,7 +107,7 @@ export default function DuplicatesScreen() {
     } else {
       setMsg({ text: `Erro: ${result.error}`, ok: false })
     }
-  }, [userId, selectedSticker, addCount, refreshDuplicates])
+  }, [userId, selectedSticker, addCount, saving, refreshDuplicates])
 
   // Inline +1 on existing item
   const handleIncrement = useCallback(
@@ -190,18 +191,21 @@ export default function DuplicatesScreen() {
   }
 
   async function handleCheck() {
+    if (checking) return
     let content = checkText
     if (checkFile) content = await checkFile.text()
     if (!content.trim()) return
 
+    setChecking(true)
     const result = checkExternalList(content, ownedSet)
     setCheckResult(result)
     if (userId && result.needed.length + result.owned.length > 0) {
-      logAction(userId, 'external_list_check', {
+      await logAction(userId, 'external_list_check', {
         checkedCount: result.needed.length + result.owned.length,
         neededCount: result.needed.length,
       })
     }
+    setChecking(false)
   }
 
   function handleCopy() {
@@ -277,7 +281,8 @@ export default function DuplicatesScreen() {
             <button
               type="button"
               onClick={() => setAddCount((c) => Math.max(1, c - 1))}
-              className="w-10 h-10 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-xl font-bold leading-none flex items-center justify-center"
+              disabled={saving}
+              className="w-10 h-10 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-xl font-bold leading-none flex items-center justify-center disabled:opacity-40"
             >
               −
             </button>
@@ -285,7 +290,8 @@ export default function DuplicatesScreen() {
             <button
               type="button"
               onClick={() => setAddCount((c) => c + 1)}
-              className="w-10 h-10 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-xl font-bold leading-none flex items-center justify-center"
+              disabled={saving}
+              className="w-10 h-10 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-xl font-bold leading-none flex items-center justify-center disabled:opacity-40"
             >
               +
             </button>
@@ -365,10 +371,10 @@ export default function DuplicatesScreen() {
               <button
                 type="button"
                 onClick={handleCheck}
-                disabled={!checkText.trim() && !checkFile}
+                disabled={checking || (!checkText.trim() && !checkFile)}
                 className="ml-auto px-4 py-1.5 rounded-lg bg-yvy-dark text-white text-xs font-semibold disabled:opacity-40 transition-colors"
               >
-                Verificar
+                {checking ? 'Verificando...' : 'Verificar'}
               </button>
             </div>
 
