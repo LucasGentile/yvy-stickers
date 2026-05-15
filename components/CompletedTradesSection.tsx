@@ -20,8 +20,11 @@ export function CompletedTradesSection({
 
   if (trades.length === 0) return null
 
-  const totalPages = Math.ceil(trades.length / PAGE_SIZE)
-  const visible = expanded ? trades.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) : []
+  const sorted = [...trades].sort(
+    (a, b) => new Date(b.acceptedAt).getTime() - new Date(a.acceptedAt).getTime()
+  )
+  const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
+  const visible = expanded ? sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) : []
 
   return (
     <div className="space-y-2">
