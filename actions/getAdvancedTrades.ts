@@ -32,7 +32,7 @@ export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeVi
   const { data: trades } = await (supabaseAdmin as any)
     .from('advanced_trades')
     .select(
-      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status, created_at, accepted_at, requested_by, verified_at'
+      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status, created_at, accepted_at, requested_by'
     )
     .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
     .in('status', ['pending', 'accepted'])
@@ -70,7 +70,6 @@ export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeVi
       created_at: string
       accepted_at: string | null
       requested_by: string
-      verified_at: string | null
     }
 
     // Cycle: A→B→C→A. Determine my position.
@@ -152,7 +151,7 @@ export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeVi
       createdAt: trade.created_at,
       acceptedAt: trade.accepted_at,
       isRequester: trade.requested_by === userId,
-      verified: !!trade.verified_at,
+      verified: !!(t as Record<string, unknown>).verified_at,
     }
   })
 }
