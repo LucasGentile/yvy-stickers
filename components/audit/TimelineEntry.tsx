@@ -33,7 +33,7 @@ export function TimelineEntry({ entry, isFocused }: { entry: AuditEntry; isFocus
 
   return (
     <div
-      className={`flex gap-3 pl-3 pr-3 py-3 rounded-r-md ${
+      className={`flex gap-3 pl-3 pr-1 py-2 rounded-r-md ${
         isAccepted || isAdvancedExecuted
           ? `border-l-[4px] bg-green-50/50 ${isFocused ? 'border-l-yvy-accent' : 'border-l-[#16a34a]'}`
           : `${isFocused ? 'border-l-[4px] border-l-yvy-accent' : `border-l-[3px] ${cfg.borderColor}`}`
