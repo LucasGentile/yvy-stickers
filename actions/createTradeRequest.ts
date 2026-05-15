@@ -156,6 +156,8 @@ export async function createTradeRequest(
       .maybeSingle()
     logAction(initiatorId, 'trade_sent', {
       partnerName: formatName(receiver?.name ?? 'Usuário'),
+      givingIds,
+      receivingIds,
       givingCount: givingIds.length,
       receivingCount: receivingIds.length,
     })

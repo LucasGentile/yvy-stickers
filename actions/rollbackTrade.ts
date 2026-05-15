@@ -155,10 +155,14 @@ export async function rollbackTrade(
     logAction(trade.initiator_id, 'trade_rolled_back', {
       partnerName: receiverName,
       partial: isPartial,
+      givingIds: givingToRevert,
+      receivingIds: receivingToRevert,
     })
     logAction(trade.receiver_id, 'trade_rolled_back', {
       partnerName: initiatorName,
       partial: isPartial,
+      givingIds: receivingToRevert,
+      receivingIds: givingToRevert,
     })
   })()
 
