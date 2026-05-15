@@ -37,6 +37,8 @@ export type PersonalInsights = {
 
   // Duplicates
   totalDuplicateCopies: number
+  tradedDuplicateCopies: number
+  tradedDuplicatesPct: number
   mostDuplicatedSticker: string | null
   mostDuplicatedStickerCount: number
   leastDuplicatedSticker: string | null
@@ -292,6 +294,8 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
     bestTradeFriendTrades,
 
     totalDuplicateCopies: totalDupesCopies,
+    tradedDuplicateCopies: totalGivenAway,
+    tradedDuplicatesPct: totalDupesCopies > 0 ? Math.round((totalGivenAway / totalDupesCopies) * 100) : 0,
     mostDuplicatedSticker,
     mostDuplicatedStickerCount,
     leastDuplicatedSticker,

@@ -208,8 +208,14 @@ export default function ProfileScreen() {
           <StatTile
             label="Total de cópias extras"
             value={data.totalDuplicateCopies}
-            sub="no inventário"
+            sub={`${data.tradedDuplicateCopies} já trocadas`}
             color="purple"
+          />
+          <StatTile
+            label="Aproveitamento"
+            value={`${data.tradedDuplicatesPct}%`}
+            sub="das repetidas foram trocadas"
+            color="green"
           />
           {data.mostDuplicatedSticker && (
             <StatTile
