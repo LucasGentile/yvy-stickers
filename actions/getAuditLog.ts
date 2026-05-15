@@ -17,7 +17,7 @@ export async function getAuditLog(userId: string): Promise<AuditEntry[]> {
     .not(
       'action',
       'in',
-      '(trade_accepted,trade_sent,trade_rejected,trade_cancelled,trade_rolled_back,advanced_trade_proposed,advanced_trade_approved,advanced_trade_rejected,advanced_trade_executed,advanced_trade_cancelled)'
+      '(trade_accepted,trade_sent,trade_received,trade_rejected,trade_cancelled,trade_rolled_back,trade_rollback_requested,trade_rollback_denied,advanced_trade_proposed,advanced_trade_approved,advanced_trade_rejected,advanced_trade_executed,advanced_trade_cancelled)'
     )
     .order('created_at', { ascending: false })
     .limit(100)

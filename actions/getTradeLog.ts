@@ -11,9 +11,12 @@ export async function getTradeLog(userId: string): Promise<AuditEntry[]> {
     .in('action', [
       'trade_accepted',
       'trade_sent',
+      'trade_received',
       'trade_rejected',
       'trade_cancelled',
       'trade_rolled_back',
+      'trade_rollback_requested',
+      'trade_rollback_denied',
       'advanced_trade_proposed',
       'advanced_trade_approved',
       'advanced_trade_rejected',

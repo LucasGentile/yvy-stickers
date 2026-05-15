@@ -90,6 +90,36 @@ export async function rollbackTrade(
       .eq('id', tradeId)
       .eq('status', 'accepted')
     if (error) return { success: false, error: 'Erro ao solicitar desfazimento.' }
+
+    // Log rollback request for both parties
+    const givingToLog = isPartial ? (partialGivingIds ?? []) : trade.giving_ids
+    const receivingToLog = isPartial ? (partialReceivingIds ?? []) : trade.receiving_ids
+    ;(async () => {
+      const { data: users } = await supabaseAdmin
+        .from('users')
+        .select('id, name')
+        .in('id', [trade.initiator_id, trade.receiver_id])
+      const initiatorName = formatName(users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário')
+      const receiverName = formatName(users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário')
+      const requesterName = userId === trade.initiator_id ? initiatorName : receiverName
+      const otherPartyId = userId === trade.initiator_id ? trade.receiver_id : trade.initiator_id
+      const otherName = userId === trade.initiator_id ? receiverName : initiatorName
+      logAction(userId, 'trade_rollback_requested', {
+        partnerName: otherName,
+        requestedBy: requesterName,
+        partial: isPartial,
+        givingIds: userId === trade.initiator_id ? givingToLog : receivingToLog,
+        receivingIds: userId === trade.initiator_id ? receivingToLog : givingToLog,
+      })
+      logAction(otherPartyId, 'trade_rollback_requested', {
+        partnerName: requesterName,
+        requestedBy: requesterName,
+        partial: isPartial,
+        givingIds: otherPartyId === trade.initiator_id ? givingToLog : receivingToLog,
+        receivingIds: otherPartyId === trade.initiator_id ? receivingToLog : givingToLog,
+      })
+    })()
+
     return { success: true }
   }
 
@@ -107,6 +137,28 @@ export async function rollbackTrade(
       })
       .eq('id', tradeId)
     if (error) return { success: false, error: 'Erro ao recusar desfazimento.' }
+
+    // Log rollback denied for both parties
+    ;(async () => {
+      const { data: users } = await supabaseAdmin
+        .from('users')
+        .select('id, name')
+        .in('id', [trade.initiator_id, trade.receiver_id])
+      const initiatorName = formatName(users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário')
+      const receiverName = formatName(users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário')
+      const denierName = userId === trade.initiator_id ? initiatorName : receiverName
+      const otherPartyId = userId === trade.initiator_id ? trade.receiver_id : trade.initiator_id
+      const otherName = userId === trade.initiator_id ? receiverName : initiatorName
+      logAction(userId, 'trade_rollback_denied', {
+        partnerName: otherName,
+        deniedBy: denierName,
+      })
+      logAction(otherPartyId, 'trade_rollback_denied', {
+        partnerName: denierName,
+        deniedBy: denierName,
+      })
+    })()
+
     return { success: true }
   }
 
