@@ -82,32 +82,38 @@ export default function StickersScreen() {
       setLoading(false)
       return
     }
-    Promise.all([getUserData(id), getTradeOriginStickers(id), getDuplicates(id)]).then(([data, origin, dupes]) => {
-      setTradeOrigin(origin)
-      setDuplicateMap(new Map(dupes.map((d) => [d.stickerId, d.count])))
-      if (data) {
-        if (!data.approved) {
-          setStep('pending' as Step)
-          setLoading(false)
-          return
+    Promise.all([getUserData(id), getTradeOriginStickers(id), getDuplicates(id)]).then(
+      ([data, origin, dupes]) => {
+        setTradeOrigin(origin)
+        setDuplicateMap(new Map(dupes.map((d) => [d.stickerId, d.count])))
+        if (data) {
+          if (!data.approved) {
+            setStep('pending' as Step)
+            setLoading(false)
+            return
+          }
+          setMode(data.inputMode)
+          const loaded = new Set<string>(data.stickerIds)
+          setSelected(loaded)
+          lastSaved.current = new Set(loaded)
+          if (data.stickerIds.length > 0 || data.inputMode) {
+            setStep('input')
+          }
         }
-        setMode(data.inputMode)
-        const loaded = new Set<string>(data.stickerIds)
-        setSelected(loaded)
-        lastSaved.current = new Set(loaded)
-        if (data.stickerIds.length > 0 || data.inputMode) {
-          setStep('input')
-        }
+        setLoading(false)
       }
-      setLoading(false)
-    })
+    )
   }, [])
 
+  const [selectingMode, setSelectingMode] = useState(false)
+
   async function handleModeSelect(m: Mode) {
-    if (!userId) return
+    if (!userId || selectingMode) return
+    setSelectingMode(true)
     await setInputMode(userId, m)
     setMode(m)
     setStep('input')
+    setSelectingMode(false)
   }
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -117,7 +123,7 @@ export default function StickersScreen() {
   }
 
   async function handleFileImport() {
-    if (!pendingFile || !userId) return
+    if (!pendingFile || !userId || importing) return
     const content = await pendingFile.text()
     const parsed = parseStickerFile(content)
     if (!parsed.valid) {
@@ -228,7 +234,8 @@ export default function StickersScreen() {
           <div className="space-y-3">
             <button
               onClick={() => handleModeSelect('have')}
-              className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-4 px-4 rounded-xl text-left transition-colors"
+              disabled={selectingMode}
+              className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-4 px-4 rounded-xl text-left transition-colors disabled:opacity-50"
             >
               <div className="text-base">
                 Vou informar as figurinhas que <strong>TENHO</strong>
@@ -239,7 +246,8 @@ export default function StickersScreen() {
             </button>
             <button
               onClick={() => handleModeSelect('need')}
-              className="w-full bg-yvy-surface hover:bg-yvy-bg border-2 border-yvy-dark text-yvy-dark font-semibold py-4 px-4 rounded-xl text-left transition-colors"
+              disabled={selectingMode}
+              className="w-full bg-yvy-surface hover:bg-yvy-bg border-2 border-yvy-dark text-yvy-dark font-semibold py-4 px-4 rounded-xl text-left transition-colors disabled:opacity-50"
             >
               <div className="text-base">
                 Vou informar as figurinhas que <strong>PRECISO</strong>
@@ -398,9 +406,10 @@ export default function StickersScreen() {
                 <button
                   type="button"
                   onClick={handleFileImport}
-                  className="shrink-0 px-3 py-1.5 rounded-lg bg-yvy-dark text-white text-xs font-semibold hover:bg-yvy-dark-hover transition-colors"
+                  disabled={importing}
+                  className="shrink-0 px-3 py-1.5 rounded-lg bg-yvy-dark text-white text-xs font-semibold hover:bg-yvy-dark-hover transition-colors disabled:opacity-50"
                 >
-                  Importar
+                  {importing ? 'Importando...' : 'Importar'}
                 </button>
               </div>
             )}
@@ -437,60 +446,77 @@ export default function StickersScreen() {
       </div>
 
       {/* Import summary */}
-      {importSummary && (() => {
-        const sortFn = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
-        const albumIds = sortFn(importSummary.addedToAlbumIds)
-        const dupeIds = sortFn(importSummary.duplicateIds)
-        const LIMIT = 30
+      {importSummary &&
+        (() => {
+          const sortFn = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
+          const albumIds = sortFn(importSummary.addedToAlbumIds)
+          const dupeIds = sortFn(importSummary.duplicateIds)
+          const LIMIT = 30
 
-        return (
-          <div className="bg-yvy-surface rounded-xl border border-green-200 shadow-md p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-yvy-dark">✓ Importação concluída</p>
-              <button onClick={() => setImportSummary(null)} className="text-yvy-muted text-sm px-1 leading-none">✕</button>
+          return (
+            <div className="bg-yvy-surface rounded-xl border border-green-200 shadow-md p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold text-yvy-dark">✓ Importação concluída</p>
+                <button
+                  onClick={() => setImportSummary(null)}
+                  className="text-yvy-muted text-sm px-1 leading-none"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {albumIds.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-green-700">
+                    Para colar no álbum ({albumIds.length})
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {albumIds.slice(0, LIMIT).map((id) => (
+                      <StickerChip key={id} id={id} variant="green" />
+                    ))}
+                    {albumIds.length > LIMIT && (
+                      <span className="text-[11px] text-yvy-muted py-0.5">
+                        +{albumIds.length - LIMIT} mais
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {dupeIds.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                    Para separar como repetidas ({dupeIds.length})
+                    {importSummary.totalDuplicateCopies > dupeIds.length && (
+                      <span className="normal-case font-normal">
+                        {' '}
+                        · {importSummary.totalDuplicateCopies} cópias extras no total
+                      </span>
+                    )}
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {dupeIds.slice(0, LIMIT).map((id) => (
+                      <StickerChip key={id} id={id} variant="amber" />
+                    ))}
+                    {dupeIds.length > LIMIT && (
+                      <span className="text-[11px] text-yvy-muted py-0.5">
+                        +{dupeIds.length - LIMIT} mais
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {albumIds.length === 0 && dupeIds.length === 0 && (
+                <p className="text-sm text-yvy-muted">Nenhuma figurinha nova detectada.</p>
+              )}
+
+              <a href="/historico" className="text-xs text-yvy-accent underline block">
+                Abrir assistente completo no Histórico →
+              </a>
             </div>
-
-            {albumIds.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-green-700">
-                  Para colar no álbum ({albumIds.length})
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {albumIds.slice(0, LIMIT).map((id) => <StickerChip key={id} id={id} variant="green" />)}
-                  {albumIds.length > LIMIT && (
-                    <span className="text-[11px] text-yvy-muted py-0.5">+{albumIds.length - LIMIT} mais</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {dupeIds.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-                  Para separar como repetidas ({dupeIds.length})
-                  {importSummary.totalDuplicateCopies > dupeIds.length && (
-                    <span className="normal-case font-normal"> · {importSummary.totalDuplicateCopies} cópias extras no total</span>
-                  )}
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {dupeIds.slice(0, LIMIT).map((id) => <StickerChip key={id} id={id} variant="amber" />)}
-                  {dupeIds.length > LIMIT && (
-                    <span className="text-[11px] text-yvy-muted py-0.5">+{dupeIds.length - LIMIT} mais</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {albumIds.length === 0 && dupeIds.length === 0 && (
-              <p className="text-sm text-yvy-muted">Nenhuma figurinha nova detectada.</p>
-            )}
-
-            <a href="/historico" className="text-xs text-yvy-accent underline block">
-              Abrir assistente completo no Histórico →
-            </a>
-          </div>
-        )
-      })()}
+          )
+        })()}
 
       {/* Sticky footer: save */}
       {(() => {
