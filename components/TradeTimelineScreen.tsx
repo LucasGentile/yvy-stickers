@@ -61,17 +61,19 @@ export default function TradeTimelineScreen({ entryId }: { entryId: string }) {
         </h2>
       </div>
 
-      <div className="relative">
-        <div className="absolute left-[18px] top-0 bottom-0 w-px bg-yvy-border" />
+      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-5 py-4">
+        <div className="relative">
+          <div className="absolute left-[18px] top-4 bottom-4 w-px bg-yvy-border" />
 
-        <div className="space-y-0">
-          {timeline.entries.map((entry) => (
-            <TimelineEntry
-              key={entry.id}
-              entry={entry}
-              isFocused={entry.id === timeline.focusedEntryId}
-            />
-          ))}
+          <div className="divide-y divide-yvy-border/40">
+            {timeline.entries.map((entry) => (
+              <TimelineEntry
+                key={entry.id}
+                entry={entry}
+                isFocused={entry.id === timeline.focusedEntryId}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
