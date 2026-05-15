@@ -24,6 +24,8 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
   const isTrade = TRADE_ACTIONS.has(entry.action)
   const isAccepted = entry.action === 'trade_accepted'
   const isAdvancedExecuted = entry.action === 'advanced_trade_executed'
+  const isCanceled = entry.action === 'trade_cancelled' || entry.action === 'advanced_trade_cancelled'
+  const isRejected = entry.action === 'trade_rejected' || entry.action === 'advanced_trade_rejected'
 
   const hint = cfg.realLifeHint?.(
     entry.metadata.partnerName
@@ -134,7 +136,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
             </span>
           </div>
         )}
-        {hasTradeStickers && (
+        {hasTradeStickers && !isCanceled && !isRejected && (
           <button
             onClick={() => setAssistantOpen(true)}
             className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yvy-accent text-white text-xs font-semibold hover:opacity-90 transition-opacity"
