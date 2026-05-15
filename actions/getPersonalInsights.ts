@@ -105,7 +105,9 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
   // ── Trade breakdown ──────────────────────────────────────────────────────
   const receivedFromTrade = new Set<string>()
   let stickersGiven = 0
+  let stickersReceivedTotal = 0
   const partnerCounts: Record<string, number> = {}
+  const givenPerSticker: Record<string, number> = {}
 
   for (const trade of trades ?? []) {
     const isInitiator = trade.initiator_id === userId
@@ -114,7 +116,9 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
     const partner = isInitiator ? trade.receiver_id : trade.initiator_id
 
     for (const id of received) receivedFromTrade.add(id)
+    stickersReceivedTotal += received.length
     stickersGiven += given.length
+    for (const id of given) givenPerSticker[id] = (givenPerSticker[id] ?? 0) + 1
     if (partner) partnerCounts[partner] = (partnerCounts[partner] ?? 0) + 1
   }
 
@@ -142,18 +146,24 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
     }
 
     for (const id of myReceiving) receivedFromTrade.add(id)
+    stickersReceivedTotal += myReceiving.length
     stickersGiven += myGiving.length
+    for (const id of myGiving) givenPerSticker[id] = (givenPerSticker[id] ?? 0) + 1
     for (const pid of partners) partnerCounts[pid] = (partnerCounts[pid] ?? 0) + 1
   }
 
   const completedTrades = (trades ?? []).length + (advancedTrades ?? []).length
   const fromTradeCount = receivedFromTrade.size
-  const stickersReceived = receivedFromTrade.size
+  const stickersReceived = stickersReceivedTotal
 
   // Purchased = owned stickers not received via trade (best estimate — some may overlap)
   const purchasedCount = Math.max(0, ownedCount - fromTradeCount)
 
-  const totalDupesCopies = (duplicates ?? []).reduce((s, r) => s + r.count, 0)
+  // Historical duplicates = current in hand + all copies traded away
+  const currentDupesCopies = (duplicates ?? []).reduce((s, r) => s + r.count, 0)
+  const totalGivenAway = Object.values(givenPerSticker).reduce((s, n) => s + n, 0)
+  const totalDupesCopies = currentDupesCopies + totalGivenAway
+
   const estimatedPacksBought = Math.ceil((purchasedCount + totalDupesCopies) / PACK_SIZE)
   const estimatedSpentBrl = estimatedPacksBought * PACK_PRICE
   const estimatedSavedBrl = Math.round(fromTradeCount * (PACK_PRICE / PACK_SIZE))
@@ -172,16 +182,23 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
     bestTradeFriend = partnerUser ? formatName(partnerUser.name as string) : null
   }
 
-  // ── Duplicate stats ──────────────────────────────────────────────────────
+  // ── Duplicate stats (historical: current + traded away) ──────────────────
+  // Build historical count per sticker: current duplicates + copies given in trades
+  const historicalDupes: Record<string, number> = {}
+  for (const row of duplicates ?? []) {
+    historicalDupes[row.sticker_id as string] = row.count as number
+  }
+  for (const [id, given] of Object.entries(givenPerSticker)) {
+    historicalDupes[id] = (historicalDupes[id] ?? 0) + given
+  }
+
   let mostDuplicatedSticker: string | null = null
   let mostDuplicatedStickerCount = 0
   let leastDuplicatedSticker: string | null = null
   let leastDuplicatedStickerCount = Infinity
 
   const countryDupeTotals: Record<string, number> = {}
-  for (const row of duplicates ?? []) {
-    const id = row.sticker_id as string
-    const count = row.count as number
+  for (const [id, count] of Object.entries(historicalDupes)) {
     if (count > mostDuplicatedStickerCount) {
       mostDuplicatedStickerCount = count
       mostDuplicatedSticker = id
@@ -190,7 +207,6 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
       leastDuplicatedStickerCount = count
       leastDuplicatedSticker = id
     }
-    // Extract team code (letters before the number)
     const match = id.match(/^([A-Z]+)/)
     if (match) {
       countryDupeTotals[match[1]] = (countryDupeTotals[match[1]] ?? 0) + count
