@@ -19,6 +19,7 @@ export type MatchResult = {
   reciprocalStickers: string[]
   completionPct: number
   missingCount: number
+  previouslyCanceled: boolean
 }
 
 function computeNeeded(mode: string, marked: Set<string>): Set<string> {
@@ -44,6 +45,7 @@ export async function getMatches(
     { data: pendingTrades },
     othersResult,
     { data: advancedTrades },
+    { data: canceledTrades },
   ] = await Promise.all([
     supabase.from('user_stickers').select('sticker_id').eq('user_id', currentUserId),
     supabase.from('user_duplicates').select('sticker_id, count').eq('user_id', currentUserId),
@@ -63,6 +65,11 @@ export async function getMatches(
       .from('advanced_trades')
       .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
       .eq('status', 'pending'),
+    supabaseAdmin
+      .from('pending_trades')
+      .select('initiator_id, receiver_id')
+      .or(`initiator_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
+      .in('status', ['cancelled', 'rejected']),
   ])
 
   type OtherUser = {
@@ -148,6 +155,12 @@ export async function getMatches(
       .map((r) => r.sticker_id)
   )
 
+  const canceledPartners = new Set(
+    (canceledTrades ?? []).map((t) =>
+      t.initiator_id === currentUserId ? t.receiver_id : t.initiator_id
+    )
+  )
+
   const results: MatchResult[] = others
     .map((user) => {
       const theirMarked = new Set(user.user_stickers.map((r) => r.sticker_id))
@@ -192,6 +205,7 @@ export async function getMatches(
         reciprocalStickers,
         completionPct,
         missingCount,
+        previouslyCanceled: canceledPartners.has(user.id),
       }
     })
     .sort((a, b) => {

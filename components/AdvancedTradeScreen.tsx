@@ -230,23 +230,19 @@ function CompletedTradesSection({
         onClick={() => setExpanded((v) => !v)}
         className="flex items-center gap-2 w-full text-left"
       >
-        <span className="text-[10px] text-yvy-muted transition-transform" style={{ transform: expanded ? 'rotate(90deg)' : undefined }}>
+        <span
+          className="text-[10px] text-yvy-muted transition-transform"
+          style={{ transform: expanded ? 'rotate(90deg)' : undefined }}
+        >
           ▶
         </span>
-        <h3 className="text-sm font-bold text-yvy-muted">
-          Trocas concluídas ({trades.length})
-        </h3>
+        <h3 className="text-sm font-bold text-yvy-muted">Trocas concluídas ({trades.length})</h3>
       </button>
 
       {expanded && (
         <div className="space-y-3">
           {visible.map((t) => (
-            <TradeCard
-              key={t.id}
-              trade={t}
-              userId={userId}
-              onDone={onRefresh}
-            />
+            <TradeCard key={t.id} trade={t} userId={userId} onDone={onRefresh} />
           ))}
 
           {totalPages > 1 && (
@@ -325,8 +321,9 @@ export default function AdvancedTradeScreen() {
       } else {
         setPreviews([])
       }
-    } catch { /* silently ignore */ }
-    finally {
+    } catch {
+      /* silently ignore */
+    } finally {
       setRefreshing(false)
     }
   }
@@ -377,9 +374,7 @@ export default function AdvancedTradeScreen() {
           setCanSearch(false)
         }
       } else {
-        setSearchMsg(
-          result.error ?? 'Erro ao criar proposta. Tente novamente.'
-        )
+        setSearchMsg(result.error ?? 'Erro ao criar proposta. Tente novamente.')
       }
     } catch {
       setSearchMsg('Erro inesperado. Tente novamente.')
@@ -445,12 +440,7 @@ export default function AdvancedTradeScreen() {
         <div className="space-y-3">
           <h3 className="text-base font-bold text-yvy-dark">Propostas pendentes</h3>
           {pendingTrades.map((t) => (
-            <TradeCard
-              key={t.id}
-              trade={t}
-              userId={userId!}
-              onDone={() => loadTrades(userId!)}
-            />
+            <TradeCard key={t.id} trade={t} userId={userId!} onDone={() => loadTrades(userId!)} />
           ))}
         </div>
       )}
@@ -463,22 +453,86 @@ export default function AdvancedTradeScreen() {
             <div className="flex justify-center">
               <svg width="180" height="140" viewBox="0 0 180 140" fill="none" aria-hidden="true">
                 {/* Triangle nodes */}
-                <circle cx="90" cy="20" r="16" className="fill-yvy-accent/20 stroke-yvy-accent" strokeWidth="2" />
-                <circle cx="30" cy="120" r="16" className="fill-purple-100 stroke-purple-400" strokeWidth="2" />
-                <circle cx="150" cy="120" r="16" className="fill-amber-100 stroke-amber-500" strokeWidth="2" />
+                <circle
+                  cx="90"
+                  cy="20"
+                  r="16"
+                  className="fill-yvy-accent/20 stroke-yvy-accent"
+                  strokeWidth="2"
+                />
+                <circle
+                  cx="30"
+                  cy="120"
+                  r="16"
+                  className="fill-purple-100 stroke-purple-400"
+                  strokeWidth="2"
+                />
+                <circle
+                  cx="150"
+                  cy="120"
+                  r="16"
+                  className="fill-amber-100 stroke-amber-500"
+                  strokeWidth="2"
+                />
                 {/* Labels */}
-                <text x="90" y="24" textAnchor="middle" className="fill-yvy-accent text-[11px] font-bold">Você</text>
-                <text x="30" y="124" textAnchor="middle" className="fill-purple-600 text-[10px] font-bold">B</text>
-                <text x="150" y="124" textAnchor="middle" className="fill-amber-600 text-[10px] font-bold">C</text>
+                <text
+                  x="90"
+                  y="24"
+                  textAnchor="middle"
+                  className="fill-yvy-accent text-[11px] font-bold"
+                >
+                  Você
+                </text>
+                <text
+                  x="30"
+                  y="124"
+                  textAnchor="middle"
+                  className="fill-purple-600 text-[10px] font-bold"
+                >
+                  B
+                </text>
+                <text
+                  x="150"
+                  y="124"
+                  textAnchor="middle"
+                  className="fill-amber-600 text-[10px] font-bold"
+                >
+                  C
+                </text>
                 {/* Arrows: A→B */}
-                <path d="M 74 30 L 42 106" className="stroke-yvy-accent" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowhead)" />
+                <path
+                  d="M 74 30 L 42 106"
+                  className="stroke-yvy-accent"
+                  strokeWidth="1.5"
+                  strokeDasharray="4 2"
+                  markerEnd="url(#arrowhead)"
+                />
                 {/* Arrows: B→C */}
-                <path d="M 48 120 L 132 120" className="stroke-purple-400" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowhead)" />
+                <path
+                  d="M 48 120 L 132 120"
+                  className="stroke-purple-400"
+                  strokeWidth="1.5"
+                  strokeDasharray="4 2"
+                  markerEnd="url(#arrowhead)"
+                />
                 {/* Arrows: C→A */}
-                <path d="M 138 106 L 106 30" className="stroke-amber-500" strokeWidth="1.5" strokeDasharray="4 2" markerEnd="url(#arrowhead)" />
+                <path
+                  d="M 138 106 L 106 30"
+                  className="stroke-amber-500"
+                  strokeWidth="1.5"
+                  strokeDasharray="4 2"
+                  markerEnd="url(#arrowhead)"
+                />
                 {/* Arrowhead marker */}
                 <defs>
-                  <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                  <marker
+                    id="arrowhead"
+                    markerWidth="8"
+                    markerHeight="6"
+                    refX="7"
+                    refY="3"
+                    orient="auto"
+                  >
                     <polygon points="0 0, 8 3, 0 6" className="fill-yvy-muted" />
                   </marker>
                 </defs>
@@ -495,21 +549,30 @@ export default function AdvancedTradeScreen() {
             {/* Steps */}
             <div className="space-y-2.5">
               <div className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-yvy-accent/15 flex items-center justify-center text-[10px] font-bold text-yvy-accent">1</span>
+                <span className="shrink-0 w-6 h-6 rounded-full bg-yvy-accent/15 flex items-center justify-center text-[10px] font-bold text-yvy-accent">
+                  1
+                </span>
                 <p className="text-xs text-yvy-text leading-relaxed">
-                  <strong className="text-yvy-dark">Você dá</strong> figurinhas que outra pessoa precisa
+                  <strong className="text-yvy-dark">Você dá</strong> figurinhas que outra pessoa
+                  precisa
                 </p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[10px] font-bold text-purple-600">2</span>
+                <span className="shrink-0 w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-[10px] font-bold text-purple-600">
+                  2
+                </span>
                 <p className="text-xs text-yvy-text leading-relaxed">
-                  <strong className="text-yvy-dark">Essa pessoa dá</strong> figurinhas para um terceiro morador
+                  <strong className="text-yvy-dark">Essa pessoa dá</strong> figurinhas para um
+                  terceiro morador
                 </p>
               </div>
               <div className="flex items-start gap-3">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-[10px] font-bold text-amber-600">3</span>
+                <span className="shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-[10px] font-bold text-amber-600">
+                  3
+                </span>
                 <p className="text-xs text-yvy-text leading-relaxed">
-                  <strong className="text-yvy-dark">O terceiro dá para você</strong> — fechando o ciclo
+                  <strong className="text-yvy-dark">O terceiro dá para você</strong> — fechando o
+                  ciclo
                 </p>
               </div>
             </div>
@@ -551,9 +614,7 @@ export default function AdvancedTradeScreen() {
               troca pendente for concluída.
             </p>
           )}
-          {searchMsg && (
-            <p className="text-xs text-yvy-muted text-center">{searchMsg}</p>
-          )}
+          {searchMsg && <p className="text-xs text-yvy-muted text-center">{searchMsg}</p>}
         </div>
       )}
 
@@ -567,16 +628,17 @@ export default function AdvancedTradeScreen() {
                 : `${previews.length} propostas encontradas`}
             </h3>
             <button
-              onClick={() => { setPreviews([]); setSearchMsg(null) }}
+              onClick={() => {
+                setPreviews([])
+                setSearchMsg(null)
+              }}
               className="text-xs text-yvy-muted underline"
             >
               Voltar
             </button>
           </div>
 
-          {searchMsg && (
-            <p className="text-xs text-red-600 text-center">{searchMsg}</p>
-          )}
+          {searchMsg && <p className="text-xs text-red-600 text-center">{searchMsg}</p>}
 
           {previews.map((preview, idx) => (
             <div
@@ -589,9 +651,16 @@ export default function AdvancedTradeScreen() {
                 <span className="text-[10px] font-bold uppercase tracking-wide text-yvy-muted">
                   Opção {idx + 1}
                 </span>
-                <span className="text-[10px] font-bold text-yvy-accent bg-yvy-accent/10 px-2 py-0.5 rounded-full">
-                  {preview.score} figurinha{preview.score !== 1 ? 's' : ''} cada
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {preview.previouslyCanceled && (
+                    <span className="text-[10px] font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+                      Cancelada anteriormente
+                    </span>
+                  )}
+                  <span className="text-[10px] font-bold text-yvy-accent bg-yvy-accent/10 px-2 py-0.5 rounded-full">
+                    {preview.score} figurinha{preview.score !== 1 ? 's' : ''} cada
+                  </span>
+                </div>
               </div>
 
               <div className="bg-rose-50/50 rounded-lg p-3 space-y-2 border border-rose-100">
@@ -625,8 +694,8 @@ export default function AdvancedTradeScreen() {
           ))}
 
           <p className="text-xs text-yvy-muted text-center leading-relaxed">
-            Ao confirmar, os outros 2 participantes receberão a proposta e precisarão aprovar
-            para a troca acontecer.
+            Ao confirmar, os outros 2 participantes receberão a proposta e precisarão aprovar para a
+            troca acontecer.
           </p>
         </div>
       )}

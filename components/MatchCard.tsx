@@ -82,6 +82,16 @@ function DetailModal({
           </button>
         </div>
 
+        {match.previouslyCanceled && (
+          <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
+            <span className="text-orange-500 text-sm shrink-0 mt-px">↩</span>
+            <p className="text-[11px] text-orange-800 leading-snug">
+              Uma troca com {match.name.split(' ')[0]} foi cancelada ou recusada anteriormente.
+              Confirme presencialmente antes de enviar novamente.
+            </p>
+          </div>
+        )}
+
         {/* Confirmation screen */}
         {confirming ? (
           <div className="space-y-4">
@@ -289,9 +299,7 @@ export default function MatchCard({
             <span className="text-white text-[11px] font-bold uppercase tracking-widest">
               Quase completo — Ajude!
             </span>
-            <span className="ml-auto text-white text-[11px] font-bold">
-              {match.completionPct}%
-            </span>
+            <span className="ml-auto text-white text-[11px] font-bold">{match.completionPct}%</span>
           </div>
         )}
 
@@ -336,6 +344,11 @@ export default function MatchCard({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {match.previouslyCanceled && (
+              <span className="text-[10px] font-semibold bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                Cancelada anteriormente
+              </span>
+            )}
             {!nearComplete && match.completionPct >= 85 && (
               <span className="text-[10px] font-semibold bg-amber-400/20 text-amber-700 px-2 py-1 rounded-full">
                 🎯 {match.completionPct}%
