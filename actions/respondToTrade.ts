@@ -45,7 +45,10 @@ export async function respondToTrade(
   let effectiveGivingIds = trade.giving_ids
   let effectiveReceivingIds = trade.receiving_ids
 
-  if (action === 'accept' && (partialMyGivingIds !== undefined || partialMyReceivingIds !== undefined)) {
+  if (
+    action === 'accept' &&
+    (partialMyGivingIds !== undefined || partialMyReceivingIds !== undefined)
+  ) {
     const resolvedMyGiving = partialMyGivingIds ?? []
     const resolvedMyReceiving = partialMyReceivingIds ?? []
 
@@ -70,8 +73,8 @@ export async function respondToTrade(
     }
 
     // Translate back to DB (initiator) perspective
-    effectiveGivingIds = resolvedMyReceiving   // what initiator gives = what receiver receives
-    effectiveReceivingIds = resolvedMyGiving   // what initiator wants = what receiver gives
+    effectiveGivingIds = resolvedMyReceiving // what initiator gives = what receiver receives
+    effectiveReceivingIds = resolvedMyGiving // what initiator wants = what receiver gives
   }
 
   const statusMap = { accept: 'accepted', reject: 'rejected', cancel: 'cancelled' } as const
@@ -146,11 +149,13 @@ export async function respondToTrade(
       })
     } else if (action === 'reject') {
       logAction(trade.receiver_id, 'trade_rejected', {
+        tradeId: trade.id,
         partnerName: initiatorName,
         givingIds: trade.receiving_ids,
         receivingIds: trade.giving_ids,
       })
       logAction(trade.initiator_id, 'trade_rejected', {
+        tradeId: trade.id,
         partnerName: receiverName,
         givingIds: trade.giving_ids,
         receivingIds: trade.receiving_ids,
@@ -158,11 +163,13 @@ export async function respondToTrade(
       })
     } else {
       logAction(trade.initiator_id, 'trade_cancelled', {
+        tradeId: trade.id,
         partnerName: receiverName,
         givingIds: trade.giving_ids,
         receivingIds: trade.receiving_ids,
       })
       logAction(trade.receiver_id, 'trade_cancelled', {
+        tradeId: trade.id,
         partnerName: initiatorName,
         givingIds: trade.receiving_ids,
         receivingIds: trade.giving_ids,

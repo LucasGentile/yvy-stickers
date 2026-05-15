@@ -26,24 +26,26 @@ export async function createTradeRequest(
 
   // Check that giving stickers have enough free copies (not fully reserved in other pending trades)
   if (givingIds.length > 0) {
-    const [{ data: existingTrades }, { data: dupes }, { data: advancedTrades }] = await Promise.all([
-      supabaseAdmin
-        .from('pending_trades')
-        .select('initiator_id, giving_ids, receiving_ids')
-        .or(`initiator_id.eq.${initiatorId},receiver_id.eq.${initiatorId}`)
-        .eq('status', 'pending'),
-      supabaseAdmin
-        .from('user_duplicates')
-        .select('sticker_id, count')
-        .eq('user_id', initiatorId)
-        .in('sticker_id', givingIds),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabaseAdmin as any)
-        .from('advanced_trades')
-        .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
-        .or(`user_a_id.eq.${initiatorId},user_b_id.eq.${initiatorId},user_c_id.eq.${initiatorId}`)
-        .eq('status', 'pending'),
-    ])
+    const [{ data: existingTrades }, { data: dupes }, { data: advancedTrades }] = await Promise.all(
+      [
+        supabaseAdmin
+          .from('pending_trades')
+          .select('initiator_id, giving_ids, receiving_ids')
+          .or(`initiator_id.eq.${initiatorId},receiver_id.eq.${initiatorId}`)
+          .eq('status', 'pending'),
+        supabaseAdmin
+          .from('user_duplicates')
+          .select('sticker_id, count')
+          .eq('user_id', initiatorId)
+          .in('sticker_id', givingIds),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabaseAdmin as any)
+          .from('advanced_trades')
+          .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
+          .or(`user_a_id.eq.${initiatorId},user_b_id.eq.${initiatorId},user_c_id.eq.${initiatorId}`)
+          .eq('status', 'pending'),
+      ]
+    )
 
     // Count how many copies of each sticker are already committed to pending trades
     const reservedCounts: Record<string, number> = {}
@@ -53,8 +55,12 @@ export async function createTradeRequest(
     }
     // Include advanced trade reservations
     for (const at of (advancedTrades ?? []) as Array<{
-      user_a_id: string; user_b_id: string; user_c_id: string
-      a_gives_ids: string[]; b_gives_ids: string[]; c_gives_ids: string[]
+      user_a_id: string
+      user_b_id: string
+      user_c_id: string
+      a_gives_ids: string[]
+      b_gives_ids: string[]
+      c_gives_ids: string[]
     }>) {
       let myGiving: string[] = []
       if (at.user_a_id === initiatorId) myGiving = at.a_gives_ids
@@ -81,24 +87,25 @@ export async function createTradeRequest(
 
   // Check that the receiver has enough free copies of the stickers they are expected to give
   if (receivingIds.length > 0) {
-    const [{ data: receiverTrades }, { data: receiverDupes }, { data: receiverAdvanced }] = await Promise.all([
-      supabaseAdmin
-        .from('pending_trades')
-        .select('initiator_id, giving_ids, receiving_ids')
-        .or(`initiator_id.eq.${receiverId},receiver_id.eq.${receiverId}`)
-        .eq('status', 'pending'),
-      supabaseAdmin
-        .from('user_duplicates')
-        .select('sticker_id, count')
-        .eq('user_id', receiverId)
-        .in('sticker_id', receivingIds),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabaseAdmin as any)
-        .from('advanced_trades')
-        .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
-        .or(`user_a_id.eq.${receiverId},user_b_id.eq.${receiverId},user_c_id.eq.${receiverId}`)
-        .eq('status', 'pending'),
-    ])
+    const [{ data: receiverTrades }, { data: receiverDupes }, { data: receiverAdvanced }] =
+      await Promise.all([
+        supabaseAdmin
+          .from('pending_trades')
+          .select('initiator_id, giving_ids, receiving_ids')
+          .or(`initiator_id.eq.${receiverId},receiver_id.eq.${receiverId}`)
+          .eq('status', 'pending'),
+        supabaseAdmin
+          .from('user_duplicates')
+          .select('sticker_id, count')
+          .eq('user_id', receiverId)
+          .in('sticker_id', receivingIds),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabaseAdmin as any)
+          .from('advanced_trades')
+          .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
+          .or(`user_a_id.eq.${receiverId},user_b_id.eq.${receiverId},user_c_id.eq.${receiverId}`)
+          .eq('status', 'pending'),
+      ])
 
     const receiverReserved: Record<string, number> = {}
     for (const trade of receiverTrades ?? []) {
@@ -107,8 +114,12 @@ export async function createTradeRequest(
     }
     // Include advanced trade reservations for receiver
     for (const at of (receiverAdvanced ?? []) as Array<{
-      user_a_id: string; user_b_id: string; user_c_id: string
-      a_gives_ids: string[]; b_gives_ids: string[]; c_gives_ids: string[]
+      user_a_id: string
+      user_b_id: string
+      user_c_id: string
+      a_gives_ids: string[]
+      b_gives_ids: string[]
+      c_gives_ids: string[]
     }>) {
       let theirGiving: string[] = []
       if (at.user_a_id === receiverId) theirGiving = at.a_gives_ids
@@ -156,6 +167,7 @@ export async function createTradeRequest(
     const initiatorName = formatName(users?.find((u) => u.id === initiatorId)?.name ?? 'Usuário')
     const receiverName = formatName(users?.find((u) => u.id === receiverId)?.name ?? 'Usuário')
     logAction(initiatorId, 'trade_sent', {
+      tradeId: data.id,
       partnerName: receiverName,
       givingIds,
       receivingIds,
@@ -163,6 +175,7 @@ export async function createTradeRequest(
       receivingCount: receivingIds.length,
     })
     logAction(receiverId, 'trade_received', {
+      tradeId: data.id,
       partnerName: initiatorName,
       givingIds: receivingIds,
       receivingIds: givingIds,

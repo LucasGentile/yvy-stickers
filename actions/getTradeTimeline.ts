@@ -6,7 +6,7 @@ import type { AuditEntry } from './getAuditLog'
 export type TradeTimeline = {
   entries: AuditEntry[]
   focusedEntryId: string
-  tradeId: string
+  tradeId: string | null
 }
 
 export async function getTradeTimeline(
@@ -25,7 +25,14 @@ export async function getTradeTimeline(
   if (!entry) return null
 
   const tradeId = (entry.metadata as Record<string, unknown>)?.tradeId as string | undefined
-  if (!tradeId) return null
+
+  if (!tradeId) {
+    return {
+      entries: [entry as AuditEntry],
+      focusedEntryId: entryId,
+      tradeId: null,
+    }
+  }
 
   const { data: related } = await supabaseAdmin
     .from('audit_log')
