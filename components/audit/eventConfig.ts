@@ -138,7 +138,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-purple-400',
     iconBg: 'bg-purple-50',
     iconColor: 'text-purple-600',
-    label: (m) => m.isSelf ? 'Você aprovou a troca triangular' : `${m.approvedBy} aprovou a troca triangular`,
+    label: (m) => (m.isSelf ?? !m.approvedBy) ? 'Você aprovou a troca triangular' : `${m.approvedBy} aprovou a troca triangular`,
     detail: (m) => `Com ${((m.partners as string[]) ?? []).join(' e ')}`,
   },
   advanced_trade_rejected: {
@@ -147,7 +147,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     iconBg: 'bg-red-50',
     iconColor: 'text-red-500',
     label: () => 'Troca triangular recusada',
-    detail: (m) => `${m.rejectedBy} recusou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
+    detail: (m) => `${m.rejectedBy ?? 'Alguém'} recusou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
   },
   advanced_trade_executed: {
     icon: '🤝',
@@ -170,7 +170,7 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     iconBg: 'bg-yvy-bg',
     iconColor: 'text-yvy-muted',
     label: () => 'Troca triangular cancelada',
-    detail: (m) => `${m.cancelledBy} cancelou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
+    detail: (m) => `${m.cancelledBy ?? 'Alguém'} cancelou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
   },
   duplicate_updated: {
     icon: '＋',
