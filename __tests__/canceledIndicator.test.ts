@@ -43,6 +43,8 @@ function makeOthersChain(data: unknown) {
 type CanceledTrade = {
   initiator_id: string
   receiver_id: string
+  giving_ids: string[]
+  receiving_ids: string[]
 }
 
 function setupMocks({
@@ -106,10 +108,10 @@ function setupMocks({
   })
 }
 
-describe('getMatches — previouslyCanceled flag', () => {
+describe('getMatches — canceledTrades details', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('sets previouslyCanceled=true when a trade with this partner was previously canceled', async () => {
+  it('includes canceled trade details when a trade with this partner was previously canceled', async () => {
     setupMocks({
       myStickers: [{ sticker_id: 'MEX1' }],
       myDupes: [{ sticker_id: 'MEX1', count: 2 }],
@@ -126,15 +128,18 @@ describe('getMatches — previouslyCanceled flag', () => {
           user_duplicates: [{ sticker_id: 'BRA1', count: 2 }],
         },
       ],
-      canceledTrades: [{ initiator_id: 'user-a', receiver_id: 'user-b' }],
+      canceledTrades: [
+        { initiator_id: 'user-a', receiver_id: 'user-b', giving_ids: ['MEX1'], receiving_ids: ['BRA1'] },
+      ],
     })
 
     const results = await getMatches('user-a')
     expect(results).toHaveLength(1)
-    expect(results[0].previouslyCanceled).toBe(true)
+    expect(results[0].canceledTrades).toHaveLength(1)
+    expect(results[0].canceledTrades[0]).toEqual({ giving: ['MEX1'], receiving: ['BRA1'] })
   })
 
-  it('sets previouslyCanceled=true when current user was the receiver of the canceled trade', async () => {
+  it('normalizes sticker perspective when current user was the receiver', async () => {
     setupMocks({
       myStickers: [{ sticker_id: 'MEX1' }],
       myDupes: [{ sticker_id: 'MEX1', count: 2 }],
@@ -151,15 +156,18 @@ describe('getMatches — previouslyCanceled flag', () => {
           user_duplicates: [{ sticker_id: 'BRA1', count: 2 }],
         },
       ],
-      canceledTrades: [{ initiator_id: 'user-b', receiver_id: 'user-a' }],
+      canceledTrades: [
+        { initiator_id: 'user-b', receiver_id: 'user-a', giving_ids: ['BRA1'], receiving_ids: ['MEX1'] },
+      ],
     })
 
     const results = await getMatches('user-a')
     expect(results).toHaveLength(1)
-    expect(results[0].previouslyCanceled).toBe(true)
+    expect(results[0].canceledTrades).toHaveLength(1)
+    expect(results[0].canceledTrades[0]).toEqual({ giving: ['MEX1'], receiving: ['BRA1'] })
   })
 
-  it('sets previouslyCanceled=false when no prior canceled trade exists with this partner', async () => {
+  it('returns empty canceledTrades array when no prior canceled trade exists', async () => {
     setupMocks({
       myStickers: [{ sticker_id: 'MEX1' }],
       myDupes: [{ sticker_id: 'MEX1', count: 2 }],
@@ -181,10 +189,10 @@ describe('getMatches — previouslyCanceled flag', () => {
 
     const results = await getMatches('user-a')
     expect(results).toHaveLength(1)
-    expect(results[0].previouslyCanceled).toBe(false)
+    expect(results[0].canceledTrades).toHaveLength(0)
   })
 
-  it('only marks the correct partner when multiple canceled trades exist', async () => {
+  it('only attaches canceled trades to the correct partner', async () => {
     setupMocks({
       myStickers: [{ sticker_id: 'MEX1' }],
       myDupes: [{ sticker_id: 'MEX1', count: 3 }],
@@ -212,14 +220,16 @@ describe('getMatches — previouslyCanceled flag', () => {
           user_duplicates: [{ sticker_id: 'ARG1', count: 2 }],
         },
       ],
-      canceledTrades: [{ initiator_id: 'user-a', receiver_id: 'user-b' }],
+      canceledTrades: [
+        { initiator_id: 'user-a', receiver_id: 'user-b', giving_ids: ['MEX1'], receiving_ids: ['BRA1'] },
+      ],
     })
 
     const results = await getMatches('user-a')
     expect(results).toHaveLength(2)
     const bob = results.find((r) => r.userId === 'user-b')!
     const carlos = results.find((r) => r.userId === 'user-c')!
-    expect(bob.previouslyCanceled).toBe(true)
-    expect(carlos.previouslyCanceled).toBe(false)
+    expect(bob.canceledTrades).toHaveLength(1)
+    expect(carlos.canceledTrades).toHaveLength(0)
   })
 })

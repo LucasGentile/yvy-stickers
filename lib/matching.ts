@@ -5,6 +5,11 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
 import { formatName } from '@/lib/format'
 
+export type CanceledTradeDetail = {
+  giving: string[]
+  receiving: string[]
+}
+
 export type MatchResult = {
   userId: string
   displayKey: string
@@ -19,7 +24,7 @@ export type MatchResult = {
   reciprocalStickers: string[]
   completionPct: number
   missingCount: number
-  previouslyCanceled: boolean
+  canceledTrades: CanceledTradeDetail[]
 }
 
 function computeNeeded(mode: string, marked: Set<string>): Set<string> {
@@ -67,7 +72,7 @@ export async function getMatches(
       .eq('status', 'pending'),
     supabaseAdmin
       .from('pending_trades')
-      .select('initiator_id, receiver_id')
+      .select('initiator_id, receiver_id, giving_ids, receiving_ids')
       .or(`initiator_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
       .in('status', ['cancelled', 'rejected']),
   ])
@@ -155,11 +160,17 @@ export async function getMatches(
       .map((r) => r.sticker_id)
   )
 
-  const canceledPartners = new Set(
-    (canceledTrades ?? []).map((t) =>
-      t.initiator_id === currentUserId ? t.receiver_id : t.initiator_id
-    )
-  )
+  const canceledByPartner = new Map<string, CanceledTradeDetail[]>()
+  for (const t of canceledTrades ?? []) {
+    const isInitiator = t.initiator_id === currentUserId
+    const partnerId = isInitiator ? t.receiver_id : t.initiator_id
+    const detail: CanceledTradeDetail = {
+      giving: isInitiator ? (t.giving_ids ?? []) : (t.receiving_ids ?? []),
+      receiving: isInitiator ? (t.receiving_ids ?? []) : (t.giving_ids ?? []),
+    }
+    if (!canceledByPartner.has(partnerId)) canceledByPartner.set(partnerId, [])
+    canceledByPartner.get(partnerId)!.push(detail)
+  }
 
   const results: MatchResult[] = others
     .map((user) => {
@@ -205,7 +216,7 @@ export async function getMatches(
         reciprocalStickers,
         completionPct,
         missingCount,
-        previouslyCanceled: canceledPartners.has(user.id),
+        canceledTrades: canceledByPartner.get(user.id) ?? [],
       }
     })
     .sort((a, b) => {
