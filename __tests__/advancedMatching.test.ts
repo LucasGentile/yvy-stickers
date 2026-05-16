@@ -346,4 +346,81 @@ describe('findAllAdvancedTrades', () => {
     const uniqueKeys = new Set(keys)
     expect(keys.length).toBe(uniqueKeys.size)
   })
+
+  it('excludes stickers from needed when incoming from a pending normal trade', async () => {
+    // A needs S[2], but already has a pending normal trade receiving S[2] from B
+    // C has S[2] available — but A should NOT need it for advanced trade
+    mockTradeData(
+      [
+        makeUser('user-a', 'have', [S[0], S[1]], [{ sticker_id: S[0], count: 2 }]),
+        makeUser('user-b', 'have', [S[0], S[2]], [{ sticker_id: S[2], count: 2 }]),
+        makeUser('user-c', 'have', [S[0], S[1]], [{ sticker_id: S[2], count: 2 }]),
+      ],
+      [
+        {
+          initiator_id: 'user-a',
+          receiver_id: 'user-b',
+          giving_ids: ['OTHER1'],
+          receiving_ids: [S[2]],
+        },
+      ]
+    )
+
+    const results = await findAllAdvancedTrades('user-a')
+    // A should not receive S[2] since it's already incoming
+    const myReceiving = results.flatMap((r) => r.cGivesIds)
+    expect(myReceiving).not.toContain(S[2])
+  })
+
+  it('excludes stickers from needed when incoming from a pending advanced trade', async () => {
+    // A needs S[3], but already has a pending advanced trade where C gives S[3] to A
+    mockTradeData(
+      [
+        makeUser('user-a', 'have', [S[0], S[1]], [{ sticker_id: S[0], count: 2 }]),
+        makeUser('user-b', 'have', [S[0], S[3]], [{ sticker_id: S[3], count: 2 }]),
+        makeUser('user-c', 'have', [S[0], S[1]], [{ sticker_id: S[3], count: 2 }]),
+      ],
+      [],
+      [
+        {
+          user_a_id: 'user-a',
+          user_b_id: 'user-x',
+          user_c_id: 'user-y',
+          a_gives_ids: ['OTHER1'],
+          b_gives_ids: ['OTHER2'],
+          c_gives_ids: [S[3]],
+        },
+      ]
+    )
+
+    const results = await findAllAdvancedTrades('user-a')
+    // A should not receive S[3] since it's already incoming from another advanced trade
+    const myReceiving = results.flatMap((r) => r.cGivesIds)
+    expect(myReceiving).not.toContain(S[3])
+  })
+
+  it('does not suggest stickers to B that B is already receiving from a pending normal trade', async () => {
+    // B needs S[4] but has a pending trade receiving it from someone
+    // A has S[4] available — but B should not "need" it
+    mockTradeData(
+      [
+        makeUser('user-a', 'have', [S[0], S[1], S[4]], [{ sticker_id: S[4], count: 2 }]),
+        makeUser('user-b', 'have', [S[0], S[1]], [{ sticker_id: S[1], count: 2 }]),
+        makeUser('user-c', 'have', [S[0], S[4]], [{ sticker_id: S[0], count: 2 }]),
+      ],
+      [
+        {
+          initiator_id: 'user-z',
+          receiver_id: 'user-b',
+          giving_ids: [S[4]],
+          receiving_ids: ['OTHER1'],
+        },
+      ]
+    )
+
+    const results = await findAllAdvancedTrades('user-a')
+    // A should not give S[4] to B since B is already receiving it
+    const aGivestoB = results.filter((r) => r.userBId === 'user-b').flatMap((r) => r.aGivesIds)
+    expect(aGivestoB).not.toContain(S[4])
+  })
 })
