@@ -106,6 +106,8 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Antes de aceitar, o app lembra de confirmar presencialmente com o outro morador
 - Figurinhas nos cards de troca são coloridas: _vermelho_ = você dá, _verde_ = você recebe (com setas indicando direção); os rótulos mostram o total (ex: "Você deu 12")
 - Trocas concluídas ficam no final da página em uma seção recolhível e paginada (3 por vez), ordenadas da mais recente para a mais antiga
+- Filtro por parceiro: chips com os nomes de quem você já trocou aparecem no topo — toque para filtrar, toque de novo para ver todas
+- Filtro "apenas não verificadas" (chip amber): mostra somente trocas que ainda não foram entregues fisicamente; combina com o filtro de parceiro
 - O _Assistente de troca_ dentro de cada troca concluída permite marcar figurinhas já separadas; ao pressionar _"Completar"_, a troca é marcada como verificada (indicador verde ✓ ao lado de "Troca concluída")
 
 🔄 _5. Troca Avançada (Triangular)_
@@ -122,7 +124,7 @@ Quando uma troca direta não é possível, o app busca automaticamente ciclos de
 - Figurinhas recebidas via troca avançada aparecem com fundo _azul_ no álbum
 - O botão de atualizar (↻) no topo re-busca propostas e atualiza o status das pendentes
 - Quando não há combinações disponíveis, o botão de busca fica desabilitado com uma explicação
-- Trocas concluídas ficam em uma seção recolhível e paginada
+- Trocas concluídas ficam em uma seção recolhível e paginada, com os mesmos filtros de parceiro e verificação disponíveis na tela de trocas normais
 - O Histórico mostra figurinhas dadas em _vermelho_, recebidas em _verde_ e do terceiro participante em _azul_
 - Exemplo: você dá para A, A dá para B, B dá para você — todos ganham figurinhas que precisam
 
@@ -259,7 +261,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (180 testes, 16 suítes)
+npm test                  # roda todos os testes (~250 testes, 27 suítes)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```
@@ -293,6 +295,7 @@ supabase db push
 | 012_deactivate_visitantes   | Desativa (`approved = false`) usuários com "visitante" no nome                                  |
 | 013_advanced_trade          | Tabela `advanced_trades` para trocas triangulares (3 participantes, ciclo A→B→C→A)              |
 | 014_backfill_audit_trade_id | Backfill `tradeId` em `metadata` de entradas antigas + índice parcial em `metadata->>'tradeId'` |
+| 015_trade_verified          | Coluna `verified_at` em `pending_trades` para marcar trocas entregues fisicamente               |
 
 ### Variáveis de ambiente
 
