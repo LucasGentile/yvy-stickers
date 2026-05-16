@@ -5,6 +5,7 @@ import { getAuditLog, type AuditEntry } from '@/actions/getAuditLog'
 import { getTradeLog } from '@/actions/getTradeLog'
 import { EventCard } from './audit/EventCard'
 import { groupByDay, consolidateActivity, EVENT_CONFIG } from './audit/eventConfig'
+import { Pagination } from './Pagination'
 
 const TRADE_PAGE_SIZE = 3
 const ACTIVITY_PAGE_SIZE = 10
@@ -114,27 +115,7 @@ export default function AuditScreen() {
               ))}
             </div>
 
-            {tradeTotalPages > 1 && (
-              <div className="flex items-center justify-between pt-1">
-                <button
-                  onClick={() => setTradePage((p) => Math.max(0, p - 1))}
-                  disabled={tradePage === 0}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  ← Anterior
-                </button>
-                <span className="text-xs text-yvy-muted">
-                  {tradePage + 1} / {tradeTotalPages}
-                </span>
-                <button
-                  onClick={() => setTradePage((p) => Math.min(tradeTotalPages - 1, p + 1))}
-                  disabled={tradePage === tradeTotalPages - 1}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  Próxima →
-                </button>
-              </div>
-            )}
+            <Pagination page={tradePage} totalPages={tradeTotalPages} onPageChange={setTradePage} />
           </>
         )}
       </div>
@@ -168,27 +149,7 @@ export default function AuditScreen() {
             ))}
           </div>
 
-          {activityTotalPages > 1 && (
-            <div className="flex items-center justify-between pt-1">
-              <button
-                onClick={() => setActivityPage((p) => Math.max(0, p - 1))}
-                disabled={activityPage === 0}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                ← Anterior
-              </button>
-              <span className="text-xs text-yvy-muted">
-                {activityPage + 1} / {activityTotalPages}
-              </span>
-              <button
-                onClick={() => setActivityPage((p) => Math.min(activityTotalPages - 1, p + 1))}
-                disabled={activityPage === activityTotalPages - 1}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-yvy-muted border border-yvy-border hover:bg-yvy-bg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                Próxima →
-              </button>
-            </div>
-          )}
+          <Pagination page={activityPage} totalPages={activityTotalPages} onPageChange={setActivityPage} />
         </div>
       )}
     </div>

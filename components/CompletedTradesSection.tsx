@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { RecentTrade } from '@/actions/getPendingTrades'
 import { RecentTradeCard } from './trades/RecentTradeCard'
 import { PartnerChip, VerifiedFilterChip, FilterChipDivider } from './FilterChips'
+import { Pagination } from './Pagination'
 
 const PAGE_SIZE = 3
 
@@ -113,27 +114,7 @@ export function CompletedTradesSection({
                 />
               ))}
 
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-3">
-                  <button
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={safePage === 0}
-                    className="text-xs text-yvy-muted disabled:opacity-30"
-                  >
-                    ← Anterior
-                  </button>
-                  <span className="text-[10px] text-yvy-muted">
-                    {safePage + 1} / {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                    disabled={safePage === totalPages - 1}
-                    className="text-xs text-yvy-muted disabled:opacity-30"
-                  >
-                    Próxima →
-                  </button>
-                </div>
-              )}
+              <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
             </>
           )}
         </div>
