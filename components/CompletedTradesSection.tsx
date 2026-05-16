@@ -18,6 +18,7 @@ export function CompletedTradesSection({
   const [expanded, setExpanded] = useState(false)
   const [page, setPage] = useState(0)
   const [selectedPartner, setSelectedPartner] = useState<string | null>(null)
+  const [onlyUnverified, setOnlyUnverified] = useState(false)
 
   if (trades.length === 0) return null
 
@@ -25,9 +26,13 @@ export function CompletedTradesSection({
     a.localeCompare(b, 'pt-BR')
   )
 
-  const filtered = selectedPartner
+  let filtered = selectedPartner
     ? trades.filter((t) => t.otherUserName === selectedPartner)
     : trades
+
+  if (onlyUnverified) {
+    filtered = filtered.filter((t) => !t.verified)
+  }
 
   const sorted = [...filtered].sort(
     (a, b) => new Date(b.acceptedAt).getTime() - new Date(a.acceptedAt).getTime()
@@ -84,9 +89,24 @@ export function CompletedTradesSection({
             </div>
           )}
 
+          <label className="flex items-center gap-2 cursor-pointer select-none pl-1">
+            <input
+              type="checkbox"
+              checked={onlyUnverified}
+              onChange={(e) => {
+                setOnlyUnverified(e.target.checked)
+                setPage(0)
+              }}
+              className="w-4.5 h-4.5 accent-yvy-accent"
+            />
+            <span className="text-xs text-yvy-muted font-medium">Apenas não verificadas</span>
+          </label>
+
           {sorted.length === 0 ? (
             <p className="text-xs text-yvy-muted text-center py-4">
-              Nenhuma troca concluída com {selectedPartner}.
+              {onlyUnverified
+                ? 'Todas as trocas já foram verificadas.'
+                : `Nenhuma troca concluída com ${selectedPartner}.`}
             </p>
           ) : (
             <>

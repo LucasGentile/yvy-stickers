@@ -7,9 +7,9 @@ vi.mock('@/lib/supabaseAdmin', () => ({ supabaseAdmin: { from: vi.fn() } }))
 
 vi.mock('@/actions/getPendingTrades', () => ({}))
 
-vi.mock('@/actions/rollbackTrade', () => ({
-  rollbackTrade: vi.fn(),
-}))
+vi.mock('@/actions/rollbackTrade', () => ({ rollbackTrade: vi.fn() }))
+vi.mock('@/actions/getTradeRollbackInfo', () => ({ getTradeRollbackInfo: vi.fn() }))
+vi.mock('@/actions/verifyTrade', () => ({ verifyTrade: vi.fn() }))
 
 vi.mock('@/lib/stickers', () => ({
   isChromeSticker: () => false,
@@ -42,9 +42,25 @@ function makeTrade(overrides: Partial<RecentTrade> = {}): RecentTrade {
   }
 }
 
+const localStorageMock = (() => {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => {
+      store[key] = value
+    },
+    clear: () => {
+      store = {}
+    },
+  }
+})()
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
+
 describe('CompletedTradesSection — partner filter', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    localStorageMock.clear()
+    localStorageMock.setItem('userId', 'user-a')
   })
 
   it('shows partner filter chips when multiple partners exist', () => {
@@ -137,5 +153,71 @@ describe('CompletedTradesSection — partner filter', () => {
     fireEvent.click(getChip('Alice'))
 
     expect(screen.getByText(/2 com Alice/)).toBeInTheDocument()
+  })
+})
+
+describe('CompletedTradesSection — verified filter', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorageMock.clear()
+    localStorageMock.setItem('userId', 'user-1')
+  })
+
+  it('shows all trades by default when expanded', () => {
+    const trades = [
+      makeTrade({ id: '1', otherUserName: 'Ana', verified: true }),
+      makeTrade({ id: '2', otherUserName: 'Bob', verified: false }),
+    ]
+
+    render(<CompletedTradesSection trades={trades} userId="user-1" onRefresh={vi.fn()} />)
+
+    fireEvent.click(screen.getByText(/Trocas concluídas/))
+
+    expect(screen.getAllByText('Ana').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Bob').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('filter checkbox is unchecked by default', () => {
+    const trades = [makeTrade({ id: '1', otherUserName: 'Ana', verified: true })]
+
+    render(<CompletedTradesSection trades={trades} userId="user-1" onRefresh={vi.fn()} />)
+
+    fireEvent.click(screen.getByText(/Trocas concluídas/))
+
+    const checkbox = screen.getByRole('checkbox')
+    expect(checkbox).not.toBeChecked()
+  })
+
+  it('filters to only unverified trades when checkbox is checked', () => {
+    const trades = [
+      makeTrade({ id: '1', otherUserName: 'Ana', verified: true, myGivingIds: ['ANA1'] }),
+      makeTrade({ id: '2', otherUserName: 'Bob', verified: false, myGivingIds: ['BOB1'] }),
+      makeTrade({ id: '3', otherUserName: 'Carlos', verified: false, myGivingIds: ['CAR1'] }),
+    ]
+
+    const { container } = render(
+      <CompletedTradesSection trades={trades} userId="user-1" onRefresh={vi.fn()} />
+    )
+
+    fireEvent.click(screen.getByText(/Trocas concluídas/))
+    fireEvent.click(screen.getByRole('checkbox'))
+
+    expect(container.textContent).not.toContain('ANA1')
+    expect(container.textContent).toContain('BOB1')
+    expect(container.textContent).toContain('CAR1')
+  })
+
+  it('shows empty message when all trades are verified and filter is on', () => {
+    const trades = [
+      makeTrade({ id: '1', otherUserName: 'Ana', verified: true }),
+      makeTrade({ id: '2', otherUserName: 'Bob', verified: true }),
+    ]
+
+    render(<CompletedTradesSection trades={trades} userId="user-1" onRefresh={vi.fn()} />)
+
+    fireEvent.click(screen.getByText(/Trocas concluídas/))
+    fireEvent.click(screen.getByRole('checkbox'))
+
+    expect(screen.getByText(/Todas as trocas já foram verificadas/)).toBeInTheDocument()
   })
 })
