@@ -318,36 +318,39 @@ function CompletedTradesSection({
 
       {expanded && (
         <div className="space-y-3">
-          {partnerNames.length > 1 && (
-            <div className="flex flex-wrap gap-1.5">
-              {partnerNames.map((name) => (
-                <button
-                  key={name}
-                  onClick={() => handlePartnerSelect(name)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
-                    selectedPartner === name
-                      ? 'bg-yvy-dark text-white'
-                      : 'bg-yvy-bg text-yvy-muted border border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
-                  }`}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <label className="flex items-center gap-2 cursor-pointer select-none pl-1">
-            <input
-              type="checkbox"
-              checked={onlyUnverified}
-              onChange={(e) => {
-                setOnlyUnverified(e.target.checked)
+          <div className="flex flex-wrap items-center gap-1.5">
+            {partnerNames.length > 1 && (
+              <>
+                {partnerNames.map((name) => (
+                  <button
+                    key={name}
+                    onClick={() => handlePartnerSelect(name)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
+                      selectedPartner === name
+                        ? 'bg-yvy-dark text-white'
+                        : 'bg-yvy-bg text-yvy-muted border border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+                <span className="w-px h-4 bg-yvy-border mx-1" />
+              </>
+            )}
+            <button
+              onClick={() => {
+                setOnlyUnverified((v) => !v)
                 setPage(0)
               }}
-              className="w-4.5 h-4.5 accent-yvy-accent"
-            />
-            <span className="text-xs text-yvy-muted font-medium">Apenas não verificadas</span>
-          </label>
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
+                onlyUnverified
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-yvy-bg text-amber-700 border border-amber-300 hover:border-amber-500'
+              }`}
+            >
+              Apenas não verificadas
+            </button>
+          </div>
 
           {sorted.length === 0 ? (
             <p className="text-xs text-yvy-muted text-center py-4">

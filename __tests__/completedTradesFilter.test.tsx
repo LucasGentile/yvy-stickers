@@ -83,7 +83,7 @@ describe('CompletedTradesSection — partner filter', () => {
     expect(chipLabels).toContain('Carlos')
   })
 
-  it('does not show filter chips when only one partner exists', () => {
+  it('does not show partner filter chips when only one partner exists', () => {
     const trades = [
       makeTrade({ otherUserName: 'Alice' }),
       makeTrade({ otherUserName: 'Alice' }),
@@ -93,8 +93,8 @@ describe('CompletedTradesSection — partner filter', () => {
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
 
-    const chips = screen.getAllByRole('button').filter((btn) =>
-      btn.className.includes('rounded-full')
+    const chips = screen.getAllByRole('button').filter(
+      (btn) => btn.className.includes('rounded-full') && btn.textContent !== 'Apenas não verificadas'
     )
     expect(chips).toHaveLength(0)
   })
@@ -177,18 +177,19 @@ describe('CompletedTradesSection — verified filter', () => {
     expect(screen.getAllByText('Bob').length).toBeGreaterThanOrEqual(1)
   })
 
-  it('filter checkbox is unchecked by default', () => {
+  it('verified filter chip is inactive by default', () => {
     const trades = [makeTrade({ id: '1', otherUserName: 'Ana', verified: true })]
 
     render(<CompletedTradesSection trades={trades} userId="user-1" onRefresh={vi.fn()} />)
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
 
-    const checkbox = screen.getByRole('checkbox')
-    expect(checkbox).not.toBeChecked()
+    const chip = screen.getByText('Apenas não verificadas')
+    expect(chip.className).toContain('border-amber-300')
+    expect(chip.className).not.toContain('bg-amber-500')
   })
 
-  it('filters to only unverified trades when checkbox is checked', () => {
+  it('filters to only unverified trades when chip is active', () => {
     const trades = [
       makeTrade({ id: '1', otherUserName: 'Ana', verified: true, myGivingIds: ['ANA1'] }),
       makeTrade({ id: '2', otherUserName: 'Bob', verified: false, myGivingIds: ['BOB1'] }),
@@ -200,7 +201,7 @@ describe('CompletedTradesSection — verified filter', () => {
     )
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
-    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByText('Apenas não verificadas'))
 
     expect(container.textContent).not.toContain('ANA1')
     expect(container.textContent).toContain('BOB1')
@@ -216,7 +217,7 @@ describe('CompletedTradesSection — verified filter', () => {
     render(<CompletedTradesSection trades={trades} userId="user-1" onRefresh={vi.fn()} />)
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
-    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByText('Apenas não verificadas'))
 
     expect(screen.getByText(/Todas as trocas já foram verificadas/)).toBeInTheDocument()
   })
