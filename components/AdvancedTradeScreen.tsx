@@ -10,6 +10,7 @@ import { verifyTrade } from '@/actions/verifyTrade'
 import { StickerList } from '@/components/trades/StickerList'
 import { ColorLegend } from '@/components/trades/ColorLegend'
 import { TradeAssistant } from '@/components/audit/TradeAssistant'
+import { PartnerChip, VerifiedFilterChip, FilterChipDivider } from '@/components/FilterChips'
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'approved') {
@@ -247,6 +248,15 @@ function TradeCard({
 
 const COMPLETED_PAGE_SIZE = 3
 
+function getAdvancedPartnerNames(trades: AdvancedTradeView[]) {
+  const names = new Set<string>()
+  for (const t of trades) {
+    names.add(t.giveTo.name)
+    names.add(t.receiveFrom.name)
+  }
+  return [...names].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+}
+
 function CompletedTradesSection({
   trades,
   userId,
@@ -258,16 +268,32 @@ function CompletedTradesSection({
 }) {
   const [expanded, setExpanded] = useState(false)
   const [page, setPage] = useState(0)
+  const [selectedPartner, setSelectedPartner] = useState<string | null>(null)
   const [onlyUnverified, setOnlyUnverified] = useState(false)
 
-  const sorted = [...trades].sort(
+  const partnerNames = getAdvancedPartnerNames(trades)
+
+  let filtered = selectedPartner
+    ? trades.filter((t) => t.giveTo.name === selectedPartner || t.receiveFrom.name === selectedPartner)
+    : trades
+
+  if (onlyUnverified) {
+    filtered = filtered.filter((t) => !t.verified)
+  }
+
+  const sorted = [...filtered].sort(
     (a, b) => new Date(b.acceptedAt ?? 0).getTime() - new Date(a.acceptedAt ?? 0).getTime()
   )
-  const filtered = onlyUnverified ? sorted.filter((t) => !t.verified) : sorted
-  const totalPages = Math.ceil(filtered.length / COMPLETED_PAGE_SIZE)
+  const totalPages = Math.ceil(sorted.length / COMPLETED_PAGE_SIZE)
+  const safePage = Math.min(page, Math.max(0, totalPages - 1))
   const visible = expanded
-    ? filtered.slice(page * COMPLETED_PAGE_SIZE, (page + 1) * COMPLETED_PAGE_SIZE)
+    ? sorted.slice(safePage * COMPLETED_PAGE_SIZE, (safePage + 1) * COMPLETED_PAGE_SIZE)
     : []
+
+  function handlePartnerSelect(name: string) {
+    setSelectedPartner((prev) => (prev === name ? null : name))
+    setPage(0)
+  }
 
   return (
     <div className="space-y-2">
@@ -281,27 +307,46 @@ function CompletedTradesSection({
         >
           ▶
         </span>
-        <h3 className="text-sm font-bold text-yvy-muted">Trocas concluídas ({trades.length})</h3>
+        <h3 className="text-sm font-bold text-yvy-muted">
+          Trocas concluídas ({trades.length})
+          {selectedPartner && (
+            <span className="font-normal text-xs ml-1">
+              · {filtered.length} com {selectedPartner}
+            </span>
+          )}
+        </h3>
       </button>
 
       {expanded && (
         <div className="space-y-3">
-          <label className="flex items-center gap-2 cursor-pointer select-none pl-1">
-            <input
-              type="checkbox"
-              checked={onlyUnverified}
-              onChange={(e) => {
-                setOnlyUnverified(e.target.checked)
+          <div className="flex flex-wrap items-center gap-1.5">
+            {partnerNames.length > 1 && (
+              <>
+                {partnerNames.map((name) => (
+                  <PartnerChip
+                    key={name}
+                    name={name}
+                    selected={selectedPartner === name}
+                    onSelect={() => handlePartnerSelect(name)}
+                  />
+                ))}
+                <FilterChipDivider />
+              </>
+            )}
+            <VerifiedFilterChip
+              active={onlyUnverified}
+              onToggle={() => {
+                setOnlyUnverified((v) => !v)
                 setPage(0)
               }}
-              className="w-4.5 h-4.5 accent-yvy-accent"
             />
-            <span className="text-xs text-yvy-muted font-medium">Apenas não verificadas</span>
-          </label>
+          </div>
 
-          {filtered.length === 0 ? (
-            <p className="text-xs text-yvy-muted text-center py-3">
-              Todas as trocas já foram verificadas.
+          {sorted.length === 0 ? (
+            <p className="text-xs text-yvy-muted text-center py-4">
+              {onlyUnverified
+                ? 'Todas as trocas já foram verificadas.'
+                : `Nenhuma troca concluída com ${selectedPartner}.`}
             </p>
           ) : (
             <>
@@ -313,17 +358,17 @@ function CompletedTradesSection({
                 <div className="flex items-center justify-center gap-3">
                   <button
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={page === 0}
+                    disabled={safePage === 0}
                     className="text-xs text-yvy-muted disabled:opacity-30"
                   >
                     ← Anterior
                   </button>
                   <span className="text-[10px] text-yvy-muted">
-                    {page + 1} / {totalPages}
+                    {safePage + 1} / {totalPages}
                   </span>
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                    disabled={page === totalPages - 1}
+                    disabled={safePage === totalPages - 1}
                     className="text-xs text-yvy-muted disabled:opacity-30"
                   >
                     Próxima →
