@@ -10,6 +10,7 @@ import { verifyTrade } from '@/actions/verifyTrade'
 import { StickerList } from '@/components/trades/StickerList'
 import { ColorLegend } from '@/components/trades/ColorLegend'
 import { TradeAssistant } from '@/components/audit/TradeAssistant'
+import { PartnerChip, VerifiedFilterChip, FilterChipDivider } from '@/components/FilterChips'
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'approved') {
@@ -322,34 +323,23 @@ function CompletedTradesSection({
             {partnerNames.length > 1 && (
               <>
                 {partnerNames.map((name) => (
-                  <button
+                  <PartnerChip
                     key={name}
-                    onClick={() => handlePartnerSelect(name)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
-                      selectedPartner === name
-                        ? 'bg-yvy-dark text-white'
-                        : 'bg-yvy-bg text-yvy-muted border border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
-                    }`}
-                  >
-                    {name}
-                  </button>
+                    name={name}
+                    selected={selectedPartner === name}
+                    onSelect={() => handlePartnerSelect(name)}
+                  />
                 ))}
-                <span className="w-px h-4 bg-yvy-border mx-1" />
+                <FilterChipDivider />
               </>
             )}
-            <button
-              onClick={() => {
+            <VerifiedFilterChip
+              active={onlyUnverified}
+              onToggle={() => {
                 setOnlyUnverified((v) => !v)
                 setPage(0)
               }}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
-                onlyUnverified
-                  ? 'bg-amber-500 text-white'
-                  : 'bg-yvy-bg text-amber-700 border border-amber-300 hover:border-amber-500'
-              }`}
-            >
-              Apenas não verificadas
-            </button>
+            />
           </div>
 
           {sorted.length === 0 ? (
