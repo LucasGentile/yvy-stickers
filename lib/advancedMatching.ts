@@ -65,6 +65,46 @@ function getReservedCounts(
   return reserved
 }
 
+function getIncomingStickers(
+  userId: string,
+  pendingNormalTrades: Array<{
+    initiator_id: string
+    receiver_id: string
+    giving_ids: string[]
+    receiving_ids: string[]
+  }>,
+  pendingAdvancedTrades: Array<{
+    user_a_id: string
+    user_b_id: string
+    user_c_id: string
+    a_gives_ids: string[]
+    b_gives_ids: string[]
+    c_gives_ids: string[]
+  }>
+): Set<string> {
+  const incoming = new Set<string>()
+
+  for (const trade of pendingNormalTrades) {
+    if (trade.initiator_id === userId) {
+      for (const id of trade.receiving_ids ?? []) incoming.add(id)
+    } else if (trade.receiver_id === userId) {
+      for (const id of trade.giving_ids ?? []) incoming.add(id)
+    }
+  }
+
+  for (const trade of pendingAdvancedTrades) {
+    if (trade.user_a_id === userId) {
+      for (const id of trade.c_gives_ids ?? []) incoming.add(id)
+    } else if (trade.user_b_id === userId) {
+      for (const id of trade.a_gives_ids ?? []) incoming.add(id)
+    } else if (trade.user_c_id === userId) {
+      for (const id of trade.b_gives_ids ?? []) incoming.add(id)
+    }
+  }
+
+  return incoming
+}
+
 function getAvailableDuplicates(
   user: UserTradeData,
   reserved: Map<string, number>
@@ -161,8 +201,11 @@ export async function checkAdvancedTradeEligibility(userId: string): Promise<boo
   if (!me) return false
 
   const myReserved = getReservedCounts(userId, pendingNormalTrades, pendingAdvancedTrades)
+  const myIncoming = getIncomingStickers(userId, pendingNormalTrades, pendingAdvancedTrades)
   const myAvailableDupes = getAvailableDuplicates(me, myReserved)
-  const myNeeded = computeNeeded(me.inputMode, me.stickers)
+  const myNeeded = new Set(
+    [...computeNeeded(me.inputMode, me.stickers)].filter((id) => !myIncoming.has(id))
+  )
 
   if (myAvailableDupes.size === 0 || myNeeded.size === 0) return false
 
@@ -171,7 +214,10 @@ export async function checkAdvancedTradeEligibility(userId: string): Promise<boo
   // potentialReceivers: users who need at least one of my available dupes
   const potentialReceivers: Array<{ user: UserTradeData; available: Set<string> }> = []
   for (const other of others) {
-    const otherNeeded = computeNeeded(other.inputMode, other.stickers)
+    const otherIncoming = getIncomingStickers(other.id, pendingNormalTrades, pendingAdvancedTrades)
+    const otherNeeded = new Set(
+      [...computeNeeded(other.inputMode, other.stickers)].filter((id) => !otherIncoming.has(id))
+    )
     const iCanGive = [...myAvailableDupes].some((id) => otherNeeded.has(id))
     if (iCanGive) {
       const otherReserved = getReservedCounts(other.id, pendingNormalTrades, pendingAdvancedTrades)
@@ -199,7 +245,10 @@ export async function checkAdvancedTradeEligibility(userId: string): Promise<boo
 
     for (const giver of potentialGivers) {
       if (giver.user.id === receiver.user.id) continue
-      const giverNeeded = computeNeeded(giver.user.inputMode, giver.user.stickers)
+      const giverIncoming = getIncomingStickers(giver.user.id, pendingNormalTrades, pendingAdvancedTrades)
+      const giverNeeded = new Set(
+        [...computeNeeded(giver.user.inputMode, giver.user.stickers)].filter((id) => !giverIncoming.has(id))
+      )
       const canClose = [...receiverAvailable].some((id) => giverNeeded.has(id))
       if (canClose) return true
     }
@@ -221,8 +270,11 @@ export async function findAllAdvancedTrades(
   if (!me) return []
 
   const myReserved = getReservedCounts(userId, pendingNormalTrades, pendingAdvancedTrades)
+  const myIncoming = getIncomingStickers(userId, pendingNormalTrades, pendingAdvancedTrades)
   const myAvailableDupes = getAvailableDuplicates(me, myReserved)
-  const myNeeded = computeNeeded(me.inputMode, me.stickers)
+  const myNeeded = new Set(
+    [...computeNeeded(me.inputMode, me.stickers)].filter((id) => !myIncoming.has(id))
+  )
 
   if (myAvailableDupes.size === 0 || myNeeded.size === 0) return []
 
@@ -234,8 +286,11 @@ export async function findAllAdvancedTrades(
   // Try all pairs (B, C) where A→B, B→C, C→A
   for (const userB of others) {
     const bReserved = getReservedCounts(userB.id, pendingNormalTrades, pendingAdvancedTrades)
+    const bIncoming = getIncomingStickers(userB.id, pendingNormalTrades, pendingAdvancedTrades)
     const bAvailableDupes = getAvailableDuplicates(userB, bReserved)
-    const bNeeded = computeNeeded(userB.inputMode, userB.stickers)
+    const bNeeded = new Set(
+      [...computeNeeded(userB.inputMode, userB.stickers)].filter((id) => !bIncoming.has(id))
+    )
 
     // A→B: my dupes that B needs
     const aToB = [...myAvailableDupes].filter((id) => bNeeded.has(id))
@@ -249,8 +304,11 @@ export async function findAllAdvancedTrades(
       if (seen.has(key)) continue
 
       const cReserved = getReservedCounts(userC.id, pendingNormalTrades, pendingAdvancedTrades)
+      const cIncoming = getIncomingStickers(userC.id, pendingNormalTrades, pendingAdvancedTrades)
       const cAvailableDupes = getAvailableDuplicates(userC, cReserved)
-      const cNeeded = computeNeeded(userC.inputMode, userC.stickers)
+      const cNeeded = new Set(
+        [...computeNeeded(userC.inputMode, userC.stickers)].filter((id) => !cIncoming.has(id))
+      )
 
       // B→C: B's dupes that C needs
       const bToC = [...bAvailableDupes].filter((id) => cNeeded.has(id))
