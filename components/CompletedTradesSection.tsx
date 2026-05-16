@@ -1,65 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import type { RecentTrade } from '@/actions/getPendingTrades'
-import { getAdvancedTrades, AdvancedTradeView } from '@/actions/getAdvancedTrades'
 import { RecentTradeCard } from './trades/RecentTradeCard'
-import { StickerChip } from './StickerChip'
 
 const PAGE_SIZE = 3
-
-type CompletedAdvancedTrade = AdvancedTradeView & { type: 'advanced' }
-type CompletedNormalTrade = RecentTrade & { type: 'normal' }
-type CompletedTrade = CompletedAdvancedTrade | CompletedNormalTrade
-
-function AdvancedTradeCard({ trade }: { trade: CompletedAdvancedTrade }) {
-  return (
-    <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-3 space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-purple-700">Troca triangular</span>
-        <span className="text-[10px] text-yvy-muted ml-auto">
-          {new Date(trade.acceptedAt ?? trade.createdAt).toLocaleDateString('pt-BR')}
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-2 text-[11px]">
-        <div>
-          <p className="text-yvy-muted font-semibold uppercase tracking-wide mb-1">Você deu →</p>
-          <div className="flex flex-wrap gap-1">
-            {trade.myGivingIds.map((id) => (
-              <StickerChip key={id} id={id} variant="giving" />
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-yvy-muted font-semibold uppercase tracking-wide mb-1">← Você recebeu</p>
-          <div className="flex flex-wrap gap-1">
-            {trade.myReceivingIds.map((id) => (
-              <StickerChip key={id} id={id} variant="receiving" />
-            ))}
-          </div>
-        </div>
-      </div>
-      <p className="text-[10px] text-purple-600">
-        Com {trade.giveTo.name} e {trade.receiveFrom.name}
-      </p>
-    </div>
-  )
-}
-
-function getPartnerNames(trades: RecentTrade[], advancedTrades: AdvancedTradeView[]) {
-  const names = new Set<string>()
-  for (const t of trades) names.add(t.otherUserName)
-  for (const t of advancedTrades) {
-    names.add(t.giveTo.name)
-    names.add(t.receiveFrom.name)
-  }
-  return [...names].sort((a, b) => a.localeCompare(b, 'pt-BR'))
-}
-
-function tradeInvolvesPartner(trade: CompletedTrade, partner: string) {
-  if (trade.type === 'normal') return trade.otherUserName === partner
-  return trade.giveTo.name === partner || trade.receiveFrom.name === partner
-}
 
 export function CompletedTradesSection({
   trades,
@@ -73,36 +18,20 @@ export function CompletedTradesSection({
   const [expanded, setExpanded] = useState(false)
   const [page, setPage] = useState(0)
   const [selectedPartner, setSelectedPartner] = useState<string | null>(null)
-  const [advancedTrades, setAdvancedTrades] = useState<AdvancedTradeView[]>([])
 
-  const loadAdvanced = useCallback(async () => {
-    const all = await getAdvancedTrades(userId)
-    setAdvancedTrades(all.filter((t) => t.status === 'accepted'))
-  }, [userId])
+  if (trades.length === 0) return null
 
-  useEffect(() => {
-    loadAdvanced()
-  }, [loadAdvanced])
-
-  const allCompleted: CompletedTrade[] = [
-    ...trades.map((t) => ({ ...t, type: 'normal' as const })),
-    ...advancedTrades.map((t) => ({ ...t, type: 'advanced' as const })),
-  ]
-
-  const totalCount = allCompleted.length
-  if (totalCount === 0) return null
-
-  const partnerNames = getPartnerNames(trades, advancedTrades)
+  const partnerNames = [...new Set(trades.map((t) => t.otherUserName))].sort((a, b) =>
+    a.localeCompare(b, 'pt-BR')
+  )
 
   const filtered = selectedPartner
-    ? allCompleted.filter((t) => tradeInvolvesPartner(t, selectedPartner))
-    : allCompleted
+    ? trades.filter((t) => t.otherUserName === selectedPartner)
+    : trades
 
-  const sorted = [...filtered].sort((a, b) => {
-    const dateA = a.type === 'normal' ? a.acceptedAt : (a.acceptedAt ?? a.createdAt)
-    const dateB = b.type === 'normal' ? b.acceptedAt : (b.acceptedAt ?? b.createdAt)
-    return new Date(dateB).getTime() - new Date(dateA).getTime()
-  })
+  const sorted = [...filtered].sort(
+    (a, b) => new Date(b.acceptedAt).getTime() - new Date(a.acceptedAt).getTime()
+  )
 
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
   const safePage = Math.min(page, Math.max(0, totalPages - 1))
@@ -126,7 +55,7 @@ export function CompletedTradesSection({
           ▶
         </span>
         <h3 className="text-sm font-bold text-yvy-muted">
-          Trocas concluídas ({totalCount})
+          Trocas concluídas ({trades.length})
           {selectedPartner && (
             <span className="font-normal text-xs ml-1">
               · {filtered.length} com {selectedPartner}
@@ -161,22 +90,15 @@ export function CompletedTradesSection({
             </p>
           ) : (
             <>
-              {visible.map((t) =>
-                t.type === 'normal' ? (
-                  <RecentTradeCard
-                    key={t.id}
-                    trade={t}
-                    userId={userId}
-                    onDone={() => {
-                      onRefresh()
-                      loadAdvanced()
-                    }}
-                    hideRollback
-                  />
-                ) : (
-                  <AdvancedTradeCard key={t.id} trade={t} />
-                )
-              )}
+              {visible.map((t) => (
+                <RecentTradeCard
+                  key={t.id}
+                  trade={t}
+                  userId={userId}
+                  onDone={onRefresh}
+                  hideRollback
+                />
+              ))}
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-3">

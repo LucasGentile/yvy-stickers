@@ -1,13 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
 vi.mock('@/lib/supabase', () => ({ supabase: { from: vi.fn() } }))
 vi.mock('@/lib/supabaseAdmin', () => ({ supabaseAdmin: { from: vi.fn() } }))
-
-vi.mock('@/actions/getAdvancedTrades', () => ({
-  getAdvancedTrades: vi.fn(),
-}))
 
 vi.mock('@/actions/getPendingTrades', () => ({}))
 
@@ -27,10 +23,7 @@ vi.mock('@/contexts/PreferencesContext', () => ({
 }))
 
 import { CompletedTradesSection } from '@/components/CompletedTradesSection'
-import { getAdvancedTrades } from '@/actions/getAdvancedTrades'
 import type { RecentTrade } from '@/actions/getPendingTrades'
-
-const mockGetAdvancedTrades = getAdvancedTrades as ReturnType<typeof vi.fn>
 
 function makeTrade(overrides: Partial<RecentTrade> = {}): RecentTrade {
   return {
@@ -52,10 +45,9 @@ function makeTrade(overrides: Partial<RecentTrade> = {}): RecentTrade {
 describe('CompletedTradesSection — partner filter', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockGetAdvancedTrades.mockResolvedValue([])
   })
 
-  it('shows partner filter chips when multiple partners exist', async () => {
+  it('shows partner filter chips when multiple partners exist', () => {
     const trades = [
       makeTrade({ otherUserName: 'Alice' }),
       makeTrade({ otherUserName: 'Bob' }),
@@ -64,14 +56,8 @@ describe('CompletedTradesSection — partner filter', () => {
 
     render(<CompletedTradesSection trades={trades} userId="user-a" onRefresh={() => {}} />)
 
-    // Expand the section
     fireEvent.click(screen.getByText(/Trocas concluídas/))
 
-    await waitFor(() => {
-      expect(screen.getAllByText('Alice').length).toBeGreaterThanOrEqual(1)
-    })
-
-    // Filter chips are rendered as buttons with rounded-full class
     const chips = screen.getAllByRole('button').filter((btn) =>
       btn.className.includes('rounded-full')
     )
@@ -81,24 +67,20 @@ describe('CompletedTradesSection — partner filter', () => {
     expect(chipLabels).toContain('Carlos')
   })
 
-  it('does not show filter chips when only one partner exists', async () => {
+  it('does not show filter chips when only one partner exists', () => {
     const trades = [
       makeTrade({ otherUserName: 'Alice' }),
       makeTrade({ otherUserName: 'Alice' }),
     ]
 
-    const { container } = render(
-      <CompletedTradesSection trades={trades} userId="user-a" onRefresh={() => {}} />
-    )
+    render(<CompletedTradesSection trades={trades} userId="user-a" onRefresh={() => {}} />)
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
 
-    await waitFor(() => {
-      expect(container.textContent).toContain('BRA1')
-    })
-
-    // Only one partner — no filter chips needed
-    expect(screen.queryByRole('button', { name: 'Alice' })).not.toBeInTheDocument()
+    const chips = screen.getAllByRole('button').filter((btn) =>
+      btn.className.includes('rounded-full')
+    )
+    expect(chips).toHaveLength(0)
   })
 
   function getChip(name: string) {
@@ -107,7 +89,7 @@ describe('CompletedTradesSection — partner filter', () => {
     )!
   }
 
-  it('filters trades when a partner chip is selected', async () => {
+  it('filters trades when a partner chip is selected', () => {
     const trades = [
       makeTrade({ id: 'trade-alice', otherUserName: 'Alice', myGivingIds: ['AAA1'] }),
       makeTrade({ id: 'trade-bob', otherUserName: 'Bob', myGivingIds: ['BBB1'] }),
@@ -118,18 +100,13 @@ describe('CompletedTradesSection — partner filter', () => {
     )
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
-
-    await waitFor(() => {
-      expect(container.textContent).toContain('AAA1')
-    })
-
     fireEvent.click(getChip('Alice'))
 
     expect(container.textContent).toContain('AAA1')
     expect(container.textContent).not.toContain('BBB1')
   })
 
-  it('deselects filter when clicking the same chip again', async () => {
+  it('deselects filter when clicking the same chip again', () => {
     const trades = [
       makeTrade({ id: 'trade-alice', otherUserName: 'Alice', myGivingIds: ['AAA1'] }),
       makeTrade({ id: 'trade-bob', otherUserName: 'Bob', myGivingIds: ['BBB1'] }),
@@ -140,11 +117,6 @@ describe('CompletedTradesSection — partner filter', () => {
     )
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
-
-    await waitFor(() => {
-      expect(container.textContent).toContain('AAA1')
-    })
-
     fireEvent.click(getChip('Alice'))
     fireEvent.click(getChip('Alice'))
 
@@ -152,23 +124,16 @@ describe('CompletedTradesSection — partner filter', () => {
     expect(container.textContent).toContain('BBB1')
   })
 
-  it('shows count with partner name in header when filtered', async () => {
+  it('shows count with partner name in header when filtered', () => {
     const trades = [
       makeTrade({ otherUserName: 'Alice' }),
       makeTrade({ otherUserName: 'Alice' }),
       makeTrade({ otherUserName: 'Bob' }),
     ]
 
-    const { container } = render(
-      <CompletedTradesSection trades={trades} userId="user-a" onRefresh={() => {}} />
-    )
+    render(<CompletedTradesSection trades={trades} userId="user-a" onRefresh={() => {}} />)
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
-
-    await waitFor(() => {
-      expect(container.textContent).toContain('Alice')
-    })
-
     fireEvent.click(getChip('Alice'))
 
     expect(screen.getByText(/2 com Alice/)).toBeInTheDocument()
