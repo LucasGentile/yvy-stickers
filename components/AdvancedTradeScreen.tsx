@@ -11,6 +11,7 @@ import { StickerList } from '@/components/trades/StickerList'
 import { ColorLegend } from '@/components/trades/ColorLegend'
 import { TradeAssistant } from '@/components/audit/TradeAssistant'
 import { PartnerChip, VerifiedFilterChip, FilterChipDivider } from '@/components/FilterChips'
+import { Pagination } from '@/components/Pagination'
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'approved') {
@@ -354,27 +355,7 @@ function CompletedTradesSection({
                 <TradeCard key={t.id} trade={t} userId={userId} onDone={onRefresh} />
               ))}
 
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-3">
-                  <button
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={safePage === 0}
-                    className="text-xs text-yvy-muted disabled:opacity-30"
-                  >
-                    ← Anterior
-                  </button>
-                  <span className="text-[10px] text-yvy-muted">
-                    {safePage + 1} / {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                    disabled={safePage === totalPages - 1}
-                    className="text-xs text-yvy-muted disabled:opacity-30"
-                  >
-                    Próxima →
-                  </button>
-                </div>
-              )}
+              <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
             </>
           )}
         </div>
