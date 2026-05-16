@@ -93,7 +93,7 @@ export function RecentTradeCard({
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-yvy-dark capitalize">{trade.otherUserName}</p>
         <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-          {verified && <span className="text-emerald-500">✓</span>}
+          {verified && <span className="text-emerald-500 text-sm">✓</span>}
           Troca concluída
         </span>
       </div>
