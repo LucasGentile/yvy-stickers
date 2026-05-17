@@ -60,7 +60,7 @@ describe('TradeCardBody', () => {
     )
     expect(container.textContent).toContain('BRA1')
     expect(container.textContent).toContain('MEX2')
-    expect(screen.getByText(/Você deu para/i)).toBeInTheDocument()
+    expect(screen.getByText(/Você deu 2 para/i)).toBeInTheDocument()
   })
 
   it('renders receiving stickers with receiving label', () => {
@@ -142,8 +142,8 @@ describe('TradeCardBody', () => {
     render(
       <TradeCardBody entry={entry} borderClass="border-l-yvy-accent" timeSlot={<span>now</span>} />
     )
-    expect(screen.getByText(/Você dá para/)).toBeInTheDocument()
-    expect(screen.getByText(/Você recebe/)).toBeInTheDocument()
+    expect(screen.getByText(/Você dá 1 para/)).toBeInTheDocument()
+    expect(screen.getByText(/Você recebe 1 de/)).toBeInTheDocument()
   })
 
   it('shows third-party stickers for advanced_trade_executed', () => {
@@ -165,7 +165,7 @@ describe('TradeCardBody', () => {
       <TradeCardBody entry={entry} borderClass="border-l-green-500" timeSlot={<span>now</span>} />
     )
     expect(container.textContent).toContain('ARG3')
-    expect(screen.getByText(/Bob dá para Carol/)).toBeInTheDocument()
+    expect(screen.getByText(/Bob dá 1 para Carol/)).toBeInTheDocument()
   })
 
   it('applies the borderClass to the container', () => {
