@@ -29,6 +29,7 @@ export function TradeCard({
   const [availability, setAvailability] = useState<TradeAvailability | 'loading' | null>(null)
   const [selectedMyGiving, setSelectedMyGiving] = useState<Set<string>>(new Set())
   const [selectedMyReceiving, setSelectedMyReceiving] = useState<Set<string>>(new Set())
+  const [pendingRemoval, setPendingRemoval] = useState<{ id: string; side: 'giving' | 'receiving' } | null>(null)
 
   const totalReceiving = trade.myReceivingIds.length
   const totalGiving = trade.myGivingIds.length
@@ -176,14 +177,14 @@ export function TradeCard({
                       ids={availability.myGivingAvailable}
                       label="Você vai dar"
                       selected={selectedMyGiving}
-                      onToggle={(id) =>
-                        setSelectedMyGiving((prev) => {
-                          const next = new Set(prev)
-                          if (next.has(id)) next.delete(id)
-                          else next.add(id)
-                          return next
-                        })
-                      }
+                      onToggle={(id) => {
+                        if (selectedMyGiving.has(id)) {
+                          setPendingRemoval({ id, side: 'giving' })
+                        } else {
+                          setPendingRemoval(null)
+                          setSelectedMyGiving((prev) => new Set([...prev, id]))
+                        }
+                      }}
                     />
                     {availability.myGivingUnavailable.length > 0 && (
                       <div>
@@ -212,14 +213,14 @@ export function TradeCard({
                       ids={availability.theirGivingAvailable}
                       label="Você vai receber"
                       selected={selectedMyReceiving}
-                      onToggle={(id) =>
-                        setSelectedMyReceiving((prev) => {
-                          const next = new Set(prev)
-                          if (next.has(id)) next.delete(id)
-                          else next.add(id)
-                          return next
-                        })
-                      }
+                      onToggle={(id) => {
+                        if (selectedMyReceiving.has(id)) {
+                          setPendingRemoval({ id, side: 'receiving' })
+                        } else {
+                          setPendingRemoval(null)
+                          setSelectedMyReceiving((prev) => new Set([...prev, id]))
+                        }
+                      }}
                     />
                     {availability.theirGivingUnavailable.length > 0 && (
                       <div>
@@ -243,11 +244,47 @@ export function TradeCard({
                     )}
                   </div>
 
+                  {pendingRemoval && (
+                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      <p className="text-[11px] text-amber-800 flex-1">
+                        Remover <span className="font-bold font-mono">{pendingRemoval.id}</span> da troca?
+                      </p>
+                      <button
+                        onClick={() => setPendingRemoval(null)}
+                        className="text-[11px] font-medium text-yvy-muted underline"
+                      >
+                        Não
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (pendingRemoval.side === 'giving') {
+                            setSelectedMyGiving((prev) => {
+                              const next = new Set(prev)
+                              next.delete(pendingRemoval.id)
+                              return next
+                            })
+                          } else {
+                            setSelectedMyReceiving((prev) => {
+                              const next = new Set(prev)
+                              next.delete(pendingRemoval.id)
+                              return next
+                            })
+                          }
+                          setPendingRemoval(null)
+                        }}
+                        className="text-[11px] font-semibold text-amber-700 underline"
+                      >
+                        Sim, remover
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
                         setConfirming(null)
                         setAvailability(null)
+                        setPendingRemoval(null)
                       }}
                       disabled={loading !== null}
                       className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
@@ -278,6 +315,7 @@ export function TradeCard({
                       }}
                       disabled={
                         loading !== null ||
+                        pendingRemoval !== null ||
                         selectedMyGiving.size + selectedMyReceiving.size === 0 ||
                         (selectedMyGiving.size === 0 && trade.myGivingIds.length > 0) ||
                         (selectedMyReceiving.size === 0 && trade.myReceivingIds.length > 0)

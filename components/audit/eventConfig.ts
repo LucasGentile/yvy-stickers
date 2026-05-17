@@ -61,13 +61,17 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-[#16a34a]',
     iconBg: 'bg-green-50',
     iconColor: 'text-green-700',
-    label: (m) => `Troca concluída com ${m.partnerName}`,
+    label: (m) => m.isPartial ? `Troca parcial com ${m.partnerName}` : `Troca concluída com ${m.partnerName}`,
     detail: (m) => {
       const giving = (m.givingIds as string[] | undefined) ?? []
       const receiving = (m.receivingIds as string[] | undefined) ?? []
       const g = giving.length || (m.givingCount as number) || 0
       const r = receiving.length || (m.receivingCount as number) || 0
-      return `${g} dando · ${r} recebendo`
+      const base = `${g} dando · ${r} recebendo`
+      if (!m.isPartial) return base
+      const exG = ((m.excludedGivingIds as string[] | undefined) ?? []).length
+      const exR = ((m.excludedReceivingIds as string[] | undefined) ?? []).length
+      return `${base} · ${exG + exR} removida${exG + exR !== 1 ? 's' : ''} da proposta`
     },
     realLifeHint: (m) => {
       const giving = (m.givingIds as string[] | undefined) ?? []
