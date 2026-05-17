@@ -339,6 +339,17 @@ describe('getPendingTrades', () => {
           order: vi.fn().mockResolvedValue({ data: [], error: null }),
         }
       }
+      if (callCount === 3) {
+        // audit_log (trade_accepted entries)
+        const chain = {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          then: (resolve: (v: unknown) => unknown) => resolve({ data: [], error: null }),
+        }
+        chain.select.mockReturnValue(chain)
+        chain.eq.mockReturnValue(chain)
+        return chain
+      }
       // users query
       return {
         select: vi.fn().mockReturnThis(),
@@ -405,6 +416,18 @@ describe('getPendingTrades', () => {
           }),
         }
       }
+      if (callCount === 3) {
+        // audit_log (trade_accepted entries)
+        const chain = {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          then: (resolve: (v: unknown) => unknown) =>
+            resolve({ data: [{ id: 'audit-1', metadata: { tradeId: 'trade-10' } }], error: null }),
+        }
+        chain.select.mockReturnValue(chain)
+        chain.eq.mockReturnValue(chain)
+        return chain
+      }
       // users query
       return {
         select: vi.fn().mockReturnThis(),
@@ -423,6 +446,7 @@ describe('getPendingTrades', () => {
     expect(result.recentlyAccepted[0].myReceivingIds).toEqual(['BRA1'])
     expect(result.recentlyAccepted[0].rollbackRequestedBy).toBeNull()
     expect(result.recentlyAccepted[0].isSender).toBe(true)
+    expect(result.recentlyAccepted[0].auditEntryId).toBe('audit-1')
   })
 })
 

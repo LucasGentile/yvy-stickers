@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import type { RecentTrade } from '@/actions/getPendingTrades'
 import { rollbackTrade } from '@/actions/rollbackTrade'
 import { verifyTrade } from '@/actions/verifyTrade'
 import { StickerList, StickerToggle } from './StickerList'
 import { TradeAssistant } from '../audit/TradeAssistant'
+import { relativeTime, absoluteTime } from '../audit/eventConfig'
 
 type RevertStep = 'idle' | 'choose-mode' | 'select-stickers'
 
@@ -97,6 +99,22 @@ export function RecentTradeCard({
           Troca concluída
         </span>
       </div>
+
+      {trade.acceptedAt &&
+        (trade.auditEntryId ? (
+          <Link
+            href={`/history/${trade.auditEntryId}`}
+            className="flex flex-col items-end shrink-0 gap-0.5 hover:opacity-70 transition-opacity"
+          >
+            <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
+            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(trade.acceptedAt)}</span>
+          </Link>
+        ) : (
+          <div className="flex flex-col items-end shrink-0 gap-0.5">
+            <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
+            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(trade.acceptedAt)}</span>
+          </div>
+        ))}
 
       <StickerList
         ids={trade.myReceivingIds}
