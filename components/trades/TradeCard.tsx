@@ -29,7 +29,7 @@ export function TradeCard({
   const [availability, setAvailability] = useState<TradeAvailability | 'loading' | null>(null)
   const [selectedMyGiving, setSelectedMyGiving] = useState<Set<string>>(new Set())
   const [selectedMyReceiving, setSelectedMyReceiving] = useState<Set<string>>(new Set())
-  const [confirmingPartial, setConfirmingPartial] = useState(false)
+  const [pendingRemoval, setPendingRemoval] = useState<{ id: string; side: 'giving' | 'receiving' } | null>(null)
 
   const totalReceiving = trade.myReceivingIds.length
   const totalGiving = trade.myGivingIds.length
@@ -177,14 +177,14 @@ export function TradeCard({
                       ids={availability.myGivingAvailable}
                       label="Você vai dar"
                       selected={selectedMyGiving}
-                      onToggle={(id) =>
-                        setSelectedMyGiving((prev) => {
-                          const next = new Set(prev)
-                          if (next.has(id)) next.delete(id)
-                          else next.add(id)
-                          return next
-                        })
-                      }
+                      onToggle={(id) => {
+                        if (selectedMyGiving.has(id)) {
+                          setPendingRemoval({ id, side: 'giving' })
+                        } else {
+                          setPendingRemoval(null)
+                          setSelectedMyGiving((prev) => new Set([...prev, id]))
+                        }
+                      }}
                     />
                     {availability.myGivingUnavailable.length > 0 && (
                       <div>
@@ -213,14 +213,14 @@ export function TradeCard({
                       ids={availability.theirGivingAvailable}
                       label="Você vai receber"
                       selected={selectedMyReceiving}
-                      onToggle={(id) =>
-                        setSelectedMyReceiving((prev) => {
-                          const next = new Set(prev)
-                          if (next.has(id)) next.delete(id)
-                          else next.add(id)
-                          return next
-                        })
-                      }
+                      onToggle={(id) => {
+                        if (selectedMyReceiving.has(id)) {
+                          setPendingRemoval({ id, side: 'receiving' })
+                        } else {
+                          setPendingRemoval(null)
+                          setSelectedMyReceiving((prev) => new Set([...prev, id]))
+                        }
+                      }}
                     />
                     {availability.theirGivingUnavailable.length > 0 && (
                       <div>
@@ -244,112 +244,89 @@ export function TradeCard({
                     )}
                   </div>
 
-                  {(() => {
-                    const isPartial =
-                      selectedMyGiving.size < trade.myGivingIds.length ||
-                      selectedMyReceiving.size < trade.myReceivingIds.length
-                    const removedGiving = trade.myGivingIds.filter((id) => !selectedMyGiving.has(id))
-                    const removedReceiving = trade.myReceivingIds.filter((id) => !selectedMyReceiving.has(id))
-
-                    async function submitTrade() {
-                      setLoading('accept')
-                      try {
-                        const result = await respondToTrade(
-                          trade.id,
-                          userId,
-                          'accept',
-                          [...selectedMyGiving],
-                          [...selectedMyReceiving]
-                        )
-                        if (result.success) {
-                          onDone()
-                        } else {
-                          setMsg(result.error)
-                        }
-                      } catch {
-                        setMsg('Erro inesperado.')
-                      } finally {
-                        setLoading(null)
-                      }
-                    }
-
-                    if (confirmingPartial && isPartial) {
-                      return (
-                        <div className="space-y-2">
-                          <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 space-y-1">
-                            <p className="text-[11px] font-semibold text-amber-800">
-                              Atenção: você removeu figurinhas da troca original
-                            </p>
-                            {removedGiving.length > 0 && (
-                              <p className="text-[11px] text-amber-700">
-                                Não vai dar: {removedGiving.join(', ')}
-                              </p>
-                            )}
-                            {removedReceiving.length > 0 && (
-                              <p className="text-[11px] text-amber-700">
-                                Não vai receber: {removedReceiving.join(', ')}
-                              </p>
-                            )}
-                            <p className="text-[11px] text-amber-700">
-                              Confirma que deseja aceitar a troca parcial?
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setConfirmingPartial(false)}
-                              disabled={loading !== null}
-                              className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
-                            >
-                              Voltar
-                            </button>
-                            <button
-                              onClick={submitTrade}
-                              disabled={loading !== null}
-                              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-                            >
-                              {loading === 'accept' ? 'Aceitando...' : 'Confirmar troca parcial'}
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    }
-
-                    return (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setConfirming(null)
-                            setAvailability(null)
-                            setConfirmingPartial(false)
-                          }}
-                          disabled={loading !== null}
-                          className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
-                        >
-                          Voltar
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (isPartial) {
-                              setConfirmingPartial(true)
-                            } else {
-                              submitTrade()
-                            }
-                          }}
-                          disabled={
-                            loading !== null ||
-                            selectedMyGiving.size + selectedMyReceiving.size === 0 ||
-                            (selectedMyGiving.size === 0 && trade.myGivingIds.length > 0) ||
-                            (selectedMyReceiving.size === 0 && trade.myReceivingIds.length > 0)
+                  {pendingRemoval && (
+                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      <p className="text-[11px] text-amber-800 flex-1">
+                        Remover <span className="font-bold font-mono">{pendingRemoval.id}</span> da troca?
+                      </p>
+                      <button
+                        onClick={() => setPendingRemoval(null)}
+                        className="text-[11px] font-medium text-yvy-muted underline"
+                      >
+                        Não
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (pendingRemoval.side === 'giving') {
+                            setSelectedMyGiving((prev) => {
+                              const next = new Set(prev)
+                              next.delete(pendingRemoval.id)
+                              return next
+                            })
+                          } else {
+                            setSelectedMyReceiving((prev) => {
+                              const next = new Set(prev)
+                              next.delete(pendingRemoval.id)
+                              return next
+                            })
                           }
-                          className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-                        >
-                          {loading === 'accept'
-                            ? 'Aceitando...'
-                            : `Confirmar troca (${selectedMyGiving.size + selectedMyReceiving.size} figurinha${selectedMyGiving.size + selectedMyReceiving.size !== 1 ? 's' : ''})`}
-                        </button>
-                      </div>
-                    )
-                  })()}
+                          setPendingRemoval(null)
+                        }}
+                        className="text-[11px] font-semibold text-amber-700 underline"
+                      >
+                        Sim, remover
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setConfirming(null)
+                        setAvailability(null)
+                        setPendingRemoval(null)
+                      }}
+                      disabled={loading !== null}
+                      className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+                    >
+                      Voltar
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setLoading('accept')
+                        try {
+                          const result = await respondToTrade(
+                            trade.id,
+                            userId,
+                            'accept',
+                            [...selectedMyGiving],
+                            [...selectedMyReceiving]
+                          )
+                          if (result.success) {
+                            onDone()
+                          } else {
+                            setMsg(result.error)
+                          }
+                        } catch {
+                          setMsg('Erro inesperado.')
+                        } finally {
+                          setLoading(null)
+                        }
+                      }}
+                      disabled={
+                        loading !== null ||
+                        pendingRemoval !== null ||
+                        selectedMyGiving.size + selectedMyReceiving.size === 0 ||
+                        (selectedMyGiving.size === 0 && trade.myGivingIds.length > 0) ||
+                        (selectedMyReceiving.size === 0 && trade.myReceivingIds.length > 0)
+                      }
+                      className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+                    >
+                      {loading === 'accept'
+                        ? 'Aceitando...'
+                        : `Confirmar troca (${selectedMyGiving.size + selectedMyReceiving.size} figurinha${selectedMyGiving.size + selectedMyReceiving.size !== 1 ? 's' : ''})`}
+                    </button>
+                  </div>
                 </>
               )}
             </div>
