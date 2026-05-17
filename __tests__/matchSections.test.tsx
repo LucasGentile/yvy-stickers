@@ -23,6 +23,9 @@ vi.mock('@/actions/getTradeAvailability', () => ({
 vi.mock('@/actions/rollbackTrade', () => ({
   rollbackTrade: vi.fn(),
 }))
+vi.mock('@/actions/verifyTrade', () => ({
+  verifyTrade: vi.fn(),
+}))
 
 import MatchesScreen from '@/components/MatchesScreen'
 import { getMatches } from '@/lib/matching'
@@ -66,6 +69,7 @@ function makeMatch(overrides: {
     completionPct: 50,
     missingCount: 100,
     previouslyCanceled: false,
+    canceledTrades: [],
   }
 }
 
@@ -98,7 +102,7 @@ describe('MatchesScreen sections', () => {
     ])
 
     render(<MatchesScreen />)
-    const sectionButton = await screen.findByText(/Têm para mim, mas não preciso das minhas/)
+    const sectionButton = await screen.findByText(/Têm para mim, mas não precisa das minhas/)
     expect(sectionButton).toBeInTheDocument()
 
     expect(screen.queryByText('Bob Doador')).not.toBeInTheDocument()
@@ -113,7 +117,7 @@ describe('MatchesScreen sections', () => {
     ])
 
     render(<MatchesScreen />)
-    const sectionButton = await screen.findByText(/Preciso das minhas, mas não têm para mim/)
+    const sectionButton = await screen.findByText(/Precisa das minhas, mas não têm para mim/)
     expect(sectionButton).toBeInTheDocument()
 
     expect(screen.queryByText('Carlos Receptor')).not.toBeInTheDocument()
@@ -136,11 +140,11 @@ describe('MatchesScreen sections', () => {
     expect(screen.queryByText('Bob Doador')).not.toBeInTheDocument()
     expect(screen.queryByText('Carlos Receptor')).not.toBeInTheDocument()
 
-    const receiveSection = screen.getByText(/Têm para mim, mas não preciso das minhas \(1\)/)
+    const receiveSection = screen.getByText(/Têm para mim, mas não precisa das minhas \(1\)/)
     fireEvent.click(receiveSection)
     expect(await screen.findByText('Bob Doador')).toBeInTheDocument()
 
-    const giveSection = screen.getByText(/Preciso das minhas, mas não têm para mim \(1\)/)
+    const giveSection = screen.getByText(/Precisa das minhas, mas não têm para mim \(1\)/)
     fireEvent.click(giveSection)
     expect(await screen.findByText('Carlos Receptor')).toBeInTheDocument()
   })

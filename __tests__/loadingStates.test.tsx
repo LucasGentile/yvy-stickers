@@ -61,6 +61,9 @@ vi.mock('@/actions/previewAdvancedTrade', () => ({
 vi.mock('@/actions/respondToAdvancedTrade', () => ({
   respondToAdvancedTrade: vi.fn(),
 }))
+vi.mock('@/actions/verifyTrade', () => ({
+  verifyTrade: vi.fn(),
+}))
 
 import { setInputMode } from '@/actions/setInputMode'
 import { getUserData } from '@/actions/getUserData'
