@@ -278,7 +278,9 @@ export function TradeCard({
                       }}
                       disabled={
                         loading !== null ||
-                        selectedMyGiving.size + selectedMyReceiving.size === 0
+                        selectedMyGiving.size + selectedMyReceiving.size === 0 ||
+                        (selectedMyGiving.size === 0 && trade.myGivingIds.length > 0) ||
+                        (selectedMyReceiving.size === 0 && trade.myReceivingIds.length > 0)
                       }
                       className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
                     >
