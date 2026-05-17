@@ -94,6 +94,44 @@ export function TradeCardBody({
                 </div>
               </div>
             )}
+            {isAccepted && entry.metadata.isPartial && (
+              <>
+                {((entry.metadata.excludedGivingIds as string[] | undefined) ?? []).length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 mb-1">
+                      Removida da proposta · não deu {((entry.metadata.excludedGivingIds as string[]) ?? []).length}
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {sort((entry.metadata.excludedGivingIds as string[]) ?? []).map((id) => (
+                        <span
+                          key={id}
+                          className="font-mono text-[11px] px-2 py-0.5 rounded-md border bg-amber-50 border-amber-200 text-amber-700 line-through opacity-70"
+                        >
+                          {id}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {((entry.metadata.excludedReceivingIds as string[] | undefined) ?? []).length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 mb-1">
+                      Removida da proposta · não recebeu {((entry.metadata.excludedReceivingIds as string[]) ?? []).length}
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {sort((entry.metadata.excludedReceivingIds as string[]) ?? []).map((id) => (
+                        <span
+                          key={id}
+                          className="font-mono text-[11px] px-2 py-0.5 rounded-md border bg-amber-50 border-amber-200 text-amber-700 line-through opacity-70"
+                        >
+                          {id}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
             {isAdvancedExecuted &&
               ((entry.metadata.thirdPartyIds as string[] | undefined) ?? []).length > 0 && (
                 <div>

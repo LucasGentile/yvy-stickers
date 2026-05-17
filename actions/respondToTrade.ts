@@ -133,19 +133,31 @@ export async function respondToTrade(
     )
 
     if (action === 'accept') {
-      // Log for both parties so each has a checklist entry in their history
-      // Use effectiveGivingIds/effectiveReceivingIds so partial trades log correctly
+      const excludedGivingIds = trade.giving_ids.filter((id) => !effectiveGivingIds.includes(id))
+      const excludedReceivingIds = trade.receiving_ids.filter((id) => !effectiveReceivingIds.includes(id))
+      const isPartial = excludedGivingIds.length > 0 || excludedReceivingIds.length > 0
+
       logAction(trade.receiver_id, 'trade_accepted', {
         tradeId: trade.id,
         partnerName: initiatorName,
-        givingIds: effectiveReceivingIds, // receiver gives what initiator requested
-        receivingIds: effectiveGivingIds, // receiver gets what initiator offered
+        givingIds: effectiveReceivingIds,
+        receivingIds: effectiveGivingIds,
+        ...(isPartial && {
+          isPartial: true,
+          excludedGivingIds: excludedReceivingIds,
+          excludedReceivingIds: excludedGivingIds,
+        }),
       })
       logAction(trade.initiator_id, 'trade_accepted', {
         tradeId: trade.id,
         partnerName: receiverName,
         givingIds: effectiveGivingIds,
         receivingIds: effectiveReceivingIds,
+        ...(isPartial && {
+          isPartial: true,
+          excludedGivingIds,
+          excludedReceivingIds,
+        }),
       })
     } else if (action === 'reject') {
       logAction(trade.receiver_id, 'trade_rejected', {
