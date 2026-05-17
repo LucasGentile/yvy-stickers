@@ -56,6 +56,13 @@ export async function respondToTrade(
       return { success: false, error: 'Selecione ao menos uma figurinha.' }
     }
 
+    if (resolvedMyGiving.length === 0 && trade.receiving_ids.length > 0) {
+      return { success: false, error: 'Selecione ao menos uma figurinha para dar.' }
+    }
+    if (resolvedMyReceiving.length === 0 && trade.giving_ids.length > 0) {
+      return { success: false, error: 'Selecione ao menos uma figurinha para receber.' }
+    }
+
     // Validate subsets (caller perspective):
     // myGivingIds (caller) = trade.receiving_ids (DB); myReceivingIds (caller) = trade.giving_ids (DB)
     const originalMyGiving = new Set(trade.receiving_ids)
