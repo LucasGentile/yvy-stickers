@@ -27,6 +27,7 @@ export type RecentTrade = {
   verified: boolean
   rollbackMyGivingIds: string[] | null
   rollbackMyReceivingIds: string[] | null
+  auditEntryId: string | null
 }
 
 export async function getPendingTrades(userId: string): Promise<{
@@ -38,24 +39,32 @@ export async function getPendingTrades(userId: string): Promise<{
   if (!userId) return empty
 
   try {
-    const [{ data: pendingTrades, error: pendingError }, { data: acceptedTrades }] =
-      await Promise.all([
-        supabaseAdmin
-          .from('pending_trades')
-          .select('id, initiator_id, receiver_id, giving_ids, receiving_ids, status, created_at')
-          .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
-          .eq('status', 'pending')
-          .order('created_at', { ascending: false }),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabaseAdmin as any)
-          .from('pending_trades')
-          .select(
-            'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids, verified_at'
-          )
-          .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
-          .eq('status', 'accepted')
-          .order('accepted_at', { ascending: false }),
-      ])
+    const [
+      { data: pendingTrades, error: pendingError },
+      { data: acceptedTrades },
+      { data: auditEntries },
+    ] = await Promise.all([
+      supabaseAdmin
+        .from('pending_trades')
+        .select('id, initiator_id, receiver_id, giving_ids, receiving_ids, status, created_at')
+        .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabaseAdmin as any)
+        .from('pending_trades')
+        .select(
+          'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids, verified_at'
+        )
+        .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
+        .eq('status', 'accepted')
+        .order('accepted_at', { ascending: false }),
+      supabaseAdmin
+        .from('audit_log')
+        .select('id, metadata')
+        .eq('user_id', userId)
+        .eq('action', 'trade_accepted'),
+    ])
 
     if (pendingError) return empty
 
@@ -97,6 +106,14 @@ export async function getPendingTrades(userId: string): Promise<{
       else received.push(normalized)
     }
 
+    const auditByTradeId = new Map<string, string>()
+    for (const entry of auditEntries ?? []) {
+      const tradeId = (entry.metadata as Record<string, unknown>)?.tradeId as string | undefined
+      if (tradeId && !auditByTradeId.has(tradeId)) {
+        auditByTradeId.set(tradeId, entry.id)
+      }
+    }
+
     const recentlyAccepted: RecentTrade[] = []
     for (const trade of acceptedTrades ?? []) {
       const isInitiator = trade.initiator_id === userId
@@ -124,6 +141,7 @@ export async function getPendingTrades(userId: string): Promise<{
         verified: !!(trade as Record<string, unknown>).verified_at,
         rollbackMyGivingIds,
         rollbackMyReceivingIds,
+        auditEntryId: auditByTradeId.get(trade.id) ?? null,
       })
     }
 

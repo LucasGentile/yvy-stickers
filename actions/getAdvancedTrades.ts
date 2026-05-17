@@ -23,6 +23,7 @@ export type AdvancedTradeView = {
   acceptedAt: string | null
   isRequester: boolean
   verified: boolean
+  auditEntryId: string | null
 }
 
 export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeView[]> {
@@ -47,10 +48,25 @@ export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeVi
     allUserIds.add(t.user_c_id)
   }
 
-  const { data: users } = await supabaseAdmin
-    .from('users')
-    .select('id, name')
-    .in('id', [...allUserIds])
+  const [{ data: users }, { data: auditEntries }] = await Promise.all([
+    supabaseAdmin
+      .from('users')
+      .select('id, name')
+      .in('id', [...allUserIds]),
+    supabaseAdmin
+      .from('audit_log')
+      .select('id, metadata')
+      .eq('user_id', userId)
+      .eq('action', 'advanced_trade_executed'),
+  ])
+
+  const auditByTradeId = new Map<string, string>()
+  for (const entry of auditEntries ?? []) {
+    const tradeId = (entry.metadata as Record<string, unknown>)?.tradeId as string | undefined
+    if (tradeId && !auditByTradeId.has(tradeId)) {
+      auditByTradeId.set(tradeId, entry.id)
+    }
+  }
 
   const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
 
@@ -152,6 +168,7 @@ export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeVi
       acceptedAt: trade.accepted_at,
       isRequester: trade.requested_by === userId,
       verified: !!(t as Record<string, unknown>).verified_at,
+      auditEntryId: auditByTradeId.get(trade.id) ?? null,
     }
   })
 }

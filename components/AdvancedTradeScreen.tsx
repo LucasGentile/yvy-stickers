@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { getAdvancedTrades, type AdvancedTradeView } from '@/actions/getAdvancedTrades'
 import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
 import { findAdvancedTrade } from '@/actions/findAdvancedTrade'
@@ -10,6 +11,7 @@ import { verifyTrade } from '@/actions/verifyTrade'
 import { StickerList } from '@/components/trades/StickerList'
 import { ColorLegend } from '@/components/trades/ColorLegend'
 import { TradeAssistant } from '@/components/audit/TradeAssistant'
+import { relativeTime, absoluteTime } from '@/components/audit/eventConfig'
 import { PartnerChip, VerifiedFilterChip, FilterChipDivider } from '@/components/FilterChips'
 import { Pagination } from '@/components/Pagination'
 
@@ -89,6 +91,23 @@ function TradeCard({
           </span>
         )}
       </div>
+
+      {isAccepted &&
+        trade.acceptedAt &&
+        (trade.auditEntryId ? (
+          <Link
+            href={`/history/${trade.auditEntryId}`}
+            className="flex flex-col items-end shrink-0 gap-0.5 hover:opacity-70 transition-opacity"
+          >
+            <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
+            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(trade.acceptedAt)}</span>
+          </Link>
+        ) : (
+          <div className="flex flex-col items-end shrink-0 gap-0.5">
+            <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
+            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(trade.acceptedAt)}</span>
+          </div>
+        ))}
 
       {/* Triangle visualization */}
       <div className="space-y-2">
@@ -275,7 +294,9 @@ function CompletedTradesSection({
   const partnerNames = getAdvancedPartnerNames(trades)
 
   let filtered = selectedPartner
-    ? trades.filter((t) => t.giveTo.name === selectedPartner || t.receiveFrom.name === selectedPartner)
+    ? trades.filter(
+        (t) => t.giveTo.name === selectedPartner || t.receiveFrom.name === selectedPartner
+      )
     : trades
 
   if (onlyUnverified) {
