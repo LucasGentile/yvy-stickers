@@ -253,7 +253,7 @@ function StickerGrid({
                       className={`relative ${id.startsWith('FWC') ? 'w-9 h-12' : 'h-12 px-3'} rounded-sm text-xs font-semibold transition-colors shadow-sm ${tradeLocked?.has(id) ? 'bg-white text-yvy-dark ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged)}`}
                     >
                       {id.startsWith('FWC') ? (
-                        <span className="font-bold text-amber-400">{id.slice(3)}</span>
+                        <span className="font-bold text-amber-400">{id === 'FWC00' ? '00' : id}</span>
                       ) : isCocaColaSticker(id) ? (
                         <span className="font-bold text-red-500">{id}</span>
                       ) : (
