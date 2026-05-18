@@ -7,6 +7,7 @@ import { importStickerFile } from '@/actions/importStickerFile'
 import { removeDuplicate } from '@/actions/removeDuplicate'
 import { getUserData } from '@/actions/getUserData'
 import { getTradeOriginStickers, type TradeOriginResult } from '@/actions/getTradeOriginStickers'
+import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
 import { getDuplicates } from '@/actions/getDuplicates'
 import { DuplicateQuickAdd } from './DuplicateQuickAdd'
 import { parseStickerFile } from '@/lib/parser'
@@ -45,6 +46,7 @@ export default function StickersScreen() {
   const lastSaved = useRef<Set<string>>(new Set())
   const [duplicateMap, setDuplicateMap] = useState<Map<string, number>>(new Map())
   const [longPressedId, setLongPressedId] = useState<string | null>(null)
+  const [lockedStickers, setLockedStickers] = useState<Set<string>>(new Set())
 
   // Compute unsaved diff at component scope so effects can read it
   const addedCount = [...selected].filter((id) => !lastSaved.current.has(id)).length
@@ -82,9 +84,10 @@ export default function StickersScreen() {
       setLoading(false)
       return
     }
-    Promise.all([getUserData(id), getTradeOriginStickers(id), getDuplicates(id)]).then(
-      ([data, origin, dupes]) => {
+    Promise.all([getUserData(id), getTradeOriginStickers(id), getDuplicates(id), getReservedStickerIds(id)]).then(
+      ([data, origin, dupes, reserved]) => {
         setTradeOrigin(origin)
+        setLockedStickers(new Set(Object.keys(reserved)))
         setDuplicateMap(new Map(dupes.map((d) => [d.stickerId, d.count])))
         if (data) {
           if (!data.approved) {
@@ -183,6 +186,24 @@ export default function StickersScreen() {
       setSaveMsg(`Erro: ${result.error}`)
     }
   }, [userId, selected])
+
+  function exportMissingStickers() {
+    const missingIds =
+      mode === 'have'
+        ? ALL_STICKER_IDS.filter((id) => !selected.has(id))
+        : [...selected]
+    if (missingIds.length === 0) {
+      alert('Nenhuma figurinha faltando — álbum completo!')
+      return
+    }
+    const blob = new Blob([missingIds.join('\n')], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'faltantes.txt'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   if (loading) {
     return (
@@ -283,6 +304,13 @@ export default function StickersScreen() {
           <p className="text-sm font-medium text-yvy-text">Selecione na grade</p>
           <div className="flex gap-2">
             <button
+              onClick={exportMissingStickers}
+              className="text-xs text-yvy-muted underline"
+              title="Baixar lista de figurinhas faltantes"
+            >
+              ↓ Faltantes
+            </button>
+            <button
               onClick={() => {
                 showToast('Todas as figurinhas marcadas', new Set(selected))
                 setSelected(new Set(ALL_STICKER_IDS))
@@ -337,8 +365,15 @@ export default function StickersScreen() {
                       </span>
                     </span>
                   )}
+                  {lockedStickers.size > 0 && (
+                    <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                      <span className="w-3 h-4 rounded-sm bg-white ring-2 ring-inset ring-blue-400 shrink-0" />
+                      Comprometida em troca
+                      <span className="font-semibold text-yvy-text">({lockedStickers.size})</span>
+                    </span>
+                  )}
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-3 rounded bg-yvy-bg border border-yvy-border shrink-0 flex items-center justify-center">
+                    <span className="w-3 h-4 rounded-sm bg-yvy-bg border border-yvy-border shrink-0 flex items-center justify-center">
                       <span className="text-[7px] font-bold text-amber-500 leading-none">1</span>
                     </span>
                     Cromada
@@ -368,6 +403,7 @@ export default function StickersScreen() {
           newestFromTrade={
             mode === 'have' && tradeOrigin ? new Set(tradeOrigin.newestIds) : undefined
           }
+          tradeLocked={mode === 'have' && lockedStickers.size > 0 ? lockedStickers : undefined}
           staged={
             mode === 'have'
               ? new Set([...selected].filter((id) => !lastSaved.current.has(id)))

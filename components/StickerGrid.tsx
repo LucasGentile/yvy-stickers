@@ -10,6 +10,7 @@ interface Props {
   tradeReceived?: Set<string>
   newestFromTrade?: Set<string>
   staged?: Set<string>
+  tradeLocked?: Set<string>
   onLongPress?: (id: string) => void
 }
 
@@ -71,6 +72,7 @@ function StickerGrid({
   tradeReceived,
   newestFromTrade,
   staged,
+  tradeLocked,
   onLongPress,
 }: Props) {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -136,19 +138,19 @@ function StickerGrid({
         return (
           <div key={section.label}>
             {/* Section header */}
-            <div className="flex items-center gap-1.5 mb-2 pb-1 border-b border-yvy-border">
+            <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-yvy-border">
               {'icon' in section ? (
                 <SectionIcon label={section.label} icon={section.icon} />
               ) : (
-                <span className="text-base">🌍</span>
+                <span className="text-lg">🌍</span>
               )}
               {section.label !== 'Figurinhas Coca-Cola' && (
-                <span className="text-xs font-bold text-yvy-dark uppercase tracking-wide">
+                <span className="text-sm font-bold text-yvy-dark uppercase tracking-wide">
                   {section.label}
                 </span>
               )}
               <span
-                className={`ml-auto text-[10px] font-semibold ${sectionComplete ? 'text-green-600' : 'text-yvy-muted'}`}
+                className={`ml-auto text-xs font-semibold ${sectionComplete ? 'text-green-600' : 'text-yvy-muted'}`}
               >
                 {sectionOwned}/{sectionTotal} · {sectionPct}%
               </span>
@@ -164,25 +166,23 @@ function StickerGrid({
                   return (
                     <div key={team.code} id={`country-${team.code}`} className="scroll-mt-20">
                       {/* Country row header */}
-                      <div className="flex items-center gap-1.5 mb-1">
+                      <div className="flex items-center gap-2 mb-1.5">
                         <img
-                          src={`https://flagcdn.com/w20/${team.flagCode}.png`}
-                          width={20}
-                          height={15}
+                          src={`https://flagcdn.com/w40/${team.flagCode}.png`}
                           alt={team.name}
-                          className="rounded-sm shrink-0"
+                          className="rounded-sm shrink-0 object-cover w-8 h-[18px]"
                         />
-                        <span className="text-xs font-medium text-yvy-text">{team.name}</span>
-                        <span className="text-[10px] text-yvy-muted font-mono">{team.code}</span>
+                        <span className="text-sm font-semibold text-yvy-text">{team.name}</span>
+                        <span className="text-xs text-yvy-muted font-mono">{team.code}</span>
                         <span
-                          className={`text-[10px] font-semibold ${complete ? 'text-green-600' : 'text-yvy-muted'}`}
+                          className={`text-xs font-semibold ${complete ? 'text-green-600' : 'text-yvy-muted'}`}
                         >
                           {ownedCount}/{total} · {pct}%
                         </span>
                         <button
                           type="button"
                           onClick={() => toggleTeam(team)}
-                          className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded transition-colors shrink-0 ${
+                          className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded transition-colors shrink-0 ${
                             complete
                               ? 'bg-yvy-dark text-white'
                               : 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
@@ -211,7 +211,7 @@ function StickerGrid({
                                   onLongPress(id)
                                 }
                               }}
-                              className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
+                              className={`relative w-9 h-12 rounded-sm text-xs font-semibold transition-colors shadow-sm ${tradeLocked?.has(id) ? 'bg-white text-yvy-dark ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged)}`}
                             >
                               {isChromeSticker(id) ? (
                                 <span className="font-bold text-amber-400">{idx + 1}</span>
@@ -219,7 +219,7 @@ function StickerGrid({
                                 idx + 1
                               )}
                               {isNew && (
-                                <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-amber-400 rounded-full" />
                               )}
                             </button>
                           )
@@ -250,17 +250,17 @@ function StickerGrid({
                           onLongPress(id)
                         }
                       }}
-                      className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
+                      className={`relative ${id.startsWith('FWC') ? 'w-9 h-12' : 'h-12 px-3'} rounded-sm text-xs font-semibold transition-colors shadow-sm ${tradeLocked?.has(id) ? 'bg-white text-yvy-dark ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged)}`}
                     >
-                      {isChromeSticker(id) ? (
-                        <span className="font-bold text-amber-400">{id}</span>
+                      {id.startsWith('FWC') ? (
+                        <span className="font-bold text-amber-400">{id.slice(3)}</span>
                       ) : isCocaColaSticker(id) ? (
                         <span className="font-bold text-red-500">{id}</span>
                       ) : (
                         id
                       )}
                       {isNew && (
-                        <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                        <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-amber-400 rounded-full" />
                       )}
                     </button>
                   )
