@@ -94,7 +94,7 @@ export function TradeCardBody({
                 </div>
               </div>
             )}
-            {isAccepted && entry.metadata.isPartial && (
+            {isAccepted && !!entry.metadata.isPartial && (
               <>
                 {((entry.metadata.excludedGivingIds as string[] | undefined) ?? []).length > 0 && (
                   <div>
