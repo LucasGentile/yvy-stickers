@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import type { MatchResult, CanceledTradeDetail } from '@/lib/matching'
 import { createTradeRequest } from '@/actions/createTradeRequest'
-import { isChromeSticker } from '@/lib/stickers'
+import { isChromeSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
+import { usePrefs } from '@/contexts/PreferencesContext'
 import { StickerChip } from './StickerChip'
 
 function setsEqual(a: string[], b: string[]) {
@@ -47,6 +48,8 @@ function DetailModal({
   onClose: () => void
   onTradeCreated?: () => void
 }) {
+  const { stickerOrder } = usePrefs()
+  const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
   const [receiving, setReceiving] = useState<Set<string>>(new Set())
   const [giving, setGiving] = useState<Set<string>>(new Set())
   const [confirming, setConfirming] = useState(false)
@@ -164,7 +167,7 @@ function DetailModal({
                   Você vai receber de {match.name.split(' ')[0]} · {receiving.size} figurinha{receiving.size !== 1 ? 's' : ''}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {[...receiving].map((id) => (
+                  {sort([...receiving]).map((id) => (
                     <StickerChip key={id} id={id} selected />
                   ))}
                 </div>
@@ -177,7 +180,7 @@ function DetailModal({
                   Você vai dar para {match.name.split(' ')[0]} · {giving.size} figurinha{giving.size !== 1 ? 's' : ''}
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {[...giving].map((id) => (
+                  {sort([...giving]).map((id) => (
                     <StickerChip key={id} id={id} />
                   ))}
                 </div>
@@ -242,7 +245,7 @@ function DetailModal({
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {match.matchStickers.map((id) => (
+                  {sort(match.matchStickers).map((id) => (
                     <StickerChip
                       key={id}
                       id={id}
@@ -283,7 +286,7 @@ function DetailModal({
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {match.reciprocalStickers.map((id) => (
+                  {sort(match.reciprocalStickers).map((id) => (
                     <StickerChip
                       key={id}
                       id={id}
