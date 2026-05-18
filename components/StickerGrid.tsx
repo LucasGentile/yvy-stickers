@@ -79,7 +79,7 @@ function StickerGrid({
   const suppressNextClick = useRef(false)
 
   function handleTouchStart(id: string, on: boolean) {
-    if (!on || !onLongPress) return
+    if (!on || !onLongPress || tradeLocked?.has(id)) return
     longPressTimer.current = setTimeout(() => {
       longPressTimer.current = null
       suppressNextClick.current = true
@@ -100,6 +100,7 @@ function StickerGrid({
       suppressNextClick.current = false
       return
     }
+    if (tradeLocked?.has(id)) return
     toggle(id)
   }
 
@@ -255,7 +256,7 @@ function StickerGrid({
                       {id.startsWith('FWC') ? (
                         <span className="font-bold text-amber-400">{id === 'FWC00' ? '00' : id}</span>
                       ) : isCocaColaSticker(id) ? (
-                        <span className="font-bold text-red-500">{id}</span>
+                        <span className="font-bold text-red-500 [text-shadow:0_0_4px_#fff,0_0_4px_#fff]">{id}</span>
                       ) : (
                         id
                       )}
