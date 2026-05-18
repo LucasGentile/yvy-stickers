@@ -69,13 +69,18 @@ export default function ProfileScreen() {
 
   const load = useCallback(async () => {
     const id = localStorage.getItem('userId')
-    if (!id) { setLoading(false); return }
+    if (!id) {
+      setLoading(false)
+      return
+    }
     const result = await getPersonalInsights(id)
     setData(result)
     setLoading(false)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load()
+  }, [load])
 
   if (loading) {
     return (
@@ -98,7 +103,6 @@ export default function ProfileScreen() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-4 space-y-5">
-
       {/* ── Profile card ────────────────────────────────────────────── */}
       <div className="bg-yvy-surface rounded-2xl shadow-sm p-4 flex items-center gap-4">
         <div className="w-14 h-14 rounded-full bg-yvy-accent flex items-center justify-center shrink-0">
@@ -106,9 +110,14 @@ export default function ProfileScreen() {
         </div>
         <div className="min-w-0">
           <p className="font-bold text-yvy-dark text-base truncate">{data.name}</p>
-          <p className="text-xs text-yvy-muted">Torre {data.tower} · Apt {data.apartment}</p>
           <p className="text-xs text-yvy-muted">
-            No app há {data.accountAgeDays === 0 ? 'menos de 1 dia' : `${data.accountAgeDays} dia${data.accountAgeDays !== 1 ? 's' : ''}`}
+            Torre {data.tower} · Apt {data.apartment}
+          </p>
+          <p className="text-xs text-yvy-muted">
+            No app há{' '}
+            {data.accountAgeDays === 0
+              ? 'menos de 1 dia'
+              : `${data.accountAgeDays} dia${data.accountAgeDays !== 1 ? 's' : ''}`}
           </p>
         </div>
       </div>
@@ -162,17 +171,8 @@ export default function ProfileScreen() {
       <div className="space-y-2">
         <SectionHeader emoji="🤝" title="Histórico de Trocas" />
         <div className="grid grid-cols-3 gap-2">
-          <StatTile
-            label="Trocas feitas"
-            value={data.completedTrades}
-            color="blue"
-          />
-          <StatTile
-            label="Dadas"
-            value={data.stickersGiven}
-            sub="figurinhas"
-            color="red"
-          />
+          <StatTile label="Trocas feitas" value={data.completedTrades} color="blue" />
+          <StatTile label="Dadas" value={data.stickersGiven} sub="figurinhas" color="red" />
           <StatTile
             label="Recebidas"
             value={data.stickersReceived}
@@ -189,7 +189,8 @@ export default function ProfileScreen() {
               </p>
               <p className="font-bold text-yvy-dark">{data.bestTradeFriend}</p>
               <p className="text-[11px] text-yvy-muted">
-                {data.bestTradeFriendTrades} troca{data.bestTradeFriendTrades !== 1 ? 's' : ''} juntos
+                {data.bestTradeFriendTrades} troca{data.bestTradeFriendTrades !== 1 ? 's' : ''}{' '}
+                juntos
               </p>
             </div>
           </div>
@@ -243,9 +244,12 @@ export default function ProfileScreen() {
                   <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide leading-tight">
                     País mais repetido
                   </p>
-                  <p className="font-bold text-yvy-dark text-sm truncate">{data.mostDuplicatedCountryName}</p>
+                  <p className="font-bold text-yvy-dark text-sm truncate">
+                    {data.mostDuplicatedCountryName}
+                  </p>
                   <p className="text-[11px] text-yvy-muted">
-                    {data.mostDuplicatedCountryCount} cópia{data.mostDuplicatedCountryCount !== 1 ? 's' : ''}
+                    {data.mostDuplicatedCountryCount} cópia
+                    {data.mostDuplicatedCountryCount !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
@@ -257,9 +261,12 @@ export default function ProfileScreen() {
                   <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide leading-tight">
                     País menos repetido
                   </p>
-                  <p className="font-bold text-yvy-dark text-sm truncate">{data.leastDuplicatedCountryName}</p>
+                  <p className="font-bold text-yvy-dark text-sm truncate">
+                    {data.leastDuplicatedCountryName}
+                  </p>
                   <p className="text-[11px] text-yvy-muted">
-                    {data.leastDuplicatedCountryCount} cópia{data.leastDuplicatedCountryCount !== 1 ? 's' : ''}
+                    {data.leastDuplicatedCountryCount} cópia
+                    {data.leastDuplicatedCountryCount !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
@@ -288,8 +295,7 @@ export default function ProfileScreen() {
               <span
                 className={`text-lg font-bold ${data.mostCompleteTeamPct === 100 ? 'text-green-600' : 'text-yvy-dark'}`}
               >
-                {data.mostCompleteTeamPct}%
-                {data.mostCompleteTeamPct === 100 && ' ✅'}
+                {data.mostCompleteTeamPct}%{data.mostCompleteTeamPct === 100 && ' ✅'}
               </span>
             </div>
             <ProgressBar pct={data.mostCompleteTeamPct} color="green" />

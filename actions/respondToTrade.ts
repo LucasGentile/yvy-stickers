@@ -45,12 +45,22 @@ export async function respondToTrade(
   let effectiveGivingIds = trade.giving_ids
   let effectiveReceivingIds = trade.receiving_ids
 
-  if (action === 'accept' && (partialMyGivingIds !== undefined || partialMyReceivingIds !== undefined)) {
+  if (
+    action === 'accept' &&
+    (partialMyGivingIds !== undefined || partialMyReceivingIds !== undefined)
+  ) {
     const resolvedMyGiving = partialMyGivingIds ?? []
     const resolvedMyReceiving = partialMyReceivingIds ?? []
 
     if (resolvedMyGiving.length === 0 && resolvedMyReceiving.length === 0) {
       return { success: false, error: 'Selecione ao menos uma figurinha.' }
+    }
+
+    if (resolvedMyGiving.length === 0 && trade.receiving_ids.length > 0) {
+      return { success: false, error: 'Selecione ao menos uma figurinha para dar.' }
+    }
+    if (resolvedMyReceiving.length === 0 && trade.giving_ids.length > 0) {
+      return { success: false, error: 'Selecione ao menos uma figurinha para receber.' }
     }
 
     // Validate subsets (caller perspective):
@@ -70,8 +80,8 @@ export async function respondToTrade(
     }
 
     // Translate back to DB (initiator) perspective
-    effectiveGivingIds = resolvedMyReceiving   // what initiator gives = what receiver receives
-    effectiveReceivingIds = resolvedMyGiving   // what initiator wants = what receiver gives
+    effectiveGivingIds = resolvedMyReceiving // what initiator gives = what receiver receives
+    effectiveReceivingIds = resolvedMyGiving // what initiator wants = what receiver gives
   }
 
   const statusMap = { accept: 'accepted', reject: 'rejected', cancel: 'cancelled' } as const
@@ -130,30 +140,62 @@ export async function respondToTrade(
     )
 
     if (action === 'accept') {
-      // Log for both parties so each has a checklist entry in their history
-      // Use effectiveGivingIds/effectiveReceivingIds so partial trades log correctly
+      const excludedGivingIds = trade.giving_ids.filter((id) => !effectiveGivingIds.includes(id))
+      const excludedReceivingIds = trade.receiving_ids.filter(
+        (id) => !effectiveReceivingIds.includes(id)
+      )
+      const isPartial = excludedGivingIds.length > 0 || excludedReceivingIds.length > 0
+
       logAction(trade.receiver_id, 'trade_accepted', {
         tradeId: trade.id,
         partnerName: initiatorName,
-        givingIds: effectiveReceivingIds, // receiver gives what initiator requested
-        receivingIds: effectiveGivingIds, // receiver gets what initiator offered
+        givingIds: effectiveReceivingIds,
+        receivingIds: effectiveGivingIds,
+        ...(isPartial && {
+          isPartial: true,
+          excludedGivingIds: excludedReceivingIds,
+          excludedReceivingIds: excludedGivingIds,
+        }),
       })
       logAction(trade.initiator_id, 'trade_accepted', {
         tradeId: trade.id,
         partnerName: receiverName,
         givingIds: effectiveGivingIds,
         receivingIds: effectiveReceivingIds,
+        ...(isPartial && {
+          isPartial: true,
+          excludedGivingIds,
+          excludedReceivingIds,
+        }),
       })
     } else if (action === 'reject') {
-      // Rejector's log
-      logAction(trade.receiver_id, 'trade_rejected', { partnerName: initiatorName })
-      // Initiator's log — their request was turned down
-      logAction(trade.initiator_id, 'trade_rejected', { partnerName: receiverName, rejectedByPartner: true })
+      logAction(trade.receiver_id, 'trade_rejected', {
+        tradeId: trade.id,
+        partnerName: initiatorName,
+        givingIds: trade.receiving_ids,
+        receivingIds: trade.giving_ids,
+      })
+      logAction(trade.initiator_id, 'trade_rejected', {
+        tradeId: trade.id,
+        partnerName: receiverName,
+        givingIds: trade.giving_ids,
+        receivingIds: trade.receiving_ids,
+        rejectedBy: receiverName,
+      })
     } else {
-      // Canceller's log
-      logAction(trade.initiator_id, 'trade_cancelled', { partnerName: receiverName })
-      // Receiver's log — the request sent to them was withdrawn
-      logAction(trade.receiver_id, 'trade_cancelled', { partnerName: initiatorName, cancelledByPartner: true })
+      logAction(trade.initiator_id, 'trade_cancelled', {
+        tradeId: trade.id,
+        partnerName: receiverName,
+        givingIds: trade.giving_ids,
+        receivingIds: trade.receiving_ids,
+      })
+      logAction(trade.receiver_id, 'trade_cancelled', {
+        tradeId: trade.id,
+        partnerName: initiatorName,
+        givingIds: trade.receiving_ids,
+        receivingIds: trade.giving_ids,
+        cancelledBy: initiatorName,
+      })
     }
   })()
 

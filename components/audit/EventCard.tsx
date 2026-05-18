@@ -24,7 +24,8 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
   const isTrade = TRADE_ACTIONS.has(entry.action)
   const isAccepted = entry.action === 'trade_accepted'
   const isAdvancedExecuted = entry.action === 'advanced_trade_executed'
-  const isCanceled = entry.action === 'trade_cancelled' || entry.action === 'advanced_trade_cancelled'
+  const isCanceled =
+    entry.action === 'trade_cancelled' || entry.action === 'advanced_trade_cancelled'
   const isRejected = entry.action === 'trade_rejected' || entry.action === 'advanced_trade_rejected'
 
   const hint = cfg.realLifeHint?.(

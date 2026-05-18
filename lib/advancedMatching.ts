@@ -44,7 +44,11 @@ function getReservedCounts(
 
   for (const trade of pendingNormalTrades) {
     const giving =
-      trade.initiator_id === userId ? trade.giving_ids : trade.receiver_id === userId ? trade.receiving_ids : null
+      trade.initiator_id === userId
+        ? trade.giving_ids
+        : trade.receiver_id === userId
+          ? trade.receiving_ids
+          : null
     if (!giving) continue
     for (const id of giving) {
       reserved.set(id, (reserved.get(id) ?? 0) + 1)
@@ -105,10 +109,7 @@ function getIncomingStickers(
   return incoming
 }
 
-function getAvailableDuplicates(
-  user: UserTradeData,
-  reserved: Map<string, number>
-): Set<string> {
+function getAvailableDuplicates(user: UserTradeData, reserved: Map<string, number>): Set<string> {
   const available = new Set<string>()
   for (const [stickerId, count] of user.duplicates) {
     if (count > (reserved.get(stickerId) ?? 0)) {
@@ -144,9 +145,7 @@ async function loadAllTradeData(): Promise<{
   const [{ data: dbUsers }, { data: normalTrades }, { data: advancedTrades }] = await Promise.all([
     supabaseAdmin
       .from('users')
-      .select(
-        'id, input_mode, user_stickers(sticker_id), user_duplicates(sticker_id, count)'
-      )
+      .select('id, input_mode, user_stickers(sticker_id), user_duplicates(sticker_id, count)')
       .eq('approved', true),
     supabaseAdmin
       .from('pending_trades')
@@ -240,14 +239,24 @@ export async function checkAdvancedTradeEligibility(userId: string): Promise<boo
   // Check if closing the cycle is possible:
   // I give to receiver B, giver C gives to me. Does B have dupes that C needs?
   for (const receiver of potentialReceivers) {
-    const receiverReserved = getReservedCounts(receiver.user.id, pendingNormalTrades, pendingAdvancedTrades)
+    const receiverReserved = getReservedCounts(
+      receiver.user.id,
+      pendingNormalTrades,
+      pendingAdvancedTrades
+    )
     const receiverAvailable = getAvailableDuplicates(receiver.user, receiverReserved)
 
     for (const giver of potentialGivers) {
       if (giver.user.id === receiver.user.id) continue
-      const giverIncoming = getIncomingStickers(giver.user.id, pendingNormalTrades, pendingAdvancedTrades)
+      const giverIncoming = getIncomingStickers(
+        giver.user.id,
+        pendingNormalTrades,
+        pendingAdvancedTrades
+      )
       const giverNeeded = new Set(
-        [...computeNeeded(giver.user.inputMode, giver.user.stickers)].filter((id) => !giverIncoming.has(id))
+        [...computeNeeded(giver.user.inputMode, giver.user.stickers)].filter(
+          (id) => !giverIncoming.has(id)
+        )
       )
       const canClose = [...receiverAvailable].some((id) => giverNeeded.has(id))
       if (canClose) return true
@@ -259,9 +268,7 @@ export async function checkAdvancedTradeEligibility(userId: string): Promise<boo
 
 export type ScoredProposal = AdvancedTradeProposal & { score: number }
 
-export async function findAllAdvancedTrades(
-  userId: string
-): Promise<ScoredProposal[]> {
+export async function findAllAdvancedTrades(userId: string): Promise<ScoredProposal[]> {
   if (!userId) return []
 
   const { users, pendingNormalTrades, pendingAdvancedTrades } = await loadAllTradeData()
@@ -338,9 +345,7 @@ export async function findAllAdvancedTrades(
   return proposals
 }
 
-export async function findBestAdvancedTrade(
-  userId: string
-): Promise<AdvancedTradeProposal | null> {
+export async function findBestAdvancedTrade(userId: string): Promise<AdvancedTradeProposal | null> {
   const all = await findAllAdvancedTrades(userId)
   return all.length > 0 ? all[0] : null
 }

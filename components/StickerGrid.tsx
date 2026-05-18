@@ -204,7 +204,13 @@ function StickerGrid({
                               onTouchStart={() => handleTouchStart(id, on)}
                               onTouchEnd={cancelLongPress}
                               onTouchMove={cancelLongPress}
-                              onContextMenu={(e) => { e.preventDefault(); if (on && onLongPress) { navigator.vibrate?.(50); onLongPress(id) } }}
+                              onContextMenu={(e) => {
+                                e.preventDefault()
+                                if (on && onLongPress) {
+                                  navigator.vibrate?.(50)
+                                  onLongPress(id)
+                                }
+                              }}
                               className={`relative w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
                             >
                               {isChromeSticker(id) ? (
@@ -237,7 +243,13 @@ function StickerGrid({
                       onTouchStart={() => handleTouchStart(id, on)}
                       onTouchEnd={cancelLongPress}
                       onTouchMove={cancelLongPress}
-                      onContextMenu={(e) => { e.preventDefault(); if (on && onLongPress) { navigator.vibrate?.(50); onLongPress(id) } }}
+                      onContextMenu={(e) => {
+                        e.preventDefault()
+                        if (on && onLongPress) {
+                          navigator.vibrate?.(50)
+                          onLongPress(id)
+                        }
+                      }}
                       className={`relative h-10 px-3 rounded-lg text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged)}`}
                     >
                       {isChromeSticker(id) ? (

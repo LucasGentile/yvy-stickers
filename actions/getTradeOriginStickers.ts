@@ -14,31 +14,34 @@ export async function getTradeOriginStickers(userId: string): Promise<TradeOrigi
 
   const cutoffIso = new Date(Date.now() - NEWEST_WINDOW_MS).toISOString()
 
-  const [{ data: trades }, { data: advancedTrades }, { data: importLogs }, { data: saveLogs }] = await Promise.all([
-    supabaseAdmin
-      .from('pending_trades')
-      .select('initiator_id, giving_ids, receiving_ids, accepted_at')
-      .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
-      .eq('status', 'accepted'),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabaseAdmin as any)
-      .from('advanced_trades')
-      .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, accepted_at')
-      .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
-      .eq('status', 'accepted'),
-    supabaseAdmin
-      .from('audit_log')
-      .select('metadata')
-      .eq('user_id', userId)
-      .eq('action', 'file_import')
-      .gte('created_at', cutoffIso),
-    supabaseAdmin
-      .from('audit_log')
-      .select('metadata')
-      .eq('user_id', userId)
-      .eq('action', 'stickers_saved')
-      .gte('created_at', cutoffIso),
-  ])
+  const [{ data: trades }, { data: advancedTrades }, { data: importLogs }, { data: saveLogs }] =
+    await Promise.all([
+      supabaseAdmin
+        .from('pending_trades')
+        .select('initiator_id, giving_ids, receiving_ids, accepted_at')
+        .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
+        .eq('status', 'accepted'),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabaseAdmin as any)
+        .from('advanced_trades')
+        .select(
+          'user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, accepted_at'
+        )
+        .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
+        .eq('status', 'accepted'),
+      supabaseAdmin
+        .from('audit_log')
+        .select('metadata')
+        .eq('user_id', userId)
+        .eq('action', 'file_import')
+        .gte('created_at', cutoffIso),
+      supabaseAdmin
+        .from('audit_log')
+        .select('metadata')
+        .eq('user_id', userId)
+        .eq('action', 'stickers_saved')
+        .gte('created_at', cutoffIso),
+    ])
 
   const fromTrade = new Set<string>()
   const newest = new Set<string>()
@@ -69,8 +72,12 @@ export async function getTradeOriginStickers(userId: string): Promise<TradeOrigi
   // Advanced trades: cycle is A→B→C→A, so each user receives from the previous in cycle
   // A receives c_gives_ids, B receives a_gives_ids, C receives b_gives_ids
   for (const trade of (advancedTrades ?? []) as Array<{
-    user_a_id: string; user_b_id: string; user_c_id: string
-    a_gives_ids: string[]; b_gives_ids: string[]; c_gives_ids: string[]
+    user_a_id: string
+    user_b_id: string
+    user_c_id: string
+    a_gives_ids: string[]
+    b_gives_ids: string[]
+    c_gives_ids: string[]
     accepted_at: string | null
   }>) {
     let received: string[] = []

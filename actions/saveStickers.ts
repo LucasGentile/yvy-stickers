@@ -58,6 +58,11 @@ export async function saveStickers(
     removedWithDupes = (dupes ?? []).map((d) => d.sticker_id)
   }
 
-  logAction(userId, 'stickers_saved', { added: addedIds.length, addedIds, removed, total: stickerIds.length })
+  logAction(userId, 'stickers_saved', {
+    added: addedIds.length,
+    addedIds,
+    removed,
+    total: stickerIds.length,
+  })
   return { success: true, count: stickerIds.length, removedWithDupes }
 }

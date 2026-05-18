@@ -47,7 +47,9 @@ export async function getTradeAvailability(
   const { data: otherTrades } = await supabaseAdmin
     .from('pending_trades')
     .select('initiator_id, receiver_id, giving_ids, receiving_ids')
-    .or(`initiator_id.eq.${myId},receiver_id.eq.${myId},initiator_id.eq.${theirId},receiver_id.eq.${theirId}`)
+    .or(
+      `initiator_id.eq.${myId},receiver_id.eq.${myId},initiator_id.eq.${theirId},receiver_id.eq.${theirId}`
+    )
     .eq('status', 'pending')
     .neq('id', tradeId)
 

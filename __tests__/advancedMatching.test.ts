@@ -4,7 +4,11 @@ vi.mock('@/lib/supabaseAdmin', () => ({
   supabaseAdmin: { from: vi.fn() },
 }))
 
-import { checkAdvancedTradeEligibility, findBestAdvancedTrade, findAllAdvancedTrades } from '@/lib/advancedMatching'
+import {
+  checkAdvancedTradeEligibility,
+  findBestAdvancedTrade,
+  findAllAdvancedTrades,
+} from '@/lib/advancedMatching'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
 
@@ -152,18 +156,33 @@ describe('findBestAdvancedTrade', () => {
     // B has dupes [S[4], S[6]] → C needs both
     // C has dupes [S[3], S[7]] → A needs both
     mockTradeData([
-      makeUser('user-a', 'have', [S[0], S[1]], [
-        { sticker_id: S[2], count: 1 },
-        { sticker_id: S[5], count: 1 },
-      ]),
-      makeUser('user-b', 'have', [S[0], S[1], S[3]], [
-        { sticker_id: S[4], count: 1 },
-        { sticker_id: S[6], count: 1 },
-      ]),
-      makeUser('user-c', 'have', [S[0], S[1], S[2], S[5]], [
-        { sticker_id: S[3], count: 1 },
-        { sticker_id: S[7], count: 1 },
-      ]),
+      makeUser(
+        'user-a',
+        'have',
+        [S[0], S[1]],
+        [
+          { sticker_id: S[2], count: 1 },
+          { sticker_id: S[5], count: 1 },
+        ]
+      ),
+      makeUser(
+        'user-b',
+        'have',
+        [S[0], S[1], S[3]],
+        [
+          { sticker_id: S[4], count: 1 },
+          { sticker_id: S[6], count: 1 },
+        ]
+      ),
+      makeUser(
+        'user-c',
+        'have',
+        [S[0], S[1], S[2], S[5]],
+        [
+          { sticker_id: S[3], count: 1 },
+          { sticker_id: S[7], count: 1 },
+        ]
+      ),
     ])
 
     const result = await findBestAdvancedTrade('user-a')
@@ -179,16 +198,26 @@ describe('findBestAdvancedTrade', () => {
   it('caps all legs to the bottleneck count', async () => {
     // A→B: 3 stickers, B→C: 1 sticker, C→A: 2 stickers → all capped at 1
     mockTradeData([
-      makeUser('user-a', 'have', [S[0]], [
-        { sticker_id: S[1], count: 1 },
-        { sticker_id: S[2], count: 1 },
-        { sticker_id: S[3], count: 1 },
-      ]),
+      makeUser(
+        'user-a',
+        'have',
+        [S[0]],
+        [
+          { sticker_id: S[1], count: 1 },
+          { sticker_id: S[2], count: 1 },
+          { sticker_id: S[3], count: 1 },
+        ]
+      ),
       makeUser('user-b', 'have', [S[0]], [{ sticker_id: S[5], count: 1 }]),
-      makeUser('user-c', 'have', [S[0], S[1], S[2], S[3]], [
-        { sticker_id: S[6], count: 1 },
-        { sticker_id: S[7], count: 1 },
-      ]),
+      makeUser(
+        'user-c',
+        'have',
+        [S[0], S[1], S[2], S[3]],
+        [
+          { sticker_id: S[6], count: 1 },
+          { sticker_id: S[7], count: 1 },
+        ]
+      ),
     ])
 
     const result = await findBestAdvancedTrade('user-a')
@@ -227,25 +256,40 @@ describe('findBestAdvancedTrade', () => {
     // Triple 1 (A,B,C): score 1
     // Triple 2 (A,D,E): score 2
     mockTradeData([
-      makeUser('user-a', 'have', [S[0]], [
-        { sticker_id: S[1], count: 1 },
-        { sticker_id: S[2], count: 1 },
-        { sticker_id: S[3], count: 1 },
-      ]),
+      makeUser(
+        'user-a',
+        'have',
+        [S[0]],
+        [
+          { sticker_id: S[1], count: 1 },
+          { sticker_id: S[2], count: 1 },
+          { sticker_id: S[3], count: 1 },
+        ]
+      ),
       // B: needs S[1], has dupe S[5] for C
       makeUser('user-b', 'have', [S[0], S[2], S[3]], [{ sticker_id: S[5], count: 1 }]),
       // C: needs S[5], has dupe S[6] for A
       makeUser('user-c', 'have', [S[0], S[1], S[2], S[3]], [{ sticker_id: S[6], count: 1 }]),
       // D: needs S[2], S[3] → has dupes S[7], S[8] for E
-      makeUser('user-d', 'have', [S[0], S[1]], [
-        { sticker_id: S[7], count: 1 },
-        { sticker_id: S[8], count: 1 },
-      ]),
+      makeUser(
+        'user-d',
+        'have',
+        [S[0], S[1]],
+        [
+          { sticker_id: S[7], count: 1 },
+          { sticker_id: S[8], count: 1 },
+        ]
+      ),
       // E: needs S[7], S[8] → has dupes S[6], S[9] for A
-      makeUser('user-e', 'have', [S[0], S[1], S[2], S[3]], [
-        { sticker_id: S[6], count: 1 },
-        { sticker_id: S[9], count: 1 },
-      ]),
+      makeUser(
+        'user-e',
+        'have',
+        [S[0], S[1], S[2], S[3]],
+        [
+          { sticker_id: S[6], count: 1 },
+          { sticker_id: S[9], count: 1 },
+        ]
+      ),
     ])
 
     const result = await findBestAdvancedTrade('user-a')
@@ -260,11 +304,16 @@ describe('findBestAdvancedTrade', () => {
     // We need to use actual chrome sticker IDs from the constant
     // For now, test that sorting is alphabetical within non-chrome
     mockTradeData([
-      makeUser('user-a', 'have', [S[0]], [
-        { sticker_id: S[3], count: 1 },
-        { sticker_id: S[1], count: 1 },
-        { sticker_id: S[2], count: 1 },
-      ]),
+      makeUser(
+        'user-a',
+        'have',
+        [S[0]],
+        [
+          { sticker_id: S[3], count: 1 },
+          { sticker_id: S[1], count: 1 },
+          { sticker_id: S[2], count: 1 },
+        ]
+      ),
       makeUser('user-b', 'have', [S[0]], [{ sticker_id: S[5], count: 1 }]),
       makeUser('user-c', 'have', [S[0], S[1], S[2], S[3]], [{ sticker_id: S[6], count: 1 }]),
     ])
@@ -274,9 +323,7 @@ describe('findBestAdvancedTrade', () => {
     // A gives 1 sticker (bottleneck is B→C and C→A with 1 each)
     // Should pick alphabetically first non-chrome
     expect(result!.aGivesIds.length).toBe(1)
-    expect(result!.aGivesIds[0]).toBe(
-      [S[1], S[2], S[3]].sort()[0]
-    )
+    expect(result!.aGivesIds[0]).toBe([S[1], S[2], S[3]].sort()[0])
   })
 })
 
@@ -293,21 +340,36 @@ describe('findAllAdvancedTrades', () => {
     // Triple 1 (A,B,C): score 1
     // Triple 2 (A,D,E): score 2
     mockTradeData([
-      makeUser('user-a', 'have', [S[0]], [
-        { sticker_id: S[1], count: 1 },
-        { sticker_id: S[2], count: 1 },
-        { sticker_id: S[3], count: 1 },
-      ]),
+      makeUser(
+        'user-a',
+        'have',
+        [S[0]],
+        [
+          { sticker_id: S[1], count: 1 },
+          { sticker_id: S[2], count: 1 },
+          { sticker_id: S[3], count: 1 },
+        ]
+      ),
       makeUser('user-b', 'have', [S[0], S[2], S[3]], [{ sticker_id: S[5], count: 1 }]),
       makeUser('user-c', 'have', [S[0], S[1], S[2], S[3]], [{ sticker_id: S[6], count: 1 }]),
-      makeUser('user-d', 'have', [S[0], S[1]], [
-        { sticker_id: S[7], count: 1 },
-        { sticker_id: S[8], count: 1 },
-      ]),
-      makeUser('user-e', 'have', [S[0], S[1], S[2], S[3]], [
-        { sticker_id: S[6], count: 1 },
-        { sticker_id: S[9], count: 1 },
-      ]),
+      makeUser(
+        'user-d',
+        'have',
+        [S[0], S[1]],
+        [
+          { sticker_id: S[7], count: 1 },
+          { sticker_id: S[8], count: 1 },
+        ]
+      ),
+      makeUser(
+        'user-e',
+        'have',
+        [S[0], S[1], S[2], S[3]],
+        [
+          { sticker_id: S[6], count: 1 },
+          { sticker_id: S[9], count: 1 },
+        ]
+      ),
     ])
 
     const results = await findAllAdvancedTrades('user-a')

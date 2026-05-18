@@ -405,7 +405,11 @@ export default function MatchCard({
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {hasCanceledTradeInAvailable(match.matchStickers, match.reciprocalStickers, match.canceledTrades) && (
+            {hasCanceledTradeInAvailable(
+              match.matchStickers,
+              match.reciprocalStickers,
+              match.canceledTrades
+            ) && (
               <span className="text-[10px] font-semibold bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
                 Cancelada anteriormente
               </span>

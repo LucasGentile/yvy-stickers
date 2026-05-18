@@ -151,9 +151,10 @@ async function computeMuralInsights(): Promise<Insight[]> {
     emoji: '💸',
     title: 'Maior Investidor',
     highlight: `${formatName(bigSpender.name as string)} gastou ~R$${bigSpend} em figurinhas`,
-    detail: personalChopps >= 3
-      ? `Com esse dinheiro dava pra tomar ${personalChopps} litros de chopp na beira da piscina (em copo plástico, claro — vidro não é permitido).`
-      : `Com esse dinheiro dava pra assinar o streaming da Copa inteira e ainda sobrava troco.`,
+    detail:
+      personalChopps >= 3
+        ? `Com esse dinheiro dava pra tomar ${personalChopps} litros de chopp na beira da piscina (em copo plástico, claro — vidro não é permitido).`
+        : `Com esse dinheiro dava pra assinar o streaming da Copa inteira e ainda sobrava troco.`,
     color: 'orange',
   })
 

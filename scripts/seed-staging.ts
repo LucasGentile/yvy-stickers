@@ -36,7 +36,10 @@ async function fetchAll(client: SupabaseClient, table: string): Promise<Record<s
   const rows: Record<string, unknown>[] = []
   let from = 0
   while (true) {
-    const { data, error } = await client.from(table).select('*').range(from, from + PAGE - 1)
+    const { data, error } = await client
+      .from(table)
+      .select('*')
+      .range(from, from + PAGE - 1)
     if (error) throw new Error(`fetch ${table}: ${error.message}`)
     if (!data?.length) break
     rows.push(...data)
@@ -47,7 +50,10 @@ async function fetchAll(client: SupabaseClient, table: string): Promise<Record<s
 }
 
 async function clearTable(client: SupabaseClient, table: string) {
-  const { error } = await client.from(table).delete().gte('id', '00000000-0000-0000-0000-000000000000')
+  const { error } = await client
+    .from(table)
+    .delete()
+    .gte('id', '00000000-0000-0000-0000-000000000000')
   if (error) throw new Error(`clear ${table}: ${error.message}`)
 }
 
@@ -62,7 +68,10 @@ async function insertBatch(client: SupabaseClient, table: string, rows: Record<s
 async function copyTable(table: string) {
   process.stdout.write(`  ${table}... `)
   const rows = await fetchAll(prodClient, table)
-  if (!rows.length) { console.log('empty'); return }
+  if (!rows.length) {
+    console.log('empty')
+    return
+  }
   await insertBatch(stagingClient, table, rows)
   console.log(`${rows.length} rows`)
 }
@@ -85,4 +94,7 @@ async function main() {
   console.log('\nDone. Staging is up to date.')
 }
 
-main().catch((err) => { console.error(err.message); process.exit(1) })
+main().catch((err) => {
+  console.error(err.message)
+  process.exit(1)
+})

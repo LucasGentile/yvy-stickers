@@ -22,8 +22,8 @@ export type PersonalInsights = {
   missingCount: number
 
   // Acquisition
-  purchasedCount: number   // owned - received from trades
-  fromTradeCount: number   // stickers received via accepted trades
+  purchasedCount: number // owned - received from trades
+  fromTradeCount: number // stickers received via accepted trades
   estimatedPacksBought: number
   estimatedSpentBrl: number
   estimatedSavedBrl: number // cost equivalent of stickers received from trades
@@ -43,7 +43,7 @@ export type PersonalInsights = {
   mostDuplicatedStickerCount: number
   leastDuplicatedSticker: string | null
   leastDuplicatedStickerCount: number
-  mostDuplicatedCountry: string | null   // team code e.g. "BRA"
+  mostDuplicatedCountry: string | null // team code e.g. "BRA"
   mostDuplicatedCountryName: string | null
   mostDuplicatedCountryCount: number
   leastDuplicatedCountry: string | null
@@ -51,7 +51,7 @@ export type PersonalInsights = {
   leastDuplicatedCountryCount: number
 
   // Collection highlights
-  mostCompleteTeam: string | null        // team name
+  mostCompleteTeam: string | null // team name
   mostCompleteTeamPct: number
   leastCompleteTeam: string | null
   leastCompleteTeamPct: number
@@ -70,14 +70,8 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
       .select('name, tower, apartment, created_at')
       .eq('id', userId)
       .maybeSingle(),
-    supabaseAdmin
-      .from('user_stickers')
-      .select('sticker_id')
-      .eq('user_id', userId),
-    supabaseAdmin
-      .from('user_duplicates')
-      .select('sticker_id, count')
-      .eq('user_id', userId),
+    supabaseAdmin.from('user_stickers').select('sticker_id').eq('user_id', userId),
+    supabaseAdmin.from('user_duplicates').select('sticker_id, count').eq('user_id', userId),
     supabaseAdmin
       .from('pending_trades')
       .select('initiator_id, receiver_id, giving_ids, receiving_ids')
@@ -126,8 +120,12 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
 
   // Include advanced trades (cycle: A→B→C→A)
   for (const at of (advancedTrades ?? []) as Array<{
-    user_a_id: string; user_b_id: string; user_c_id: string
-    a_gives_ids: string[]; b_gives_ids: string[]; c_gives_ids: string[]
+    user_a_id: string
+    user_b_id: string
+    user_c_id: string
+    a_gives_ids: string[]
+    b_gives_ids: string[]
+    c_gives_ids: string[]
   }>) {
     let myGiving: string[] = []
     let myReceiving: string[] = []
@@ -295,7 +293,8 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
 
     totalDuplicateCopies: totalDupesCopies,
     tradedDuplicateCopies: totalGivenAway,
-    tradedDuplicatesPct: totalDupesCopies > 0 ? Math.round((totalGivenAway / totalDupesCopies) * 100) : 0,
+    tradedDuplicatesPct:
+      totalDupesCopies > 0 ? Math.round((totalGivenAway / totalDupesCopies) * 100) : 0,
     mostDuplicatedSticker,
     mostDuplicatedStickerCount,
     leastDuplicatedSticker,

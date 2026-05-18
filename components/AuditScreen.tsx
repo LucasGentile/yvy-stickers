@@ -149,7 +149,11 @@ export default function AuditScreen() {
             ))}
           </div>
 
-          <Pagination page={activityPage} totalPages={activityTotalPages} onPageChange={setActivityPage} />
+          <Pagination
+            page={activityPage}
+            totalPages={activityTotalPages}
+            onPageChange={setActivityPage}
+          />
         </div>
       )}
     </div>

@@ -19,14 +19,14 @@ type BrowseEntry =
   | { kind: 'team'; code: string; name: string; flagCode: string; stickers: string[] }
   | { kind: 'special'; label: string; icon: string; stickers: string[] }
 
-const FWC_STICKERS = ALL_STICKER_SECTIONS
-  .filter((s): s is StickerSpecial => s.type === 'special' && s.label !== 'Figurinhas Coca-Cola')
-  .flatMap((s) => s.stickers)
+const FWC_STICKERS = ALL_STICKER_SECTIONS.filter(
+  (s): s is StickerSpecial => s.type === 'special' && s.label !== 'Figurinhas Coca-Cola'
+).flatMap((s) => s.stickers)
 
 const CC_STICKERS =
-  ALL_STICKER_SECTIONS
-    .find((s): s is StickerSpecial => s.type === 'special' && s.label === 'Figurinhas Coca-Cola')
-    ?.stickers ?? []
+  ALL_STICKER_SECTIONS.find(
+    (s): s is StickerSpecial => s.type === 'special' && s.label === 'Figurinhas Coca-Cola'
+  )?.stickers ?? []
 
 const BROWSE_ENTRIES: BrowseEntry[] = [
   { kind: 'special', label: 'Copa do Mundo (FWC)', icon: '⚽', stickers: FWC_STICKERS },
@@ -320,7 +320,9 @@ export default function StickerLookupScreen() {
                   : 'Buscar seleção ou coleção...'
               }
               className={`w-full rounded-lg border border-yvy-border pl-8 pr-8 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg ${
-                selectedEntry && !browseQuery ? 'placeholder:text-yvy-dark placeholder:font-medium' : ''
+                selectedEntry && !browseQuery
+                  ? 'placeholder:text-yvy-dark placeholder:font-medium'
+                  : ''
               }`}
             />
             {(browseQuery || selectedEntry) && (

@@ -61,13 +61,18 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-[#16a34a]',
     iconBg: 'bg-green-50',
     iconColor: 'text-green-700',
-    label: (m) => `Troca concluída com ${m.partnerName}`,
+    label: (m) =>
+      m.isPartial ? `Troca parcial com ${m.partnerName}` : `Troca concluída com ${m.partnerName}`,
     detail: (m) => {
       const giving = (m.givingIds as string[] | undefined) ?? []
       const receiving = (m.receivingIds as string[] | undefined) ?? []
       const g = giving.length || (m.givingCount as number) || 0
       const r = receiving.length || (m.receivingCount as number) || 0
-      return `${g} dando · ${r} recebendo`
+      const base = `${g} dando · ${r} recebendo`
+      if (!m.isPartial) return base
+      const exG = ((m.excludedGivingIds as string[] | undefined) ?? []).length
+      const exR = ((m.excludedReceivingIds as string[] | undefined) ?? []).length
+      return `${base} · ${exG + exR} removida${exG + exR !== 1 ? 's' : ''} da proposta`
     },
     realLifeHint: (m) => {
       const giving = (m.givingIds as string[] | undefined) ?? []
@@ -81,16 +86,25 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-red-400',
     iconBg: 'bg-red-50',
     iconColor: 'text-red-500',
-    label: (m) => m.rejectedByPartner ? 'Pedido recusado' : 'Troca recusada',
-    detail: (m) => m.rejectedByPartner ? `Recusado por ${m.partnerName}` : `Pedido de ${m.partnerName}`,
+    label: (m) => (m.rejectedBy ? `Troca recusada por ${m.rejectedBy}` : 'Troca recusada'),
+    detail: (m) => `Com ${m.partnerName}`,
+  },
+  trade_received: {
+    icon: '📥',
+    borderColor: 'border-l-yvy-accent',
+    iconBg: 'bg-yvy-accent/10',
+    iconColor: 'text-yvy-accent',
+    label: () => 'Pedido de troca recebido',
+    detail: (m) =>
+      `De ${m.partnerName} · ${m.receivingCount || 0} recebendo, ${m.givingCount || 0} dando`,
   },
   trade_cancelled: {
     icon: '○',
     borderColor: 'border-l-yvy-border',
     iconBg: 'bg-yvy-bg',
     iconColor: 'text-yvy-muted',
-    label: (m) => m.cancelledByPartner ? 'Pedido cancelado' : 'Pedido cancelado',
-    detail: (m) => m.cancelledByPartner ? `Cancelado por ${m.partnerName}` : `Para ${m.partnerName}`,
+    label: (m) => (m.cancelledBy ? `Pedido cancelado por ${m.cancelledBy}` : 'Pedido cancelado'),
+    detail: (m) => `Com ${m.partnerName}`,
   },
   trade_rolled_back: {
     icon: '↩',
@@ -100,12 +114,28 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     label: (m) => (m.partial ? 'Troca parcialmente desfeita' : 'Troca desfeita'),
     detail: (m) => `Com ${m.partnerName}`,
   },
+  trade_rollback_requested: {
+    icon: '⏳',
+    borderColor: 'border-l-amber-300',
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-amber-500',
+    label: (m) => (m.partial ? 'Desfazimento parcial solicitado' : 'Desfazimento solicitado'),
+    detail: (m) => `${m.requestedBy} pediu para desfazer a troca com ${m.partnerName}`,
+  },
+  trade_rollback_denied: {
+    icon: '🚫',
+    borderColor: 'border-l-yvy-border',
+    iconBg: 'bg-yvy-bg',
+    iconColor: 'text-yvy-muted',
+    label: () => 'Desfazimento recusado',
+    detail: (m) => `${m.deniedBy} manteve a troca com ${m.partnerName}`,
+  },
   advanced_trade_proposed: {
     icon: '🔄',
     borderColor: 'border-l-purple-400',
     iconBg: 'bg-purple-50',
     iconColor: 'text-purple-600',
-    label: (m) => m.isRequester ? 'Troca triangular proposta' : 'Troca triangular recebida',
+    label: (m) => (m.isRequester ? 'Troca triangular proposta' : 'Troca triangular recebida'),
     detail: (m) => `Com ${((m.partners as string[]) ?? []).join(' e ')}`,
   },
   advanced_trade_approved: {
@@ -113,7 +143,10 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-purple-400',
     iconBg: 'bg-purple-50',
     iconColor: 'text-purple-600',
-    label: () => 'Troca triangular aprovada',
+    label: (m) =>
+      (m.isSelf ?? !m.approvedBy)
+        ? 'Você aprovou a troca triangular'
+        : `${m.approvedBy} aprovou a troca triangular`,
     detail: (m) => `Com ${((m.partners as string[]) ?? []).join(' e ')}`,
   },
   advanced_trade_rejected: {
@@ -122,7 +155,8 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     iconBg: 'bg-red-50',
     iconColor: 'text-red-500',
     label: () => 'Troca triangular recusada',
-    detail: (m) => `${m.rejectedBy} recusou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
+    detail: (m) =>
+      `${m.rejectedBy ?? 'Alguém'} recusou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
   },
   advanced_trade_executed: {
     icon: '🤝',
@@ -135,7 +169,8 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
       const receiving = (m.receivingIds as string[] | undefined) ?? []
       const parts: string[] = []
       if (giving.length > 0) parts.push(`${giving.length} para ${m.giveToName ?? 'alguém'}`)
-      if (receiving.length > 0) parts.push(`${receiving.length} de ${m.receiveFromName ?? 'alguém'}`)
+      if (receiving.length > 0)
+        parts.push(`${receiving.length} de ${m.receiveFromName ?? 'alguém'}`)
       return parts.join(' · ')
     },
   },
@@ -145,7 +180,8 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     iconBg: 'bg-yvy-bg',
     iconColor: 'text-yvy-muted',
     label: () => 'Troca triangular cancelada',
-    detail: (m) => `${m.cancelledBy} cancelou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
+    detail: (m) =>
+      `${m.cancelledBy ?? 'Alguém'} cancelou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
   },
   duplicate_updated: {
     icon: '＋',
@@ -229,9 +265,12 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
 export const TRADE_ACTIONS = new Set([
   'trade_accepted',
   'trade_sent',
+  'trade_received',
   'trade_rejected',
   'trade_cancelled',
   'trade_rolled_back',
+  'trade_rollback_requested',
+  'trade_rollback_denied',
   'advanced_trade_proposed',
   'advanced_trade_approved',
   'advanced_trade_rejected',

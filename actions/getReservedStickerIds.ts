@@ -32,8 +32,12 @@ export async function getReservedStickerIds(userId: string): Promise<Record<stri
   }
 
   for (const trade of (advancedData ?? []) as Array<{
-    user_a_id: string; user_b_id: string; user_c_id: string
-    a_gives_ids: string[]; b_gives_ids: string[]; c_gives_ids: string[]
+    user_a_id: string
+    user_b_id: string
+    user_c_id: string
+    a_gives_ids: string[]
+    b_gives_ids: string[]
+    c_gives_ids: string[]
   }>) {
     let giving: string[] = []
     if (trade.user_a_id === userId) giving = trade.a_gives_ids

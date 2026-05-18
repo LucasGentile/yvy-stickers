@@ -63,14 +63,6 @@ function makeAtomicUpdateChain(result: unknown) {
   return chain
 }
 
-function makeUpdateChain(result: unknown = { error: null }) {
-  const chain: Record<string, ReturnType<typeof vi.fn>> = {}
-  chain.update = vi.fn().mockReturnValue(chain)
-  chain.eq = vi.fn().mockReturnValue(chain)
-  chain.then = (resolve: (v: unknown) => unknown) => Promise.resolve(result).then(resolve)
-  return chain
-}
-
 // ─── createTradeRequest: tradeId in logs ────────────────────────────────────
 
 describe('createTradeRequest logs include tradeId', () => {
@@ -137,7 +129,8 @@ describe('respondToTrade logs include tradeId', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
-      if (callCount === 2) return makeAtomicUpdateChain({ data: { id: 'trade-resp-456' }, error: null })
+      if (callCount === 2)
+        return makeAtomicUpdateChain({ data: { id: 'trade-resp-456' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'Ana' },
@@ -170,7 +163,8 @@ describe('respondToTrade logs include tradeId', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
-      if (callCount === 2) return makeAtomicUpdateChain({ data: { id: 'trade-resp-456' }, error: null })
+      if (callCount === 2)
+        return makeAtomicUpdateChain({ data: { id: 'trade-resp-456' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'Ana' },
@@ -202,7 +196,8 @@ describe('respondToTrade logs include tradeId', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeData, error: null })
-      if (callCount === 2) return makeAtomicUpdateChain({ data: { id: 'trade-resp-456' }, error: null })
+      if (callCount === 2)
+        return makeAtomicUpdateChain({ data: { id: 'trade-resp-456' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'Ana' },

@@ -70,6 +70,7 @@ A contagem _"Compradas: X · De trocas: Y"_ aparece acima da grade.
 Figurinhas especiais têm destaque visual:
 🟡 _Dourado_ — figurinhas cromadas (FWC + #1 de cada seleção)
 🔴 _Vermelho_ — figurinhas Coca-Cola (CC1–CC14)
+✨ _Badge dourado_ — figurinha adicionada ao seu álbum nas últimas 12h (seja por troca ou salva manualmente)
 
 - Segure (pressione por 500ms) qualquer figurinha marcada (verde ou azul) para abrir um painel rápido de repetida — ajuste a quantidade e salve sem sair da tela
 
@@ -99,13 +100,16 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Toque em _"Realizar Troca"_ para enviar um pedido formal
 - O pedido fica pendente até que o outro morador aceite
 - Ao aceitar, é possível selecionar apenas um subconjunto das figurinhas — útil quando nem todas estão disponíveis no momento; figurinhas indisponíveis aparecem riscadas automaticamente
+  - Ao desmarcar qualquer figurinha, o app pede confirmação _por figurinha_ antes de removê-la da proposta
+  - Não é possível aceitar com nenhum lado da troca vazio — o app avisa e impede o envio
+  - As figurinhas removidas da proposta aparecem registradas no histórico (seção "removida da proposta")
+- Antes de confirmar a aceitação, um _checklist_ resume as figurinhas envolvidas — útil para conferir com o outro morador presencialmente antes de bater o martelo
 - Após aceite, a troca pode ser desfeita a qualquer momento — basta solicitar e o outro morador confirmar
 - Desfazimento parcial disponível: escolha quais figurinhas específicas reverter, não precisa ser tudo
 - Um _ponto vermelho_ no menu indica pedidos esperando sua resposta
 - Pedidos recebidos mostram quantas figurinhas estão envolvidas e alertam se houver uma troca mais vantajosa com outro morador
-- Antes de aceitar, o app lembra de confirmar presencialmente com o outro morador
 - Figurinhas nos cards de troca são coloridas: _vermelho_ = você dá, _verde_ = você recebe (com setas indicando direção); os rótulos mostram o total (ex: "Você deu 12")
-- Trocas concluídas ficam no final da página em uma seção recolhível e paginada (3 por vez), ordenadas da mais recente para a mais antiga
+- Trocas concluídas ficam no final da página em uma seção recolhível e paginada (3 por vez), ordenadas da mais recente para a mais antiga; cada card mostra o timestamp e um link direto para a linha do tempo da troca
 - Filtro por parceiro: chips com os nomes de quem você já trocou aparecem no topo — toque para filtrar, toque de novo para ver todas
 - Filtro "apenas não verificadas" (chip amber): mostra somente trocas que ainda não foram entregues fisicamente; combina com o filtro de parceiro
 - O _Assistente de troca_ dentro de cada troca concluída permite marcar figurinhas já separadas; ao pressionar _"Completar"_, a troca é marcada como verificada (indicador verde ✓ ao lado de "Troca concluída")
@@ -115,6 +119,7 @@ Quando uma troca direta não é possível, o app busca automaticamente ciclos de
 
 - O menu _"Troca Avançada"_ aparece quando você tem trocas pendentes _ou_ quando existe pelo menos um ciclo válido
 - Toque em _"Buscar Trocas Triangulares"_ para ver _todas_ as combinações possíveis, ranqueadas por número de figurinhas (a melhor aparece no topo)
+- O matching exclui automaticamente figurinhas que você já vai receber em trocas normais pendentes — evita sugerir ciclos impossíveis
 - Escolha qual proposta enviar — as figurinhas são selecionadas automaticamente, sem escolha manual
 - Código de cores nos cards: _vermelho_ = você dá, _verde_ = você recebe, _azul_ = troca entre os outros dois participantes
 - Os 3 participantes precisam aprovar para a troca acontecer; se qualquer um recusar, a proposta é cancelada para todos
@@ -261,7 +266,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (~250 testes, 27 suítes)
+npm test                  # roda todos os testes (269 testes, 27 suítes)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```

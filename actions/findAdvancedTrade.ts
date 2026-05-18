@@ -15,7 +15,7 @@ export async function findAdvancedTrade(
 ): Promise<FindAdvancedTradeResult> {
   if (!userId) return { found: false, error: 'Usuário inválido.' }
 
-  const proposal = selectedProposal ?? await findBestAdvancedTrade(userId)
+  const proposal = selectedProposal ?? (await findBestAdvancedTrade(userId))
   if (!proposal) return { found: false }
 
   const userAStatus = proposal.userAId === userId ? 'approved' : 'pending'
@@ -51,9 +51,7 @@ export async function findAdvancedTrade(
         .from('users')
         .select('id, name')
         .in('id', [proposal.userAId, proposal.userBId, proposal.userCId])
-      const nameMap = Object.fromEntries(
-        (users ?? []).map((u) => [u.id, formatName(u.name)])
-      )
+      const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
       const participants = [proposal.userAId, proposal.userBId, proposal.userCId]
       for (const pid of participants) {
         const others = participants.filter((id) => id !== pid).map((id) => nameMap[id] ?? 'Usuário')
@@ -63,7 +61,9 @@ export async function findAdvancedTrade(
           isRequester: pid === userId,
         })
       }
-    } catch { /* logging is best-effort */ }
+    } catch {
+      /* logging is best-effort */
+    }
   })()
 
   return { found: true, tradeId: data.id, proposal }

@@ -2,7 +2,13 @@
 
 import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 
-export type StickerChipVariant = 'default' | 'green' | 'amber' | 'giving' | 'receiving' | 'third-party'
+export type StickerChipVariant =
+  | 'default'
+  | 'green'
+  | 'amber'
+  | 'giving'
+  | 'receiving'
+  | 'third-party'
 
 export function StickerChip({
   id,
@@ -63,19 +69,22 @@ export function StickerChip({
     containerClass = 'bg-sky-50 border-sky-200 text-sky-700'
   }
 
-  const showSparkle = (variant === 'giving' || variant === 'receiving' || variant === 'third-party') && isChrome
+  const showSparkle =
+    (variant === 'giving' || variant === 'receiving' || variant === 'third-party') && isChrome
   const label = showSparkle ? `✨${id}` : id
 
   const skipSpecialColor =
-    variant === 'giving' || variant === 'receiving' || variant === 'third-party' ||
+    variant === 'giving' ||
+    variant === 'receiving' ||
+    variant === 'third-party' ||
     (checked && (variant === 'green' || variant === 'amber'))
-  const chromeClass = variant === 'default' && selected ? 'font-bold text-amber-300' : 'font-bold text-amber-500'
-  const cokeClass = variant === 'default' && selected ? 'font-bold text-red-300' : 'font-bold text-red-500'
+  const chromeClass =
+    variant === 'default' && selected ? 'font-bold text-amber-300' : 'font-bold text-amber-500'
+  const cokeClass =
+    variant === 'default' && selected ? 'font-bold text-red-300' : 'font-bold text-red-500'
 
   const badgeColor =
-    variant === 'giving' ? 'bg-rose-400' :
-    variant === 'amber' ? 'bg-amber-500' :
-    'bg-green-500'
+    variant === 'giving' ? 'bg-rose-400' : variant === 'amber' ? 'bg-amber-500' : 'bg-green-500'
 
   const content = (
     <>

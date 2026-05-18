@@ -2,9 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-export type AdvancedTradeEffectuateResult =
-  | { success: true }
-  | { success: false; error: string }
+export type AdvancedTradeEffectuateResult = { success: true } | { success: false; error: string }
 
 async function decrementDupes(userId: string, ids: string[]) {
   for (const sid of ids) {

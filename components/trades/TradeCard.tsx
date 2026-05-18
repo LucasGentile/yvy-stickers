@@ -7,10 +7,7 @@ import {
   getBetterMatchExcludingTrade,
   type BetterMatchResult,
 } from '@/actions/getBetterMatchExcludingTrade'
-import {
-  getTradeAvailability,
-  type TradeAvailability,
-} from '@/actions/getTradeAvailability'
+import { getTradeAvailability, type TradeAvailability } from '@/actions/getTradeAvailability'
 import { StickerList, StickerToggle } from './StickerList'
 
 export function TradeCard({
@@ -30,7 +27,10 @@ export function TradeCard({
   const [availability, setAvailability] = useState<TradeAvailability | 'loading' | null>(null)
   const [selectedMyGiving, setSelectedMyGiving] = useState<Set<string>>(new Set())
   const [selectedMyReceiving, setSelectedMyReceiving] = useState<Set<string>>(new Set())
-  const [pendingRemoval, setPendingRemoval] = useState<{ id: string; side: 'giving' | 'receiving' } | null>(null)
+  const [pendingRemoval, setPendingRemoval] = useState<{
+    id: string
+    side: 'giving' | 'receiving'
+  } | null>(null)
 
   const totalReceiving = trade.myReceivingIds.length
   const totalGiving = trade.myGivingIds.length
@@ -157,11 +157,16 @@ export function TradeCard({
               <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
                 <span className="text-blue-500 text-sm shrink-0 mt-px">ℹ️</span>
                 <div className="space-y-1">
-                  <p className="text-[12px] font-semibold text-blue-900">Antes de aceitar, confira:</p>
+                  <p className="text-[12px] font-semibold text-blue-900">
+                    Antes de aceitar, confira:
+                  </p>
                   <ul className="text-[11px] text-blue-800 leading-snug space-y-1 list-disc list-inside">
                     <li>Você tem todas as figurinhas que vai dar em mãos?</li>
                     <li>A outra pessoa também confirmou que tem as figurinhas dela?</li>
-                    <li>Se alguma não estiver disponível agora, use a <strong>seleção parcial</strong> na próxima tela para incluir só as que vocês têm.</li>
+                    <li>
+                      Se alguma não estiver disponível agora, use a <strong>seleção parcial</strong>{' '}
+                      na próxima tela para incluir só as que vocês têm.
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -285,7 +290,8 @@ export function TradeCard({
                   {pendingRemoval && (
                     <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                       <p className="text-[11px] text-amber-800 flex-1">
-                        Remover <span className="font-bold font-mono">{pendingRemoval.id}</span> da troca?
+                        Remover <span className="font-bold font-mono">{pendingRemoval.id}</span> da
+                        troca?
                       </p>
                       <button
                         onClick={() => setPendingRemoval(null)}

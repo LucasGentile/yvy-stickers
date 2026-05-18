@@ -1,6 +1,11 @@
 'use client'
 
-import { isChromeSticker, isCocaColaSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
+import {
+  isChromeSticker,
+  isCocaColaSticker,
+  sortByAlbumOrder,
+  sortAlphabetically,
+} from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
 import { StickerChip, type StickerChipVariant } from '@/components/StickerChip'
 
@@ -48,7 +53,9 @@ export function StickerList({
   return (
     <div>
       {displayLabel && (
-        <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${LABEL_STYLES[variant]}`}>
+        <p
+          className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${LABEL_STYLES[variant]}`}
+        >
           {displayLabel}
           {chromeCount > 0 && (
             <span className="ml-1.5 text-amber-600 normal-case font-medium">

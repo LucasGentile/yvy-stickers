@@ -74,9 +74,9 @@ describe('CompletedTradesSection — partner filter', () => {
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
 
-    const chips = screen.getAllByRole('button').filter((btn) =>
-      btn.className.includes('rounded-full')
-    )
+    const chips = screen
+      .getAllByRole('button')
+      .filter((btn) => btn.className.includes('rounded-full'))
     const chipLabels = chips.map((c) => c.textContent)
     expect(chipLabels).toContain('Alice')
     expect(chipLabels).toContain('Bob')
@@ -84,25 +84,25 @@ describe('CompletedTradesSection — partner filter', () => {
   })
 
   it('does not show partner filter chips when only one partner exists', () => {
-    const trades = [
-      makeTrade({ otherUserName: 'Alice' }),
-      makeTrade({ otherUserName: 'Alice' }),
-    ]
+    const trades = [makeTrade({ otherUserName: 'Alice' }), makeTrade({ otherUserName: 'Alice' })]
 
     render(<CompletedTradesSection trades={trades} userId="user-a" onRefresh={() => {}} />)
 
     fireEvent.click(screen.getByText(/Trocas concluídas/))
 
-    const chips = screen.getAllByRole('button').filter(
-      (btn) => btn.className.includes('rounded-full') && btn.textContent !== 'Apenas não verificadas'
-    )
+    const chips = screen
+      .getAllByRole('button')
+      .filter(
+        (btn) =>
+          btn.className.includes('rounded-full') && btn.textContent !== 'Apenas não verificadas'
+      )
     expect(chips).toHaveLength(0)
   })
 
   function getChip(name: string) {
-    return screen.getAllByRole('button').find(
-      (btn) => btn.className.includes('rounded-full') && btn.textContent === name
-    )!
+    return screen
+      .getAllByRole('button')
+      .find((btn) => btn.className.includes('rounded-full') && btn.textContent === name)!
   }
 
   it('filters trades when a partner chip is selected', () => {

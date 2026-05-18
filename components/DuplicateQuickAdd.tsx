@@ -49,10 +49,13 @@ export function DuplicateQuickAdd({
           Adicionar repetida
         </p>
 
-        <p className={`text-3xl font-mono font-bold mb-1 ${
-          chrome ? 'text-amber-500' : coke ? 'text-red-500' : 'text-yvy-dark'
-        }`}>
-          {id}{chrome && <span className="text-xl ml-1">✨</span>}
+        <p
+          className={`text-3xl font-mono font-bold mb-1 ${
+            chrome ? 'text-amber-500' : coke ? 'text-red-500' : 'text-yvy-dark'
+          }`}
+        >
+          {id}
+          {chrome && <span className="text-xl ml-1">✨</span>}
         </p>
 
         <p className="text-xs text-yvy-muted mb-7">

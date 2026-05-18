@@ -5,7 +5,7 @@ import { sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
 import { formatName } from '@/lib/format'
 import { StickerChip } from '../StickerChip'
-import { EVENT_CONFIG, relativeTime, absoluteTime } from './eventConfig'
+import { EVENT_CONFIG } from './eventConfig'
 
 export function TradeCardBody({
   entry,
@@ -99,7 +99,8 @@ export function TradeCardBody({
                 {((entry.metadata.excludedGivingIds as string[] | undefined) ?? []).length > 0 && (
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 mb-1">
-                      Removida da proposta · não deu {((entry.metadata.excludedGivingIds as string[]) ?? []).length}
+                      Removida da proposta · não deu{' '}
+                      {((entry.metadata.excludedGivingIds as string[]) ?? []).length}
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {sort((entry.metadata.excludedGivingIds as string[]) ?? []).map((id) => (
@@ -113,10 +114,12 @@ export function TradeCardBody({
                     </div>
                   </div>
                 )}
-                {((entry.metadata.excludedReceivingIds as string[] | undefined) ?? []).length > 0 && (
+                {((entry.metadata.excludedReceivingIds as string[] | undefined) ?? []).length >
+                  0 && (
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 mb-1">
-                      Removida da proposta · não recebeu {((entry.metadata.excludedReceivingIds as string[]) ?? []).length}
+                      Removida da proposta · não recebeu{' '}
+                      {((entry.metadata.excludedReceivingIds as string[]) ?? []).length}
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {sort((entry.metadata.excludedReceivingIds as string[]) ?? []).map((id) => (

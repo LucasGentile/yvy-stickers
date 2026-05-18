@@ -129,7 +129,12 @@ describe('getMatches — canceledTrades details', () => {
         },
       ],
       canceledTrades: [
-        { initiator_id: 'user-a', receiver_id: 'user-b', giving_ids: ['MEX1'], receiving_ids: ['BRA1'] },
+        {
+          initiator_id: 'user-a',
+          receiver_id: 'user-b',
+          giving_ids: ['MEX1'],
+          receiving_ids: ['BRA1'],
+        },
       ],
     })
 
@@ -157,7 +162,12 @@ describe('getMatches — canceledTrades details', () => {
         },
       ],
       canceledTrades: [
-        { initiator_id: 'user-b', receiver_id: 'user-a', giving_ids: ['BRA1'], receiving_ids: ['MEX1'] },
+        {
+          initiator_id: 'user-b',
+          receiver_id: 'user-a',
+          giving_ids: ['BRA1'],
+          receiving_ids: ['MEX1'],
+        },
       ],
     })
 
@@ -221,7 +231,12 @@ describe('getMatches — canceledTrades details', () => {
         },
       ],
       canceledTrades: [
-        { initiator_id: 'user-a', receiver_id: 'user-b', giving_ids: ['MEX1'], receiving_ids: ['BRA1'] },
+        {
+          initiator_id: 'user-a',
+          receiver_id: 'user-b',
+          giving_ids: ['MEX1'],
+          receiving_ids: ['BRA1'],
+        },
       ],
     })
 

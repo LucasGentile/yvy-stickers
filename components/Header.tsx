@@ -184,29 +184,30 @@ export default function Header() {
                 )
               })}
 
-              {advancedTradeEligible && (() => {
-                const active = pathname === '/advanced-trade'
-                return (
-                  <Link
-                    href="/advanced-trade"
-                    className={`flex items-center mx-3 my-1 px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
-                      active
-                        ? 'bg-gradient-to-r from-amber-500/30 to-sky-500/20 text-white'
-                        : 'bg-gradient-to-r from-amber-500/15 to-sky-500/10 text-white hover:from-amber-500/25 hover:to-sky-500/15'
-                    }`}
-                  >
-                    Troca Avançada
-                    {advancedTradePending > 0 && (
-                      <span className="ml-auto min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
-                        {advancedTradePending > 9 ? '9+' : advancedTradePending}
-                      </span>
-                    )}
-                    {active && advancedTradePending === 0 && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
-                    )}
-                  </Link>
-                )
-              })()}
+              {advancedTradeEligible &&
+                (() => {
+                  const active = pathname === '/advanced-trade'
+                  return (
+                    <Link
+                      href="/advanced-trade"
+                      className={`flex items-center mx-3 my-1 px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
+                        active
+                          ? 'bg-gradient-to-r from-amber-500/30 to-sky-500/20 text-white'
+                          : 'bg-gradient-to-r from-amber-500/15 to-sky-500/10 text-white hover:from-amber-500/25 hover:to-sky-500/15'
+                      }`}
+                    >
+                      Troca Avançada
+                      {advancedTradePending > 0 && (
+                        <span className="ml-auto min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
+                          {advancedTradePending > 9 ? '9+' : advancedTradePending}
+                        </span>
+                      )}
+                      {active && advancedTradePending === 0 && (
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </Link>
+                  )
+                })()}
 
               <div className="mx-5 my-1 border-t border-white/10" />
 

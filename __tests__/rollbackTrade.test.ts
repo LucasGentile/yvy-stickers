@@ -19,7 +19,7 @@ function makeSelectChain(result: unknown) {
   const chain = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
+    in: vi.fn().mockResolvedValue(result),
     maybeSingle: vi.fn().mockResolvedValue(result),
   }
   return chain
@@ -111,11 +111,19 @@ describe('rollbackTrade', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: makeTrade(), error: null })
-      return makeUpdateChain({ error: null })
+      if (callCount === 2) return makeUpdateChain({ error: null })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Ana' },
+          { id: 'user-b', name: 'Bob' },
+        ],
+        error: null,
+      })
     })
 
     const result = await rollbackTrade('trade-1', 'user-a', 'request')
     expect(result.success).toBe(true)
+    await new Promise((r) => setTimeout(r, 10))
   })
 
   it('request: returns error when rollback already requested', async () => {
@@ -133,6 +141,14 @@ describe('rollbackTrade', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: makeTrade(), error: null })
+      if (callCount === 3)
+        return makeSelectChain({
+          data: [
+            { id: 'user-a', name: 'Ana' },
+            { id: 'user-b', name: 'Bob' },
+          ],
+          error: null,
+        })
       const chain: Record<string, ReturnType<typeof vi.fn>> = {}
       chain.update = vi.fn().mockImplementation((payload) => {
         updatePayload = payload
@@ -146,6 +162,7 @@ describe('rollbackTrade', () => {
 
     const result = await rollbackTrade('trade-1', 'user-a', 'request', ['MEX1'], ['BRA2'])
     expect(result.success).toBe(true)
+    await new Promise((r) => setTimeout(r, 10))
     expect(updatePayload).toMatchObject({
       rollback_requested_by: 'user-a',
       rollback_giving_ids: ['MEX1'],
@@ -177,11 +194,19 @@ describe('rollbackTrade', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: trade, error: null })
-      return makeUpdateChain({ error: null })
+      if (callCount === 2) return makeUpdateChain({ error: null })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Ana' },
+          { id: 'user-b', name: 'Bob' },
+        ],
+        error: null,
+      })
     })
 
     const result = await rollbackTrade('trade-1', 'user-b', 'deny')
     expect(result.success).toBe(true)
+    await new Promise((r) => setTimeout(r, 10))
   })
 
   it('deny: returns error when denying own request', async () => {

@@ -51,7 +51,8 @@ describe('importStickerFile', () => {
     let callIndex = 0
     mockFrom.mockImplementation(() => {
       callIndex++
-      if (callIndex === 1) return makeChain({ data: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }] }) // existing stickers
+      if (callIndex === 1)
+        return makeChain({ data: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }] }) // existing stickers
       if (callIndex === 2) return makeChain({ data: [] }) // existing dupes
       if (callIndex === 3) return makeChain({ error: null }) // insert new stickers (BRA5)
       return makeChain({ error: null }) // upsert dupes
@@ -60,8 +61,8 @@ describe('importStickerFile', () => {
     const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 1, BRA5: 1 })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.addedToAlbum).toBe(1)       // only BRA5
-      expect(result.removedFromAlbum).toBe(0)   // MEX2 NOT removed
+      expect(result.addedToAlbum).toBe(1) // only BRA5
+      expect(result.removedFromAlbum).toBe(0) // MEX2 NOT removed
     }
   })
 
@@ -79,8 +80,8 @@ describe('importStickerFile', () => {
     const result = await importStickerFile('u1', ['MEX1'], { MEX1: 1 })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.addedToAlbum).toBe(0)         // MEX1 already in album
-      expect(result.newDuplicates).toBe(1)         // MEX1 becomes 1 duplicate
+      expect(result.addedToAlbum).toBe(0) // MEX1 already in album
+      expect(result.newDuplicates).toBe(1) // MEX1 becomes 1 duplicate
       expect(result.totalDuplicateCopies).toBe(1)
     }
   })
@@ -101,8 +102,8 @@ describe('importStickerFile', () => {
     const result = await importStickerFile('u1', ['MEX1'], { MEX1: 1 })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.newDuplicates).toBe(1)         // 1 sticker code updated
-      expect(result.totalDuplicateCopies).toBe(1)  // +1 new copy added
+      expect(result.newDuplicates).toBe(1) // 1 sticker code updated
+      expect(result.totalDuplicateCopies).toBe(1) // +1 new copy added
     }
   })
 
@@ -122,8 +123,8 @@ describe('importStickerFile', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.addedToAlbum).toBe(2)
-      expect(result.newDuplicates).toBe(2)         // 2 sticker codes got duplicates
-      expect(result.totalDuplicateCopies).toBe(3)  // 2 + 1
+      expect(result.newDuplicates).toBe(2) // 2 sticker codes got duplicates
+      expect(result.totalDuplicateCopies).toBe(3) // 2 + 1
     }
   })
 
@@ -141,8 +142,8 @@ describe('importStickerFile', () => {
     const result = await importStickerFile('u1', ['MEX1', 'BRA5'], { MEX1: 3, BRA5: 2 })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.totalStickers).toBe(2)          // 2 unique IDs
-      expect(result.totalDuplicateCopies).toBe(3)   // 5 lines - 2 unique = 3 extra
+      expect(result.totalStickers).toBe(2) // 2 unique IDs
+      expect(result.totalDuplicateCopies).toBe(3) // 5 lines - 2 unique = 3 extra
     }
   })
 
@@ -162,7 +163,7 @@ describe('importStickerFile', () => {
     const result = await importStickerFile('u1', ['MEX1'], { MEX1: 2 })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.totalDuplicateCopies).toBe(2)  // +1 overlap + +1 from count-1
+      expect(result.totalDuplicateCopies).toBe(2) // +1 overlap + +1 from count-1
     }
   })
 
@@ -173,8 +174,8 @@ describe('importStickerFile', () => {
       if (callIndex === 1) return makeChain({ data: [] })
       if (callIndex === 2) return makeChain({ data: [] })
       if (callIndex === 3) return makeChain({ error: { message: 'bulk failed' } }) // bulk insert fails
-      if (callIndex === 4) return makeChain({ error: null })                        // MEX1 ok
-      if (callIndex === 5) return makeChain({ error: { message: 'row error' } })   // MEX2 fails
+      if (callIndex === 4) return makeChain({ error: null }) // MEX1 ok
+      if (callIndex === 5) return makeChain({ error: { message: 'row error' } }) // MEX2 fails
       return makeChain({ error: null })
     })
 

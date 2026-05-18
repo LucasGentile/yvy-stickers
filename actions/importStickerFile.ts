@@ -45,10 +45,14 @@ async function upsertDupesWithFallback(
   const failed: string[] = []
   for (let i = 0; i < rows.length; i += BATCH) {
     const batch = rows.slice(i, i + BATCH)
-    const { error } = await db.from('user_duplicates').upsert(batch, { onConflict: 'user_id,sticker_id' })
+    const { error } = await db
+      .from('user_duplicates')
+      .upsert(batch, { onConflict: 'user_id,sticker_id' })
     if (!error) continue
     for (const row of batch) {
-      const { error: e } = await db.from('user_duplicates').upsert(row, { onConflict: 'user_id,sticker_id' })
+      const { error: e } = await db
+        .from('user_duplicates')
+        .upsert(row, { onConflict: 'user_id,sticker_id' })
       if (e) failed.push(row.sticker_id)
     }
   }
@@ -87,12 +91,11 @@ export async function importStickerFile(
   }
 
   // Merge increments with existing duplicate counts
-  const mergedDupeRows = Object.entries(dupeIncrements)
-    .map(([sticker_id, inc]) => ({
-      user_id: userId,
-      sticker_id,
-      count: (existingDupeMap[sticker_id] ?? 0) + inc,
-    }))
+  const mergedDupeRows = Object.entries(dupeIncrements).map(([sticker_id, inc]) => ({
+    user_id: userId,
+    sticker_id,
+    count: (existingDupeMap[sticker_id] ?? 0) + inc,
+  }))
 
   // Insert only new album stickers (never remove existing ones)
   const stickerRows = addedToAlbumIds.map((sticker_id) => ({ user_id: userId, sticker_id }))

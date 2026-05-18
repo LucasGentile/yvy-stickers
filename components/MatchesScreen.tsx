@@ -60,12 +60,6 @@ export default function MatchesScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadPending = useCallback(async (uid: string) => {
-    const result = await getPendingTrades(uid)
-    setPending(result)
-    window.dispatchEvent(new Event('trade-action'))
-  }, [])
-
   const refreshMatches = useCallback(async (uid: string) => {
     setRefreshing(true)
     try {

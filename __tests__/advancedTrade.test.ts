@@ -121,7 +121,13 @@ describe('findAdvancedTrade', () => {
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeInsertChain({ data: { id: 'new-trade-id' }, error: null }) // insert
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'Ana' }, { id: 'user-b', name: 'Bob' }, { id: 'user-c', name: 'Carol' }] }) // names lookup
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Ana' },
+          { id: 'user-b', name: 'Bob' },
+          { id: 'user-c', name: 'Carol' },
+        ],
+      }) // names lookup
     })
     mockFindBest.mockResolvedValue({
       userAId: 'user-a',
@@ -195,7 +201,13 @@ describe('respondToAdvancedTrade', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: pendingTrade })
       if (callCount === 2) return makeUpdateChain({ data: { id: 'trade-1' } })
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'Ana' }, { id: 'user-b', name: 'Bob' }, { id: 'user-c', name: 'Carol' }] })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Ana' },
+          { id: 'user-b', name: 'Bob' },
+          { id: 'user-c', name: 'Carol' },
+        ],
+      })
     })
 
     const result = await respondToAdvancedTrade('trade-1', 'user-b', 'reject')
@@ -210,10 +222,21 @@ describe('respondToAdvancedTrade', () => {
       if (callCount === 2) {
         // After B approves: A=approved, B=approved, C=pending
         return makeUpdateChain({
-          data: { id: 'trade-1', user_a_status: 'approved', user_b_status: 'approved', user_c_status: 'pending' },
+          data: {
+            id: 'trade-1',
+            user_a_status: 'approved',
+            user_b_status: 'approved',
+            user_c_status: 'pending',
+          },
         })
       }
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'Ana' }, { id: 'user-b', name: 'Bob' }, { id: 'user-c', name: 'Carol' }] })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Ana' },
+          { id: 'user-b', name: 'Bob' },
+          { id: 'user-c', name: 'Carol' },
+        ],
+      })
     })
 
     const result = await respondToAdvancedTrade('trade-1', 'user-b', 'approve')
@@ -234,7 +257,12 @@ describe('respondToAdvancedTrade', () => {
       if (callCount === 1) return makeSelectChain({ data: tradeAllPending })
       if (callCount === 2) {
         return makeUpdateChain({
-          data: { id: 'trade-1', user_a_status: 'approved', user_b_status: 'approved', user_c_status: 'approved' },
+          data: {
+            id: 'trade-1',
+            user_a_status: 'approved',
+            user_b_status: 'approved',
+            user_c_status: 'approved',
+          },
         })
       }
       // Remaining calls: update status to accepted, name lookups
@@ -245,8 +273,12 @@ describe('respondToAdvancedTrade', () => {
     const result = await respondToAdvancedTrade('trade-1', 'user-c', 'approve')
     expect(result.success).toBe(true)
     expect(mockEffectuate).toHaveBeenCalledWith(
-      'user-a', 'user-b', 'user-c',
-      ['MEX1'], ['BRA1'], ['ARG1']
+      'user-a',
+      'user-b',
+      'user-c',
+      ['MEX1'],
+      ['BRA1'],
+      ['ARG1']
     )
   })
 
@@ -263,12 +295,20 @@ describe('respondToAdvancedTrade', () => {
       if (callCount === 1) return makeSelectChain({ data: tradeAllPending })
       if (callCount === 2) {
         return makeUpdateChain({
-          data: { id: 'trade-1', user_a_status: 'approved', user_b_status: 'approved', user_c_status: 'approved' },
+          data: {
+            id: 'trade-1',
+            user_a_status: 'approved',
+            user_b_status: 'approved',
+            user_c_status: 'approved',
+          },
         })
       }
       return makeUpdateChain({ data: { id: 'trade-1' } })
     })
-    mockEffectuate.mockResolvedValue({ success: false, error: 'Figurinha(s) não disponível(eis): MEX1' })
+    mockEffectuate.mockResolvedValue({
+      success: false,
+      error: 'Figurinha(s) não disponível(eis): MEX1',
+    })
 
     const result = await respondToAdvancedTrade('trade-1', 'user-c', 'approve')
     expect(result.success).toBe(false)
@@ -295,7 +335,13 @@ describe('respondToAdvancedTrade', () => {
       callCount++
       if (callCount === 1) return makeSelectChain({ data: tradeWithRequester })
       if (callCount === 2) return makeUpdateChain({ data: { id: 'trade-1' } })
-      return makeSelectChain({ data: [{ id: 'user-a', name: 'Ana' }, { id: 'user-b', name: 'Bob' }, { id: 'user-c', name: 'Carol' }] })
+      return makeSelectChain({
+        data: [
+          { id: 'user-a', name: 'Ana' },
+          { id: 'user-b', name: 'Bob' },
+          { id: 'user-c', name: 'Carol' },
+        ],
+      })
     })
 
     const result = await respondToAdvancedTrade('trade-1', 'user-a', 'cancel')
