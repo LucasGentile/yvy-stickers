@@ -21,11 +21,24 @@ export const metadata: Metadata = {
   title: 'YVY Figurinhas',
   description: 'Troca de figurinhas da Copa do Mundo 2026 – Condomínio YVY Lindóia',
   icons: {
+    icon: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
     apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'YVY Figurinhas',
   },
 }
 
 export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: '#1a433b',
 }
 

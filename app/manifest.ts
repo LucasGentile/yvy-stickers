@@ -2,16 +2,19 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'YVY FIGURINHAS',
-    short_name: 'YVY FIGURINHAS',
+    id: '/',
+    name: 'YVY Figurinhas',
+    short_name: 'YVY Figurinhas',
     description: 'Troca de figurinhas da Copa do Mundo 2026 – Condomínio YVY Lindóia',
     start_url: '/',
     display: 'standalone',
+    orientation: 'portrait',
     background_color: '#f9fbf9',
     theme_color: '#1a433b',
     icons: [
       { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   }
 }
