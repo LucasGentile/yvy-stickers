@@ -167,7 +167,7 @@ export function RecentTradeCard({
         (() => {
           const canForce = trade.rollbackRequestedAt
             ? Date.now() - new Date(trade.rollbackRequestedAt).getTime() >= 3 * 24 * 60 * 60 * 1000
-            : false
+            : Date.now() - new Date(trade.acceptedAt).getTime() >= 7 * 24 * 60 * 60 * 1000
 
           return (
             <div className="space-y-1.5 pt-0.5">
