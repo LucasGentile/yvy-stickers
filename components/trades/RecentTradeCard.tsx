@@ -22,7 +22,7 @@ export function RecentTradeCard({
   onDone: () => void
   hideRollback?: boolean
 }) {
-  const [loading, setLoading] = useState<'request' | 'confirm' | 'deny' | null>(null)
+  const [loading, setLoading] = useState<'request' | 'confirm' | 'deny' | 'force' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [revertStep, setRevertStep] = useState<RevertStep>('idle')
   const [selectedGiving, setSelectedGiving] = useState<Set<string>>(new Set())
@@ -55,7 +55,7 @@ export function RecentTradeCard({
   }
 
   async function handle(
-    action: 'request' | 'confirm' | 'deny',
+    action: 'request' | 'confirm' | 'deny' | 'force',
     pGiving?: string[],
     pReceiving?: string[]
   ) {
@@ -158,28 +158,52 @@ export function RecentTradeCard({
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 
-      {iRequested && (
-        <div className="space-y-1.5 pt-0.5">
-          <p className="text-xs text-yvy-muted">
-            {isPartialRequest
-              ? `Aguardando confirmação de ${trade.otherUserName} para desfazer parcialmente:`
-              : `Aguardando confirmação de ${trade.otherUserName} para desfazer toda a troca.`}
-          </p>
-          {isPartialRequest && (
-            <div className="space-y-1.5">
-              {trade.rollbackMyGivingIds && trade.rollbackMyGivingIds.length > 0 && (
-                <StickerList ids={trade.rollbackMyGivingIds} label="Das figurinhas que você deu" />
+      {iRequested &&
+        (() => {
+          const canForce = trade.rollbackRequestedAt
+            ? Date.now() - new Date(trade.rollbackRequestedAt).getTime() >= 3 * 24 * 60 * 60 * 1000
+            : false
+
+          return (
+            <div className="space-y-1.5 pt-0.5">
+              <p className="text-xs text-yvy-muted">
+                {isPartialRequest
+                  ? `Aguardando confirmação de ${trade.otherUserName} para desfazer parcialmente:`
+                  : `Aguardando confirmação de ${trade.otherUserName} para desfazer toda a troca.`}
+              </p>
+              {isPartialRequest && (
+                <div className="space-y-1.5">
+                  {trade.rollbackMyGivingIds && trade.rollbackMyGivingIds.length > 0 && (
+                    <StickerList
+                      ids={trade.rollbackMyGivingIds}
+                      label="Das figurinhas que você deu"
+                    />
+                  )}
+                  {trade.rollbackMyReceivingIds && trade.rollbackMyReceivingIds.length > 0 && (
+                    <StickerList
+                      ids={trade.rollbackMyReceivingIds}
+                      label="Das figurinhas que você recebeu"
+                    />
+                  )}
+                </div>
               )}
-              {trade.rollbackMyReceivingIds && trade.rollbackMyReceivingIds.length > 0 && (
-                <StickerList
-                  ids={trade.rollbackMyReceivingIds}
-                  label="Das figurinhas que você recebeu"
-                />
+              {canForce && (
+                <div className="space-y-1.5 pt-1">
+                  <p className="text-[11px] text-amber-700 leading-snug">
+                    Já se passaram 3 dias sem resposta. Você pode forçar o desfazimento.
+                  </p>
+                  <button
+                    onClick={() => handle('force')}
+                    disabled={loading !== null}
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+                  >
+                    {loading === 'force' ? 'Desfazendo...' : 'Forçar desfazimento'}
+                  </button>
+                </div>
               )}
             </div>
-          )}
-        </div>
-      )}
+          )
+        })()}
 
       {otherRequested && (
         <div className="space-y-2">

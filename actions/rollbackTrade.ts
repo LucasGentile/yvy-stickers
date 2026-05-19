@@ -35,10 +35,12 @@ async function removeFromCollection(userId: string, ids: string[]) {
 
 // partialGivingIds / partialReceivingIds are from the trade's initiator perspective.
 // Pass them (even as []) to request a partial rollback; omit both for a full rollback.
+const FORCE_UNDO_DELAY_MS = 3 * 24 * 60 * 60 * 1000
+
 export async function rollbackTrade(
   tradeId: string,
   userId: string,
-  action: 'request' | 'confirm' | 'deny',
+  action: 'request' | 'confirm' | 'deny' | 'force',
   partialGivingIds?: string[],
   partialReceivingIds?: string[]
 ): Promise<RollbackResult> {
@@ -48,7 +50,7 @@ export async function rollbackTrade(
   const { data: trade } = await (supabaseAdmin as any)
     .from('pending_trades')
     .select(
-      'id, initiator_id, receiver_id, giving_ids, receiving_ids, status, accepted_at, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids'
+      'id, initiator_id, receiver_id, giving_ids, receiving_ids, status, accepted_at, rollback_requested_by, rollback_requested_at, rollback_giving_ids, rollback_receiving_ids'
     )
     .eq('id', tradeId)
     .eq('status', 'accepted')
@@ -78,7 +80,10 @@ export async function rollbackTrade(
       }
     }
 
-    const updatePayload: Record<string, unknown> = { rollback_requested_by: userId }
+    const updatePayload: Record<string, unknown> = {
+      rollback_requested_by: userId,
+      rollback_requested_at: new Date().toISOString(),
+    }
     if (isPartial) {
       updatePayload.rollback_giving_ids = partialGivingIds ?? []
       updatePayload.rollback_receiving_ids = partialReceivingIds ?? []
@@ -138,6 +143,7 @@ export async function rollbackTrade(
       .from('pending_trades')
       .update({
         rollback_requested_by: null,
+        rollback_requested_at: null,
         rollback_giving_ids: null,
         rollback_receiving_ids: null,
       })
@@ -175,11 +181,30 @@ export async function rollbackTrade(
     return { success: true }
   }
 
-  // action === 'confirm'
+  if (action === 'force') {
+    if (!trade.rollback_requested_by) {
+      return { success: false, error: 'Nenhuma solicitação de desfazimento pendente.' }
+    }
+    if (trade.rollback_requested_by !== userId) {
+      return { success: false, error: 'Apenas quem solicitou o desfazimento pode forçá-lo.' }
+    }
+    const requestedAt = trade.rollback_requested_at
+      ? new Date(trade.rollback_requested_at).getTime()
+      : 0
+    if (Date.now() - requestedAt < FORCE_UNDO_DELAY_MS) {
+      return {
+        success: false,
+        error: 'Aguarde 3 dias após a solicitação para forçar o desfazimento.',
+      }
+    }
+    // Fall through to the same rollback execution as 'confirm'
+  }
+
+  // action === 'confirm' or 'force' (after 3 days)
   if (!trade.rollback_requested_by) {
     return { success: false, error: 'Nenhuma solicitação de desfazimento pendente.' }
   }
-  if (trade.rollback_requested_by === userId) {
+  if (action === 'confirm' && trade.rollback_requested_by === userId) {
     return { success: false, error: 'Aguardando confirmação do outro participante.' }
   }
 
@@ -194,6 +219,8 @@ export async function rollbackTrade(
     .maybeSingle()
 
   if (!updated) return { success: false, error: 'Troca já foi processada em outro dispositivo.' }
+
+  const isForced = action === 'force'
 
   // NULL means "revert all"; an explicit array (even empty) limits the scope
   const givingToRevert: string[] = trade.rollback_giving_ids ?? trade.giving_ids
@@ -217,12 +244,18 @@ export async function rollbackTrade(
     const receiverName = formatName(
       users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
     )
+    const forcerName = isForced
+      ? userId === trade.initiator_id
+        ? initiatorName
+        : receiverName
+      : undefined
     logAction(trade.initiator_id, 'trade_rolled_back', {
       tradeId: trade.id,
       partnerName: receiverName,
       partial: isPartial,
       givingIds: givingToRevert,
       receivingIds: receivingToRevert,
+      ...(isForced && { forcedBy: forcerName }),
     })
     logAction(trade.receiver_id, 'trade_rolled_back', {
       tradeId: trade.id,
@@ -230,6 +263,7 @@ export async function rollbackTrade(
       partial: isPartial,
       givingIds: receivingToRevert,
       receivingIds: givingToRevert,
+      ...(isForced && { forcedBy: forcerName }),
     })
   })()
 

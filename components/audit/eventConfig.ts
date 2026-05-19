@@ -111,7 +111,12 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     borderColor: 'border-l-amber-400',
     iconBg: 'bg-amber-50',
     iconColor: 'text-amber-600',
-    label: (m) => (m.partial ? 'Troca parcialmente desfeita' : 'Troca desfeita'),
+    label: (m) =>
+      m.forcedBy
+        ? `Desfazimento forçado por ${m.forcedBy}`
+        : m.partial
+          ? 'Troca parcialmente desfeita'
+          : 'Troca desfeita',
     detail: (m) => `Com ${m.partnerName}`,
   },
   trade_rollback_requested: {
