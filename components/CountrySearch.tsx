@@ -15,16 +15,13 @@ export default function CountrySearch() {
   const q = query.trim().toLowerCase()
 
   const filteredTeams = q
-    ? ALL_TEAMS.filter(
-        (t) => t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q)
-      )
+    ? ALL_TEAMS.filter((t) => t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q))
     : ALL_TEAMS
 
   const filteredSections = q
     ? SPECIAL_SECTIONS.filter(
         (s) =>
-          s.label.toLowerCase().includes(q) ||
-          s.stickers.some((id) => id.toLowerCase().includes(q))
+          s.label.toLowerCase().includes(q) || s.stickers.some((id) => id.toLowerCase().includes(q))
       )
     : SPECIAL_SECTIONS
 
@@ -33,13 +30,17 @@ export default function CountrySearch() {
   function goToTeam(code: string) {
     setQuery('')
     setOpen(false)
-    document.getElementById(`country-${code}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    document
+      .getElementById(`country-${code}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   function goToSection(label: string) {
     setQuery('')
     setOpen(false)
-    document.getElementById(`section-${label}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    document
+      .getElementById(`section-${label}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   useEffect(() => {

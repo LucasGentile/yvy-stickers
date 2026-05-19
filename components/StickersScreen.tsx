@@ -8,7 +8,7 @@ import { importStickerFile } from '@/actions/importStickerFile'
 import { removeDuplicate } from '@/actions/removeDuplicate'
 import { getUserData } from '@/actions/getUserData'
 import { getTradeOriginStickers, type TradeOriginResult } from '@/actions/getTradeOriginStickers'
-import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
+import { getIncomingTradeStickers } from '@/actions/getIncomingTradeStickers'
 import { getDuplicates } from '@/actions/getDuplicates'
 import { DuplicateQuickAdd } from './DuplicateQuickAdd'
 import { parseStickerFile } from '@/lib/parser'
@@ -47,7 +47,7 @@ export default function StickersScreen() {
   const lastSaved = useRef<Set<string>>(new Set())
   const [duplicateMap, setDuplicateMap] = useState<Map<string, number>>(new Map())
   const [longPressedId, setLongPressedId] = useState<string | null>(null)
-  const [lockedStickers, setLockedStickers] = useState<Set<string>>(new Set())
+  const [incomingStickers, setIncomingStickers] = useState<Set<string>>(new Set())
   const [albumProtected, setAlbumProtected] = useState(() => {
     if (typeof window === 'undefined') return false
     return localStorage.getItem('albumProtected') === 'true'
@@ -91,28 +91,31 @@ export default function StickersScreen() {
       setLoading(false)
       return
     }
-    Promise.all([getUserData(id), getTradeOriginStickers(id), getDuplicates(id), getReservedStickerIds(id)]).then(
-      ([data, origin, dupes, reserved]) => {
-        setTradeOrigin(origin)
-        setLockedStickers(new Set(Object.keys(reserved)))
-        setDuplicateMap(new Map(dupes.map((d) => [d.stickerId, d.count])))
-        if (data) {
-          if (!data.approved) {
-            setStep('pending' as Step)
-            setLoading(false)
-            return
-          }
-          setMode(data.inputMode)
-          const loaded = new Set<string>(data.stickerIds)
-          setSelected(loaded)
-          lastSaved.current = new Set(loaded)
-          if (data.stickerIds.length > 0 || data.inputMode) {
-            setStep('input')
-          }
+    Promise.all([
+      getUserData(id),
+      getTradeOriginStickers(id),
+      getDuplicates(id),
+      getIncomingTradeStickers(id),
+    ]).then(([data, origin, dupes, incoming]) => {
+      setTradeOrigin(origin)
+      setIncomingStickers(new Set(incoming))
+      setDuplicateMap(new Map(dupes.map((d) => [d.stickerId, d.count])))
+      if (data) {
+        if (!data.approved) {
+          setStep('pending' as Step)
+          setLoading(false)
+          return
         }
-        setLoading(false)
+        setMode(data.inputMode)
+        const loaded = new Set<string>(data.stickerIds)
+        setSelected(loaded)
+        lastSaved.current = new Set(loaded)
+        if (data.stickerIds.length > 0 || data.inputMode) {
+          setStep('input')
+        }
       }
-    )
+      setLoading(false)
+    })
   }, [])
 
   const [selectingMode, setSelectingMode] = useState(false)
@@ -213,9 +216,8 @@ export default function StickersScreen() {
   }
 
   function exportOwnedStickers() {
-    const ownedIds = mode === 'have'
-      ? [...selected]
-      : ALL_STICKER_IDS.filter((id) => !selected.has(id))
+    const ownedIds =
+      mode === 'have' ? [...selected] : ALL_STICKER_IDS.filter((id) => !selected.has(id))
     if (ownedIds.length === 0) return
     const blob = new Blob(['Minhas figurinhas:\n' + ownedIds.join('\n')], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
@@ -227,9 +229,7 @@ export default function StickersScreen() {
   }
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (!userId) {
@@ -305,24 +305,43 @@ export default function StickersScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
           Minhas Figurinhas
         </h2>
         <div className="flex items-center gap-3">
           <button
             onClick={toggleProtection}
-            title={albumProtected ? 'Álbum protegido — clique para desbloquear' : 'Clique para proteger o álbum'}
+            title={
+              albumProtected
+                ? 'Álbum protegido — clique para desbloquear'
+                : 'Clique para proteger o álbum'
+            }
             className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
               albumProtected
                 ? 'bg-yvy-dark text-yvy-gold border-yvy-dark'
                 : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
             }`}
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              {albumProtected
-                ? <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m0 0v2m0-2h2m-2 0H10M5 11V7a7 7 0 0114 0v4M5 11h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z" />
-                : <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-              }
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              {albumProtected ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 15v2m0 0v2m0-2h2m-2 0H10M5 11V7a7 7 0 0114 0v4M5 11h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                />
+              )}
             </svg>
             {albumProtected ? 'Protegido' : 'Proteger'}
           </button>
@@ -335,15 +354,25 @@ export default function StickersScreen() {
 
       {protectionAlert && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yvy-dark text-yvy-gold text-xs font-medium">
-          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m0 0v2m0-2h2m-2 0H10M5 11V7a7 7 0 0114 0v4M5 11h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z" />
+          <svg
+            className="w-4 h-4 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 15v2m0 0v2m0-2h2m-2 0H10M5 11V7a7 7 0 0114 0v4M5 11h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z"
+            />
           </svg>
           Álbum protegido — remoções estão bloqueadas
         </div>
       )}
 
       {/* Grid */}
-      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 shadow-md p-4">
         <div className="mb-3">
           <CountrySearch />
         </div>
@@ -351,10 +380,20 @@ export default function StickersScreen() {
           <button
             onClick={exportOwnedStickers}
             title="Baixar lista de figurinhas que tenho"
-            className="flex items-center gap-1.5 text-xs text-yvy-muted hover:text-yvy-text transition-colors"
+            className="flex items-center gap-1.5 text-xs text-yvy-muted hover:text-yvy-gold transition-colors"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"
+              />
             </svg>
             Baixar minhas figurinhas
           </button>
@@ -370,30 +409,30 @@ export default function StickersScreen() {
               <>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mb-1">
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-4 rounded-[1px] bg-green-600 ring-2 ring-inset ring-green-700 shrink-0" />
+                    <span className="w-3 h-4 rounded-[2px] bg-green-600 ring-2 ring-inset ring-green-700 shrink-0" />
                     Comprada
                     <span className="font-semibold text-yvy-text">({boughtCount})</span>
                   </span>
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-4 rounded-[1px] bg-blue-500 ring-2 ring-inset ring-blue-400 shrink-0" />
+                    <span className="w-3 h-4 rounded-[2px] bg-blue-500 ring-2 ring-inset ring-blue-400 shrink-0" />
                     Recebida em troca
                     <span className="font-semibold text-yvy-text">({tradeCount})</span>
                   </span>
                   {[...selected].some((id) => !lastSaved.current.has(id)) && (
                     <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                      <span className="w-3 h-4 rounded-[1px] bg-green-400 ring-2 ring-inset ring-green-500 shrink-0" />
+                      <span className="w-3 h-4 rounded-[2px] bg-green-400 ring-2 ring-inset ring-green-500 shrink-0" />
                       Marcada, não salva
                     </span>
                   )}
-                  {lockedStickers.size > 0 && (
+                  {incomingStickers.size > 0 && (
                     <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                      <span className="w-3 h-4 rounded-[1px] bg-white ring-2 ring-inset ring-blue-400 shrink-0" />
+                      <span className="w-3 h-4 rounded-[2px] bg-white ring-2 ring-inset ring-blue-400 shrink-0" />
                       Pendente em troca
-                      <span className="font-semibold text-yvy-text">({lockedStickers.size})</span>
+                      <span className="font-semibold text-yvy-text">({incomingStickers.size})</span>
                     </span>
                   )}
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-4 rounded-[1px] bg-yvy-bg ring-2 ring-inset ring-yvy-border shrink-0 flex items-center justify-center">
+                    <span className="w-3 h-4 rounded-[2px] bg-yvy-bg ring-2 ring-inset ring-yvy-border shrink-0 flex items-center justify-center">
                       <span className="text-[10px] font-bold text-amber-500 leading-none">1</span>
                     </span>
                     Cromada
@@ -419,29 +458,33 @@ export default function StickersScreen() {
           })()}
 
         <div className="mt-6">
-        <StickerGrid
-          selected={selected}
-          onChange={setSelected}
-          onBulkChange={(next, message) => {
-            showToast(message, new Set(selected))
-            setSelected(next)
-          }}
-          tradeReceived={
-            mode === 'have' && tradeOrigin ? new Set(tradeOrigin.fromTradeIds) : undefined
-          }
-          newestFromTrade={
-            mode === 'have' && tradeOrigin ? new Set(tradeOrigin.newestIds) : undefined
-          }
-          tradeLocked={mode === 'have' && lockedStickers.size > 0 ? lockedStickers : undefined}
-          staged={
-            mode === 'have'
-              ? new Set([...selected].filter((id) => !lastSaved.current.has(id)))
-              : undefined
-          }
-          onLongPress={mode === 'have' ? (id) => setLongPressedId(id) : undefined}
-          isProtected={mode === 'have' && albumProtected}
-          onProtectedRemove={triggerProtectionAlert}
-        />
+          <StickerGrid
+            selected={selected}
+            onChange={setSelected}
+            onBulkChange={(next, message) => {
+              showToast(message, new Set(selected))
+              setSelected(next)
+            }}
+            tradeReceived={
+              mode === 'have' && tradeOrigin
+                ? new Set(tradeOrigin.fromTradeIds.filter((id) => !duplicateMap.has(id)))
+                : undefined
+            }
+            newestFromTrade={
+              mode === 'have' && tradeOrigin ? new Set(tradeOrigin.newestIds) : undefined
+            }
+            staged={
+              mode === 'have'
+                ? new Set([...selected].filter((id) => !lastSaved.current.has(id)))
+                : undefined
+            }
+            onLongPress={mode === 'have' ? (id) => setLongPressedId(id) : undefined}
+            isProtected={mode === 'have' && albumProtected}
+            onProtectedRemove={triggerProtectionAlert}
+            incomingStickers={
+              mode === 'have' && incomingStickers.size > 0 ? incomingStickers : undefined
+            }
+          />
         </div>
       </div>
 

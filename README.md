@@ -59,6 +59,7 @@ Selecione suas figurinhas na grade — organizadas por grupos e seleções com a
 - O código _00_ no arquivo é aceito automaticamente como FWC00
 - O app avisa se você tentar sair sem salvar
   💾 Não esqueça de salvar no final!
+- Ative a _proteção do álbum_ (cadeado no topo) para evitar desmarcar figurinhas por acidente — o app exibe um aviso antes de qualquer remoção
 
 As figurinhas marcadas aparecem em cores diferentes:
 🟢 _Verde_ — comprada/colada no álbum físico
@@ -106,6 +107,7 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 - Antes de confirmar a aceitação, um _checklist_ resume as figurinhas envolvidas — útil para conferir com o outro morador presencialmente antes de bater o martelo
 - Após aceite, a troca pode ser desfeita a qualquer momento — basta solicitar e o outro morador confirmar
 - Desfazimento parcial disponível: escolha quais figurinhas específicas reverter, não precisa ser tudo
+- Se o outro morador não responder ao pedido de desfazimento em 3 dias, o app libera o _desfazimento forçado_ — uma confirmação é exibida antes de executar
 - Um _ponto vermelho_ no menu indica pedidos esperando sua resposta
 - Pedidos recebidos mostram quantas figurinhas estão envolvidas e alertam se houver uma troca mais vantajosa com outro morador
 - Figurinhas nos cards de troca são coloridas: _vermelho_ = você dá, _verde_ = você recebe (com setas indicando direção); os rótulos mostram o total (ex: "Você deu 12")
@@ -123,7 +125,7 @@ Quando uma troca direta não é possível, o app busca automaticamente ciclos de
 - Escolha qual proposta enviar — as figurinhas são selecionadas automaticamente, sem escolha manual
 - Código de cores nos cards: _vermelho_ = você dá, _verde_ = você recebe, _azul_ = troca entre os outros dois participantes
 - Os 3 participantes precisam aprovar para a troca acontecer; se qualquer um recusar, a proposta é cancelada para todos
-- Quem propôs pode cancelar a qualquer momento enquanto estiver pendente
+- Qualquer participante pode cancelar enquanto a troca estiver pendente
 - Você pode ter _múltiplas_ trocas avançadas pendentes ao mesmo tempo
 - Figurinhas comprometidas ficam reservadas (aparecem como _"em troca"_ na tela de Repetidas e não entram em novas sugestões)
 - Figurinhas recebidas via troca avançada aparecem com fundo _azul_ no álbum

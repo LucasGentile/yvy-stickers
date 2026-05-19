@@ -64,6 +64,9 @@ vi.mock('@/actions/respondToAdvancedTrade', () => ({
 vi.mock('@/actions/verifyTrade', () => ({
   verifyTrade: vi.fn(),
 }))
+vi.mock('@/actions/getIncomingTradeStickers', () => ({
+  getIncomingTradeStickers: vi.fn().mockResolvedValue([]),
+}))
 
 import { setInputMode } from '@/actions/setInputMode'
 import { getUserData } from '@/actions/getUserData'
@@ -115,6 +118,7 @@ describe('StickersScreen loading states', () => {
     mockGetUserData.mockResolvedValue(null)
     mockGetTradeOriginStickers.mockResolvedValue({ fromTradeIds: [], newestIds: [] })
     mockGetDuplicates.mockResolvedValue([])
+    mockGetReservedStickerIds.mockResolvedValue({})
   })
 
   it('disables mode selection buttons while setInputMode is in flight', async () => {

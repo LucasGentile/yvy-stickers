@@ -33,7 +33,7 @@ function StatTile({
     default: 'text-yvy-dark',
   }[color]
   return (
-    <div className="bg-yvy-surface rounded-xl p-3 flex flex-col gap-0.5 shadow-sm">
+    <div className="bg-yvy-surface rounded-xl p-3 flex flex-col gap-0.5 shadow-sm border border-yvy-gold/20">
       <span className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide leading-tight">
         {label}
       </span>
@@ -45,7 +45,7 @@ function StatTile({
 
 function SectionHeader({ emoji, title }: { emoji: string; title: string }) {
   return (
-    <div className="flex items-center gap-2 mb-2">
+    <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-yvy-gold/30">
       <span className="text-base">{emoji}</span>
       <span className="text-xs font-bold text-yvy-dark uppercase tracking-wide">{title}</span>
     </div>
@@ -104,7 +104,7 @@ export default function ProfileScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-4 space-y-5">
       {/* ── Profile card ────────────────────────────────────────────── */}
-      <div className="bg-yvy-surface rounded-2xl shadow-sm p-4 flex items-center gap-4">
+      <div className="bg-yvy-surface rounded-2xl shadow-sm border border-yvy-gold/20 p-4 flex items-center gap-4">
         <div className="w-14 h-14 rounded-full bg-yvy-accent flex items-center justify-center shrink-0">
           <span className="text-white font-bold text-lg">{initials(data.name)}</span>
         </div>
@@ -123,7 +123,7 @@ export default function ProfileScreen() {
       </div>
 
       {/* ── Album progress ──────────────────────────────────────────── */}
-      <div className="bg-yvy-surface rounded-2xl shadow-sm p-4 space-y-2">
+      <div className="bg-yvy-surface rounded-2xl shadow-sm border border-yvy-gold/20 p-4 space-y-2">
         <SectionHeader emoji="📖" title="Meu Álbum" />
         <div className="flex items-end justify-between mb-1">
           <span className="text-3xl font-bold tabular-nums text-yvy-dark">{data.ownedCount}</span>
@@ -181,7 +181,7 @@ export default function ProfileScreen() {
           />
         </div>
         {data.bestTradeFriend && (
-          <div className="bg-yvy-surface rounded-xl p-3 flex items-center gap-3 shadow-sm">
+          <div className="bg-yvy-surface rounded-xl p-3 flex items-center gap-3 shadow-sm border border-yvy-gold/20">
             <span className="text-2xl">🏆</span>
             <div>
               <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide">
@@ -238,7 +238,7 @@ export default function ProfileScreen() {
         {(data.mostDuplicatedCountryName || data.leastDuplicatedCountryName) && (
           <div className="grid grid-cols-2 gap-2">
             {data.mostDuplicatedCountryName && (
-              <div className="bg-yvy-surface rounded-xl p-3 flex items-start gap-2 shadow-sm">
+              <div className="bg-yvy-surface rounded-xl p-3 flex items-start gap-2 shadow-sm border border-yvy-gold/20">
                 <span className="text-lg mt-0.5">📦</span>
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide leading-tight">
@@ -255,7 +255,7 @@ export default function ProfileScreen() {
               </div>
             )}
             {data.leastDuplicatedCountryName && (
-              <div className="bg-yvy-surface rounded-xl p-3 flex items-start gap-2 shadow-sm">
+              <div className="bg-yvy-surface rounded-xl p-3 flex items-start gap-2 shadow-sm border border-yvy-gold/20">
                 <span className="text-lg mt-0.5">🔍</span>
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide leading-tight">
@@ -284,7 +284,7 @@ export default function ProfileScreen() {
       <div className="space-y-2">
         <SectionHeader emoji="🌍" title="Destaques da Coleção" />
         {data.mostCompleteTeam && (
-          <div className="bg-yvy-surface rounded-xl p-3 shadow-sm space-y-1.5">
+          <div className="bg-yvy-surface rounded-xl p-3 shadow-sm border border-yvy-gold/20 space-y-1.5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide">
@@ -302,7 +302,7 @@ export default function ProfileScreen() {
           </div>
         )}
         {data.leastCompleteTeam && data.leastCompleteTeamPct < 100 && (
-          <div className="bg-yvy-surface rounded-xl p-3 shadow-sm space-y-1.5">
+          <div className="bg-yvy-surface rounded-xl p-3 shadow-sm border border-yvy-gold/20 space-y-1.5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-semibold text-yvy-muted uppercase tracking-wide">

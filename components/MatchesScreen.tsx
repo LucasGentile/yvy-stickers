@@ -104,9 +104,7 @@ export default function MatchesScreen() {
   }, [refreshMatches])
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (error) {
@@ -126,7 +124,7 @@ export default function MatchesScreen() {
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+          <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
             Ranking de Trocas
           </h2>
           {pendingCount > 0 && (
@@ -240,7 +238,7 @@ export default function MatchesScreen() {
                       {mutualMatches.length > 0 && (
                         <>
                           {nearCompleteMatches.length > 0 && (
-                            <h3 className="text-sm font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5">
+                            <h3 className="text-sm font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5">
                               Ranking de Compatibilidade
                             </h3>
                           )}

@@ -228,9 +228,7 @@ export default function DuplicatesScreen() {
   }
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (!userId) {
@@ -247,7 +245,7 @@ export default function DuplicatesScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
           Minhas repetidas
         </h2>
         <a href="/stickers" className="text-xs text-yvy-muted underline">
@@ -256,7 +254,7 @@ export default function DuplicatesScreen() {
       </div>
 
       {/* Add form */}
-      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 shadow-md p-4 space-y-3">
         <p className="text-sm font-medium text-yvy-text">Adicionar repetida</p>
 
         <DuplicatePicker
@@ -311,7 +309,7 @@ export default function DuplicatesScreen() {
       </div>
 
       {/* Check external list */}
-      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 shadow-md p-4 space-y-3">
         <button
           type="button"
           onClick={() => {
@@ -447,7 +445,7 @@ export default function DuplicatesScreen() {
       </div>
 
       {/* Duplicates list */}
-      <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 shadow-md p-4">
         <div className="mb-3 space-y-2">
           {duplicates.length === 0 ? (
             <p className="text-sm font-medium text-yvy-text">Nenhuma repetida cadastrada ainda.</p>
@@ -544,7 +542,7 @@ export default function DuplicatesScreen() {
         </div>
 
         {duplicates.length > 0 && (
-          <div className="divide-y divide-yvy-border">
+          <div className="divide-y divide-yvy-gold/20">
             {sortedIds.map((stickerId) => {
               const count = dupeMap[stickerId]
               if (count === undefined) return null

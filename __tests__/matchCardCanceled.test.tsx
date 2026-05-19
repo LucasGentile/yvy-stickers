@@ -6,10 +6,14 @@ vi.mock('@/actions/createTradeRequest', () => ({
   createTradeRequest: vi.fn(),
 }))
 
-vi.mock('@/lib/stickers', () => ({
-  isChromeSticker: () => false,
-  isCocaColaSticker: () => false,
-}))
+vi.mock(import('@/lib/stickers'), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    isChromeSticker: () => false,
+    isCocaColaSticker: () => false,
+  }
+})
 
 import MatchCard from '@/components/MatchCard'
 import type { MatchResult } from '@/lib/matching'

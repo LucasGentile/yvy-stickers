@@ -186,9 +186,7 @@ export default function PanelinhasScreen() {
   }, [load])
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   return (
@@ -206,9 +204,22 @@ export default function PanelinhasScreen() {
         <button
           onClick={() => load(true)}
           disabled={refreshing}
-          className="text-sm text-yvy-accent underline disabled:opacity-40"
+          aria-label="Atualizar"
+          className="w-8 h-8 flex items-center justify-center rounded-full border border-yvy-border bg-yvy-surface text-yvy-muted hover:text-yvy-dark hover:border-yvy-dark transition-colors disabled:opacity-40"
         >
-          {refreshing ? 'Atualizando...' : 'Atualizar'}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+          >
+            <path d="M23 4v6h-6" />
+            <path d="M1 20v-6h6" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
         </button>
       </div>
 

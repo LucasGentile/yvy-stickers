@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Josefin_Sans, Bebas_Neue } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/Header'
-import MothersDayBanner from '@/components/MothersDayBanner'
 import Providers from './providers'
 
 const geist = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
@@ -53,7 +52,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full flex flex-col bg-yvy-bg text-yvy-text">
         <Providers>
           <Header />
-          <MothersDayBanner />
           <main className="flex-1 flex flex-col pt-14">{children}</main>
         </Providers>
       </body>

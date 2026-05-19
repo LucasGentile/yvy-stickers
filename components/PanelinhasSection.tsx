@@ -196,7 +196,7 @@ export default function PanelinhasSection() {
       {hasMore && (
         <button
           onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-          className="w-full py-2.5 text-sm font-medium text-yvy-accent hover:text-yvy-dark transition-colors rounded-xl border border-yvy-border bg-yvy-surface"
+          className="w-full py-2.5 text-sm font-medium text-yvy-accent hover:text-yvy-gold transition-colors rounded-xl border border-yvy-gold/20 bg-yvy-surface"
         >
           Ver mais ({pairs.length - visibleCount} restantes)
         </button>

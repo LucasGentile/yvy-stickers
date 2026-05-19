@@ -164,7 +164,8 @@ function DetailModal({
             {receiving.size > 0 && (
               <div className="bg-yvy-bg rounded-lg p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1.5">
-                  Você vai receber de {match.name.split(' ')[0]} · {receiving.size} figurinha{receiving.size !== 1 ? 's' : ''}
+                  Você vai receber de {match.name.split(' ')[0]} · {receiving.size} figurinha
+                  {receiving.size !== 1 ? 's' : ''}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {sort([...receiving]).map((id) => (
@@ -177,7 +178,8 @@ function DetailModal({
             {giving.size > 0 && (
               <div className="bg-yvy-bg rounded-lg p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted mb-1.5">
-                  Você vai dar para {match.name.split(' ')[0]} · {giving.size} figurinha{giving.size !== 1 ? 's' : ''}
+                  Você vai dar para {match.name.split(' ')[0]} · {giving.size} figurinha
+                  {giving.size !== 1 ? 's' : ''}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {sort([...giving]).map((id) => (

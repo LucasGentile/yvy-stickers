@@ -109,9 +109,7 @@ export default function MissingScreen() {
   }
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (!userId) {
@@ -139,7 +137,7 @@ export default function MissingScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 pb-24 space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
           Figurinhas Faltantes: <span className="text-yvy-accent">{missingSet.size}</span>
         </h2>
         <a href="/stickers" className="text-xs text-yvy-muted underline">
@@ -219,7 +217,7 @@ export default function MissingScreen() {
             if (teamsWithMissing.length === 0) return null
             return (
               <div key={section.label}>
-                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-yvy-border">
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-yvy-gold/30">
                   <span className="text-lg">🌍</span>
                   <span className="text-sm font-bold text-yvy-dark uppercase tracking-wide">
                     {section.label}
@@ -234,8 +232,12 @@ export default function MissingScreen() {
                           alt={team.name}
                           className="rounded-sm shrink-0 object-cover w-8 h-[18px]"
                         />
-                        <span className="text-xs font-semibold text-yvy-text truncate">{team.name}</span>
-                        <span className="text-[10px] text-yvy-muted font-mono shrink-0">{team.code}</span>
+                        <span className="text-xs font-semibold text-yvy-text truncate">
+                          {team.name}
+                        </span>
+                        <span className="text-[10px] text-yvy-muted font-mono shrink-0">
+                          {team.code}
+                        </span>
                         <span className="ml-auto text-[10px] font-semibold text-yvy-muted shrink-0">
                           {team.stickers.filter((id) => missingSet.has(id)).length} faltando
                         </span>
@@ -246,14 +248,18 @@ export default function MissingScreen() {
                           return (
                             <span
                               key={id}
-                              className={`relative aspect-[4.9/6.5] w-full rounded-[1px] text-xs font-semibold flex items-center justify-center ${
+                              className={`relative aspect-[4.9/6.5] w-full rounded-[2px] text-xs font-semibold flex items-center justify-center ${
                                 missing
                                   ? 'bg-amber-50 text-amber-800 ring-2 ring-inset ring-amber-300'
                                   : 'bg-yvy-bg text-yvy-border/40 ring-2 ring-inset ring-yvy-border/30'
                               }`}
                             >
                               {isChromeSticker(id) ? (
-                                <span className={`font-bold ${missing ? 'text-amber-500' : 'text-yvy-border/30'}`}>{idx + 1}</span>
+                                <span
+                                  className={`font-bold ${missing ? 'text-amber-500' : 'text-yvy-border/30'}`}
+                                >
+                                  {idx + 1}
+                                </span>
                               ) : (
                                 idx + 1
                               )}
@@ -270,8 +276,12 @@ export default function MissingScreen() {
             const sectionMissing = section.stickers.filter((id) => missingSet.has(id))
             if (sectionMissing.length === 0) return null
             return (
-              <div key={section.label} id={`missing-section-${section.label}`} className="scroll-mt-20">
-                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-yvy-border">
+              <div
+                key={section.label}
+                id={`missing-section-${section.label}`}
+                className="scroll-mt-20"
+              >
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-yvy-gold/30">
                   <span className="text-lg">{section.icon}</span>
                   <span className="text-sm font-bold text-yvy-dark uppercase tracking-wide">
                     {section.label}
@@ -283,16 +293,24 @@ export default function MissingScreen() {
                     return (
                       <span
                         key={id}
-                        className={`h-10 px-2 rounded-[1px] text-xs font-semibold flex items-center ring-2 ring-inset ${
+                        className={`h-10 px-2 rounded-[2px] text-xs font-semibold flex items-center ring-2 ring-inset ${
                           missing
                             ? 'bg-amber-50 text-amber-800 ring-amber-300'
                             : 'bg-yvy-bg text-yvy-border/40 ring-yvy-border/30'
                         }`}
                       >
                         {isChromeSticker(id) ? (
-                          <span className={`font-bold ${missing ? 'text-amber-500' : 'text-yvy-border/30'}`}>{id}</span>
+                          <span
+                            className={`font-bold ${missing ? 'text-amber-500' : 'text-yvy-border/30'}`}
+                          >
+                            {id}
+                          </span>
                         ) : isCocaColaSticker(id) ? (
-                          <span className={`font-bold ${missing ? 'text-red-500' : 'text-yvy-border/30'}`}>{id}</span>
+                          <span
+                            className={`font-bold ${missing ? 'text-red-500' : 'text-yvy-border/30'}`}
+                          >
+                            {id}
+                          </span>
                         ) : (
                           id
                         )}
@@ -319,8 +337,18 @@ export default function MissingScreen() {
             title="Baixar lista como arquivo"
             className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-yvy-dark hover:bg-yvy-dark-hover text-yvy-gold font-semibold transition-colors text-sm shrink-0"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"
+              />
             </svg>
             Baixar
           </button>

@@ -31,9 +31,7 @@ export default function TradeTimelineScreen({ entryId }: { entryId: string }) {
   }, [entryId])
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (error) {

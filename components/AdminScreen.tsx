@@ -62,9 +62,7 @@ export default function AdminScreen() {
   }
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (error) {
@@ -77,17 +75,14 @@ export default function AdminScreen() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+      <div>
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
           Aprovações Pendentes
         </h2>
-        <span className="text-sm font-semibold text-yvy-accent">
-          {users.length}
-          <span className="text-yvy-muted font-normal">
-            {' '}
-            pendente{users.length !== 1 ? 's' : ''}
-          </span>
-        </span>
+        <p className="text-xs text-yvy-muted mt-0.5 pl-2.5">
+          <span className="font-semibold text-yvy-accent">{users.length}</span> pendente
+          {users.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
       {users.length === 0 ? (

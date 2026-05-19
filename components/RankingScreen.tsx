@@ -34,7 +34,7 @@ function RankCard({ user, rank }: { user: RankedUser; rank: number }) {
   return (
     <div
       className={`bg-yvy-surface rounded-xl shadow-md overflow-hidden flex flex-col gap-0 ${
-        isTop3 ? medal!.border : 'border border-yvy-border'
+        isTop3 ? medal!.border : 'border border-yvy-gold/20'
       }`}
     >
       {/* Top 3 banner */}
@@ -78,7 +78,7 @@ function RankCard({ user, rank }: { user: RankedUser; rank: number }) {
             >
               {user.completionPct}%
             </p>
-            <p className="text-[10px] text-yvy-muted mt-0.5">
+            <p className="text-[10px] text-yvy-gold/60 mt-0.5">
               {user.ownedCount}/{user.totalCount}
             </p>
           </div>
@@ -127,9 +127,7 @@ export default function RankingScreen() {
   }, [load])
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (error) {
@@ -143,7 +141,7 @@ export default function RankingScreen() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
           Ranking do Álbum
         </h2>
         <div className="flex items-center gap-3">
@@ -151,9 +149,22 @@ export default function RankingScreen() {
           <button
             onClick={() => load({ silent: true })}
             disabled={refreshing}
-            className="text-xs text-yvy-accent underline disabled:opacity-40"
+            aria-label="Atualizar"
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-yvy-border bg-yvy-surface text-yvy-muted hover:text-yvy-dark hover:border-yvy-dark transition-colors disabled:opacity-40"
           >
-            {refreshing ? 'Atualizando...' : 'Atualizar'}
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+            >
+              <path d="M23 4v6h-6" />
+              <path d="M1 20v-6h6" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
           </button>
         </div>
       </div>

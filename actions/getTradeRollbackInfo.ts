@@ -4,8 +4,10 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export type TradeRollbackInfo =
   | { found: false }
+  | { found: true; alreadyRolledBack: true }
   | {
       found: true
+      alreadyRolledBack: false
       isInitiator: boolean
       rollbackRequestedBy: string | null
       rollbackMyGivingIds: string[] | null
@@ -22,13 +24,15 @@ export async function getTradeRollbackInfo(
   const { data: trade } = await (supabaseAdmin as any)
     .from('pending_trades')
     .select(
-      'initiator_id, receiver_id, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids'
+      'initiator_id, receiver_id, status, rollback_requested_by, rollback_giving_ids, rollback_receiving_ids'
     )
     .eq('id', tradeId)
-    .eq('status', 'accepted')
+    .in('status', ['accepted', 'rolled_back'])
     .maybeSingle()
 
   if (!trade) return { found: false }
+
+  if (trade.status === 'rolled_back') return { found: true, alreadyRolledBack: true }
 
   const isInitiator = trade.initiator_id === userId
 
@@ -42,6 +46,7 @@ export async function getTradeRollbackInfo(
 
   return {
     found: true,
+    alreadyRolledBack: false,
     isInitiator,
     rollbackRequestedBy: trade.rollback_requested_by ?? null,
     rollbackMyGivingIds,

@@ -37,9 +37,7 @@ export default function AuditScreen() {
   }, [])
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (!userId) {
@@ -75,7 +73,7 @@ export default function AuditScreen() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-      <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+      <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
         Histórico
       </h2>
 
@@ -105,7 +103,7 @@ export default function AuditScreen() {
                     </span>
                     <div className="flex-1 h-px bg-yvy-border" />
                   </div>
-                  <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-3 space-y-4">
+                  <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 shadow-md px-4 py-3 space-y-4">
                     {dayEntries.map((entry) => (
                       <EventCard key={entry.id} entry={entry} userId={userId} />
                     ))}

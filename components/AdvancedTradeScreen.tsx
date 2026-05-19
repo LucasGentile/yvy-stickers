@@ -504,9 +504,7 @@ export default function AdvancedTradeScreen() {
   }
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (error) {
@@ -524,7 +522,9 @@ export default function AdvancedTradeScreen() {
     <div className="max-w-lg mx-auto px-4 pt-20 pb-8 space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-yvy-dark">Troca Avançada</h2>
+          <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+            Troca Avançada
+          </h2>
           <p className="text-xs text-yvy-muted mt-1">
             Troca triangular entre 3 moradores. O sistema encontra automaticamente a melhor
             combinação onde todos se beneficiam, mesmo quando uma troca direta não é possível.
@@ -567,7 +567,7 @@ export default function AdvancedTradeScreen() {
       {previews.length === 0 && (
         <div className="space-y-4">
           {/* Visual triangle diagram */}
-          <div className="bg-yvy-surface rounded-2xl border border-yvy-border shadow-md p-5 space-y-4">
+          <div className="bg-yvy-surface rounded-2xl border border-yvy-gold/20 shadow-md p-5 space-y-4">
             <div className="flex justify-center">
               <svg width="180" height="140" viewBox="0 0 180 140" fill="none" aria-hidden="true">
                 {/* Triangle nodes */}

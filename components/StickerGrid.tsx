@@ -10,10 +10,10 @@ interface Props {
   tradeReceived?: Set<string>
   newestFromTrade?: Set<string>
   staged?: Set<string>
-  tradeLocked?: Set<string>
   onLongPress?: (id: string) => void
   isProtected?: boolean
   onProtectedRemove?: () => void
+  incomingStickers?: Set<string>
 }
 
 function TrophySVG() {
@@ -59,8 +59,12 @@ function stickerColor(
   id: string,
   on: boolean,
   tradeReceived?: Set<string>,
-  staged?: Set<string>
+  staged?: Set<string>,
+  incomingStickers?: Set<string>
 ): string {
+  // Incoming pending sticker not yet owned — shows as white+blue
+  if (incomingStickers?.has(id) && !on)
+    return 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400'
   if (!on) return 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border ring-2 ring-inset ring-yvy-border'
   if (staged?.has(id)) return 'bg-green-400 text-white ring-2 ring-inset ring-green-500'
   if (tradeReceived?.has(id)) return 'bg-blue-500 text-white ring-2 ring-inset ring-blue-400'
@@ -76,16 +80,16 @@ function StickerGrid({
   tradeReceived,
   newestFromTrade,
   staged,
-  tradeLocked,
   onLongPress,
   isProtected,
   onProtectedRemove,
+  incomingStickers,
 }: Props) {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const suppressNextClick = useRef(false)
 
   function handleTouchStart(id: string, on: boolean) {
-    if (!on || !onLongPress || tradeLocked?.has(id)) return
+    if (!on || !onLongPress) return
     longPressTimer.current = setTimeout(() => {
       longPressTimer.current = null
       suppressNextClick.current = true
@@ -106,7 +110,7 @@ function StickerGrid({
       suppressNextClick.current = false
       return
     }
-    if (tradeLocked?.has(id)) return
+    if (incomingStickers?.has(id) && !selected.has(id)) return
     if (isProtected && selected.has(id) && !staged?.has(id)) {
       onProtectedRemove?.()
       return
@@ -149,7 +153,7 @@ function StickerGrid({
         return (
           <div key={section.label} id={`section-${section.label}`} className="scroll-mt-20">
             {/* Section header */}
-            <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-yvy-border">
+            <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-yvy-gold/30">
               {'icon' in section ? (
                 <SectionIcon label={section.label} icon={section.icon} />
               ) : (
@@ -161,7 +165,7 @@ function StickerGrid({
                 </span>
               )}
               <span
-                className={`ml-auto text-xs font-semibold ${sectionComplete ? 'text-green-600' : 'text-yvy-muted'}`}
+                className={`ml-auto text-xs font-semibold ${sectionComplete ? 'text-green-600' : 'text-yvy-gold/70'}`}
               >
                 {sectionOwned}/{sectionTotal} · {sectionPct}%
               </span>
@@ -186,7 +190,7 @@ function StickerGrid({
                         <span className="text-sm font-semibold text-yvy-text">{team.name}</span>
                         <span className="text-xs text-yvy-muted font-mono">{team.code}</span>
                         <span
-                          className={`text-xs font-semibold ${complete ? 'text-green-600' : 'text-yvy-muted'}`}
+                          className={`text-xs font-semibold ${complete ? 'text-green-600' : 'text-yvy-gold/70'}`}
                         >
                           {ownedCount}/{total} · {pct}%
                         </span>
@@ -218,7 +222,7 @@ function StickerGrid({
                                   onLongPress(id)
                                 }
                               }}
-                              className={`relative aspect-[4.9/6.5] w-full rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged)}`}
+                              className={`relative aspect-[4.9/6.5] w-full rounded-[2px] text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
                             >
                               {isChromeSticker(id) ? (
                                 <span className="font-bold text-amber-400">{idx + 1}</span>
@@ -257,7 +261,7 @@ function StickerGrid({
                           onLongPress(id)
                         }
                       }}
-                      className={`relative ${id.startsWith('FWC') ? 'w-12 h-12' : 'h-12 px-3'} rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged)}`}
+                      className={`relative ${id.startsWith('FWC') ? 'w-12 h-12' : 'h-12 px-3'} rounded-[2px] text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
                     >
                       {id.startsWith('FWC') ? (
                         <span className="flex flex-col items-center leading-none gap-[1px]">

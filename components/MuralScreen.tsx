@@ -1,9 +1,9 @@
 'use client'
-import LoadingScreen from '@/components/LoadingScreen'
 
 import { useEffect, useState, useCallback } from 'react'
 import { getMuralInsights, Insight } from '@/actions/getMuralInsights'
 import PanelinhasSection from '@/components/PanelinhasSection'
+import RankingScreen from '@/components/RankingScreen'
 
 const COLOR_MAP: Record<
   Insight['color'],
@@ -76,105 +76,169 @@ function InsightCard({ insight }: { insight: Insight }) {
   )
 }
 
+const TABS = [
+  { id: 'ranking', label: 'Ranking' },
+  { id: 'mural', label: 'Mural' },
+  { id: 'panelinhas', label: 'Panelinhas' },
+] as const
+
+type Tab = (typeof TABS)[number]['id']
+
 export default function MuralScreen() {
+  const [tab, setTab] = useState<Tab>('ranking')
   const [insights, setInsights] = useState<Insight[]>([])
-  const [loading, setLoading] = useState(true)
+  const [muralLoading, setMuralLoading] = useState(false)
+  const [muralLoaded, setMuralLoaded] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
-  const load = useCallback(async (isRefresh = false) => {
+  const loadMural = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
-    else setLoading(true)
+    else setMuralLoading(true)
     try {
       const data = await getMuralInsights()
       setInsights(data)
+      setMuralLoaded(true)
     } finally {
-      setLoading(false)
+      setMuralLoading(false)
       setRefreshing(false)
     }
   }, [])
 
   useEffect(() => {
-    load()
+    if (tab === 'mural' && !muralLoaded && !muralLoading) {
+      loadMural()
+    }
+  }, [tab, muralLoaded, muralLoading, loadMural])
+
+  useEffect(() => {
     const handleVisibility = () => {
-      if (!document.hidden) load(true)
+      if (!document.hidden && tab === 'mural' && muralLoaded) loadMural(true)
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
-  }, [load])
-
-  if (loading) {
-    return (
-      <LoadingScreen />
-    )
-  }
+  }, [tab, muralLoaded, loadMural])
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
-            Mural do YVY
-          </h2>
-          <p className="text-xs text-yvy-muted mt-0.5 pl-2.5">
-            Fatos e insights do condomínio figurinheiro
-          </p>
-        </div>
-        <button
-          onClick={() => load(true)}
-          disabled={refreshing}
-          className="text-sm text-yvy-accent underline disabled:opacity-40"
-        >
-          {refreshing ? 'Atualizando...' : 'Atualizar'}
-        </button>
-      </div>
-
-      {/* Disclaimer banner */}
-      <div className="bg-yvy-surface border border-yvy-border rounded-xl px-4 py-3">
-        <p className="text-xs text-yvy-muted leading-relaxed">
-          <span className="font-semibold text-yvy-dark">Aviso importante:</span> os fatos abaixo são
-          gerados automaticamente com fins humorísticos. Se você apareceu aqui é porque se destacou
-          — de alguma forma. 😬
-        </p>
-      </div>
-
-      {insights.length === 0 ? (
-        <div className="text-center py-16 text-yvy-muted space-y-2">
-          <p className="text-base">Sem dados suficientes ainda.</p>
-          <p className="text-sm">Volte quando o condomínio tiver mais figurinhas coladas.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {insights.map((insight) => (
-            <InsightCard key={insight.id} insight={insight} />
+    <div className="flex flex-col flex-1">
+      {/* Tab bar */}
+      <div className="sticky top-14 z-10 bg-yvy-dark border-b border-yvy-gold/20">
+        <div className="max-w-lg mx-auto px-3 py-2 flex gap-1">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                tab === t.id
+                  ? 'bg-yvy-gold/20 text-yvy-gold'
+                  : 'text-yvy-gold/50 hover:bg-yvy-gold/10 hover:text-yvy-gold/80'
+              }`}
+            >
+              {t.label}
+            </button>
           ))}
+        </div>
+      </div>
+
+      {/* Ranking tab */}
+      {tab === 'ranking' && <RankingScreen />}
+
+      {/* Mural tab */}
+      {tab === 'mural' && (
+        <div className="max-w-lg mx-auto w-full px-4 py-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+                Mural do YVY
+              </h2>
+              <p className="text-xs text-yvy-muted mt-0.5 pl-2.5">
+                Fatos e insights do condomínio figurinheiro
+              </p>
+            </div>
+            <button
+              onClick={() => loadMural(true)}
+              disabled={refreshing || muralLoading}
+              aria-label="Atualizar"
+              className="w-8 h-8 flex items-center justify-center rounded-full border border-yvy-border bg-yvy-surface text-yvy-muted hover:text-yvy-dark hover:border-yvy-dark transition-colors disabled:opacity-40"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+              >
+                <path d="M23 4v6h-6" />
+                <path d="M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+            </button>
+          </div>
+
+          {muralLoading && !muralLoaded ? (
+            <div className="flex justify-center py-16">
+              <div className="flex gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-yvy-gold/70 animate-bounce [animation-delay:0ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-yvy-gold/70 animate-bounce [animation-delay:150ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-yvy-gold/70 animate-bounce [animation-delay:300ms]" />
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="bg-yvy-surface border border-yvy-gold/20 rounded-xl px-4 py-3">
+                <p className="text-xs text-yvy-muted leading-relaxed">
+                  <span className="font-semibold text-yvy-dark">Aviso importante:</span> os fatos
+                  abaixo são gerados automaticamente com fins humorísticos. Se você apareceu aqui é
+                  porque se destacou — de alguma forma. 😬
+                </p>
+              </div>
+
+              {insights.length === 0 ? (
+                <div className="text-center py-16 text-yvy-muted space-y-2">
+                  <p className="text-base">Sem dados suficientes ainda.</p>
+                  <p className="text-sm">
+                    Volte quando o condomínio tiver mais figurinhas coladas.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {insights.map((insight) => (
+                    <InsightCard key={insight.id} insight={insight} />
+                  ))}
+                </div>
+              )}
+
+              <p className="text-center text-[10px] text-yvy-muted pt-2">
+                Atualizado com base nos dados mais recentes · Sem julgamentos (mentira)
+              </p>
+            </>
+          )}
         </div>
       )}
 
-      <p className="text-center text-[10px] text-yvy-muted pt-2">
-        Atualizado com base nos dados mais recentes · Sem julgamentos (mentira)
-      </p>
+      {/* Panelinhas tab */}
+      {tab === 'panelinhas' && (
+        <div className="max-w-lg mx-auto w-full px-4 py-6 space-y-4">
+          <div>
+            <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+              Panelinhas do YVYs
+            </h2>
+            <p className="text-xs text-yvy-muted mt-0.5 pl-2.5">
+              Os pares que mais trocam figurinhas entre si 🤝
+            </p>
+          </div>
 
-      {/* Panelinhas section */}
-      <div className="border-t border-yvy-border pt-6 mt-6 space-y-3">
-        <div>
-          <h3 className="text-base font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
-            Panelinhas do YVYs
-          </h3>
-          <p className="text-xs text-yvy-muted mt-0.5 pl-2.5">
-            Os pares que mais trocam figurinhas entre si 🤝
-          </p>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+            <p className="text-xs text-amber-900 leading-relaxed">
+              Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais
+              inseparáveis — e mais suspeitos de panelinha!
+            </p>
+          </div>
+
+          <PanelinhasSection />
         </div>
-
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <p className="text-xs text-amber-900 leading-relaxed">
-            Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais
-            inseparáveis — e mais suspeitos de panelinha!
-          </p>
-        </div>
-
-        <PanelinhasSection />
-      </div>
+      )}
     </div>
   )
 }

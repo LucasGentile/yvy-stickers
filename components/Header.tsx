@@ -9,14 +9,16 @@ import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibili
 import { getAdvancedTrades } from '@/actions/getAdvancedTrades'
 import { usePrefs } from '@/contexts/PreferencesContext'
 
-const MAIN_NAV = [
+const NAV_TOP = [
   { href: '/stickers', label: 'Minhas Figurinhas' },
   { href: '/duplicates', label: 'Repetidas' },
-  { href: '/missing', label: 'Faltantes' },
   { href: '/matches', label: 'Ranking de Trocas' },
-  { href: '/verificar', label: 'Verificar Figurinha' },
+]
+
+const NAV_BOTTOM = [
   { href: '/historico', label: 'Histórico' },
-  { href: '/ranking', label: 'Ranking do Álbum' },
+  { href: '/missing', label: 'Faltantes' },
+  { href: '/verificar', label: 'Verificar Figurinha' },
 ]
 
 const SOCIAL_NAV = [
@@ -158,7 +160,7 @@ export default function Header() {
             </div>
 
             <nav className="flex-1 py-2 overflow-y-auto">
-              {MAIN_NAV.map((item) => {
+              {NAV_TOP.map((item) => {
                 const active = pathname === item.href
                 const showDot = item.href === '/matches' && pendingCount > 0
                 return (
@@ -209,6 +211,24 @@ export default function Header() {
                   )
                 })()}
 
+              {NAV_BOTTOM.map((item) => {
+                const active = pathname === item.href
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center px-5 py-3.5 text-sm font-medium transition-colors ${
+                      active
+                        ? 'bg-yvy-gold/15 text-yvy-gold'
+                        : 'text-yvy-gold/90 hover:bg-yvy-gold/10 hover:text-yvy-gold'
+                    }`}
+                  >
+                    {item.label}
+                    {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yvy-gold" />}
+                  </Link>
+                )
+              })}
+
               <div className="mx-5 my-1 border-t border-white/10" />
 
               {SOCIAL_NAV.map((item) => {
@@ -238,8 +258,8 @@ export default function Header() {
                       href="/admin"
                       className={`flex items-center px-5 py-3.5 text-sm font-medium transition-colors border-t border-white/10 mt-1 pt-3.5 ${
                         active
-                          ? 'bg-white/15 text-white'
-                          : 'text-white/70 hover:bg-white/10 hover:text-white'
+                          ? 'bg-yvy-gold/15 text-yvy-gold'
+                          : 'text-yvy-gold/90 hover:bg-yvy-gold/10 hover:text-yvy-gold'
                       }`}
                     >
                       <span>Aprovações</span>
@@ -257,64 +277,60 @@ export default function Header() {
             </nav>
 
             {/* Font size + Sticker order */}
-            <div className="px-5 py-3 border-t border-white/10 space-y-2.5">
-              <div className="space-y-1">
-                <p className="text-[9px] uppercase tracking-widest text-yvy-gold/60 font-semibold">
-                  Tamanho do texto
+            <div className="px-5 py-2 border-t border-white/10 space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <p className="text-[8px] uppercase tracking-widest text-yvy-gold/40 font-semibold w-14 shrink-0">
+                  Texto
                 </p>
-                <div className="flex gap-1.5">
-                  {FONT_SIZES.map((s, i) => (
-                    <button
-                      key={s.label}
-                      onClick={() => pickFontSize(i)}
-                      className={`flex-1 py-1 rounded-md text-[11px] font-bold transition-colors ${
-                        fontSize === i
-                          ? 'bg-yvy-gold text-yvy-dark'
-                          : 'bg-yvy-gold/10 text-yvy-gold/80 hover:bg-yvy-gold/20'
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
+                {FONT_SIZES.map((s, i) => (
+                  <button
+                    key={s.label}
+                    onClick={() => pickFontSize(i)}
+                    className={`flex-1 h-5 rounded text-[10px] font-semibold transition-colors ${
+                      fontSize === i
+                        ? 'bg-yvy-gold/60 text-yvy-dark'
+                        : 'bg-yvy-gold/8 text-yvy-gold/50 hover:bg-yvy-gold/15'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
               </div>
-              <div className="space-y-1">
-                <p className="text-[9px] uppercase tracking-widest text-yvy-gold/60 font-semibold">
-                  Ordem das figurinhas
+              <div className="flex items-center gap-1.5">
+                <p className="text-[8px] uppercase tracking-widest text-yvy-gold/40 font-semibold w-14 shrink-0">
+                  Ordem
                 </p>
-                <div className="flex gap-1.5">
-                  {(
-                    [
-                      ['album', 'Álbum'],
-                      ['alpha', 'A–Z'],
-                    ] as const
-                  ).map(([val, label]) => (
-                    <button
-                      key={val}
-                      onClick={() => setStickerOrder(val)}
-                      className={`flex-1 py-1 rounded-md text-[11px] font-bold transition-colors ${
-                        stickerOrder === val
-                          ? 'bg-yvy-gold text-yvy-dark'
-                          : 'bg-yvy-gold/10 text-yvy-gold/80 hover:bg-yvy-gold/20'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+                {(
+                  [
+                    ['album', 'Álbum'],
+                    ['alpha', 'A–Z'],
+                  ] as const
+                ).map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setStickerOrder(val)}
+                    className={`flex-1 h-5 rounded text-[10px] font-semibold transition-colors ${
+                      stickerOrder === val
+                        ? 'bg-yvy-gold/60 text-yvy-dark'
+                        : 'bg-yvy-gold/8 text-yvy-gold/50 hover:bg-yvy-gold/15'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* WhatsApp */}
-            <div className="px-5 py-4 border-t border-white/10">
+            <div className="px-5 py-2 border-t border-white/10">
               <a
                 href={groupHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2.5 text-sm text-yvy-gold/80 hover:text-yvy-gold transition-colors"
+                className="flex items-center gap-2 text-xs text-yvy-gold/60 hover:text-yvy-gold/90 transition-colors"
               >
                 <svg
-                  className="w-4 h-4 fill-current flex-shrink-0"
+                  className="w-3.5 h-3.5 fill-current flex-shrink-0"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                 >

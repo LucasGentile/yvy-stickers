@@ -113,7 +113,7 @@ export async function rollbackTrade(
       const requesterName = userId === trade.initiator_id ? initiatorName : receiverName
       const otherPartyId = userId === trade.initiator_id ? trade.receiver_id : trade.initiator_id
       const otherName = userId === trade.initiator_id ? receiverName : initiatorName
-      logAction(userId, 'trade_rollback_requested', {
+      await logAction(userId, 'trade_rollback_requested', {
         tradeId: trade.id,
         partnerName: otherName,
         requestedBy: requesterName,
@@ -121,7 +121,7 @@ export async function rollbackTrade(
         givingIds: userId === trade.initiator_id ? givingToLog : receivingToLog,
         receivingIds: userId === trade.initiator_id ? receivingToLog : givingToLog,
       })
-      logAction(otherPartyId, 'trade_rollback_requested', {
+      await logAction(otherPartyId, 'trade_rollback_requested', {
         tradeId: trade.id,
         partnerName: requesterName,
         requestedBy: requesterName,
@@ -166,12 +166,12 @@ export async function rollbackTrade(
       const denierName = userId === trade.initiator_id ? initiatorName : receiverName
       const otherPartyId = userId === trade.initiator_id ? trade.receiver_id : trade.initiator_id
       const otherName = userId === trade.initiator_id ? receiverName : initiatorName
-      logAction(userId, 'trade_rollback_denied', {
+      await logAction(userId, 'trade_rollback_denied', {
         tradeId: trade.id,
         partnerName: otherName,
         deniedBy: denierName,
       })
-      logAction(otherPartyId, 'trade_rollback_denied', {
+      await logAction(otherPartyId, 'trade_rollback_denied', {
         tradeId: trade.id,
         partnerName: denierName,
         deniedBy: denierName,
@@ -249,7 +249,7 @@ export async function rollbackTrade(
         ? initiatorName
         : receiverName
       : undefined
-    logAction(trade.initiator_id, 'trade_rolled_back', {
+    await logAction(trade.initiator_id, 'trade_rolled_back', {
       tradeId: trade.id,
       partnerName: receiverName,
       partial: isPartial,
@@ -257,7 +257,7 @@ export async function rollbackTrade(
       receivingIds: receivingToRevert,
       ...(isForced && { forcedBy: forcerName }),
     })
-    logAction(trade.receiver_id, 'trade_rolled_back', {
+    await logAction(trade.receiver_id, 'trade_rolled_back', {
       tradeId: trade.id,
       partnerName: initiatorName,
       partial: isPartial,

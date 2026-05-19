@@ -225,7 +225,7 @@ export default function StickerLookupScreen() {
     <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
           Verificar Figurinha
         </h2>
         <p className="text-xs text-yvy-muted mt-1 pl-3 leading-relaxed">
@@ -380,7 +380,7 @@ export default function StickerLookupScreen() {
 
         {/* Sticker chips for selected section */}
         {selectedEntry && (
-          <div className="bg-yvy-surface rounded-xl border border-yvy-border p-3 space-y-2">
+          <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 p-3 space-y-2">
             <div className="flex items-center gap-2">
               {selectedEntry.kind === 'team' ? (
                 <img

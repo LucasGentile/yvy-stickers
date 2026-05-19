@@ -52,6 +52,11 @@ export function RollbackControl({
         setStep('closed')
         return
       }
+      if (info.alreadyRolledBack) {
+        setMsg('Esta troca já foi desfeita.')
+        setStep('closed')
+        return
+      }
       setIsInitiator(info.isInitiator)
       if (info.rollbackRequestedBy === userId) {
         setPendingGiving(info.rollbackMyGivingIds)
