@@ -24,6 +24,7 @@ export function RecentTradeCard({
 }) {
   const [loading, setLoading] = useState<'request' | 'confirm' | 'deny' | 'force' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  const [confirmingForce, setConfirmingForce] = useState(false)
   const [revertStep, setRevertStep] = useState<RevertStep>('idle')
   const [selectedGiving, setSelectedGiving] = useState<Set<string>>(new Set())
   const [selectedReceiving, setSelectedReceiving] = useState<Set<string>>(new Set())
@@ -197,13 +198,37 @@ export function RecentTradeCard({
                   <p className="text-[11px] text-amber-700 leading-snug">
                     Já se passaram 3 dias sem resposta. Você pode forçar o desfazimento.
                   </p>
-                  <button
-                    onClick={() => handle('force')}
-                    disabled={loading !== null}
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-                  >
-                    {loading === 'force' ? 'Desfazendo...' : 'Forçar desfazimento'}
-                  </button>
+                  {confirmingForce ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-red-700 font-medium">
+                        Tem certeza? Os álbuns de ambos serão revertidos imediatamente.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setConfirmingForce(false)}
+                          disabled={loading !== null}
+                          className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={() => handle('force')}
+                          disabled={loading !== null}
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+                        >
+                          {loading === 'force' ? 'Desfazendo...' : 'Confirmar desfazimento'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmingForce(true)}
+                      disabled={loading !== null}
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+                    >
+                      Forçar desfazimento
+                    </button>
+                  )}
                 </div>
               )}
             </div>
