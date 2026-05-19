@@ -47,7 +47,7 @@ export async function getRanking(): Promise<RankedUser[]> {
     .filter((u) => (countByUser[u.id] ?? 0) > 0)
     .map((u) => {
       const ownedCount = countByUser[u.id]!
-      const completionPct = Math.round((ownedCount / total) * 100)
+      const completionPct = ownedCount >= total ? 100 : Math.floor((ownedCount / total) * 100)
       return {
         id: u.id,
         name: formatName(u.name),
