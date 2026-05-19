@@ -7,6 +7,7 @@ import { sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
 import { formatName } from '@/lib/format'
 import { RollbackControl } from './RollbackControl'
+import { AdvancedRollbackControl } from './AdvancedRollbackControl'
 import { ImportAssistant } from './ImportAssistant'
 import { TradeAssistant } from './TradeAssistant'
 import { TradeCardBody } from './TradeCardBody'
@@ -38,6 +39,9 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
   )
 
   const tradeId = isAccepted ? (entry.metadata.tradeId as string | undefined) : undefined
+  const advancedTradeId = isAdvancedExecuted
+    ? (entry.metadata.tradeId as string | undefined)
+    : undefined
 
   const givingIds = sort((entry.metadata.givingIds as string[] | undefined) ?? [])
   const receivingIds = sort((entry.metadata.receivingIds as string[] | undefined) ?? [])
@@ -163,6 +167,7 @@ export function EventCard({ entry, userId }: { entry: AuditEntry; userId: string
             receivingIds={receivingIds}
           />
         )}
+        {advancedTradeId && <AdvancedRollbackControl tradeId={advancedTradeId} userId={userId} />}
       </TradeCardBody>
 
       {assistantOpen && hasTradeStickers && (
