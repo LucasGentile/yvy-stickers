@@ -1,4 +1,5 @@
 'use client'
+import LoadingScreen from '@/components/LoadingScreen'
 
 import { useEffect, useState } from 'react'
 import { getPendingUsers, PendingUser } from '@/actions/getPendingUsers'
@@ -62,9 +63,7 @@ export default function AdminScreen() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-yvy-muted">
-        <p>Carregando...</p>
-      </div>
+      <LoadingScreen />
     )
   }
 

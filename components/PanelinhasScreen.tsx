@@ -1,4 +1,5 @@
 'use client'
+import LoadingScreen from '@/components/LoadingScreen'
 
 import { useEffect, useState, useCallback } from 'react'
 import { getPanelinhas, Panelinha } from '@/actions/getPanelinhas'
@@ -186,9 +187,7 @@ export default function PanelinhasScreen() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-yvy-muted">
-        <p>Calculando panelinhas...</p>
-      </div>
+      <LoadingScreen />
     )
   }
 

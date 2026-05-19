@@ -1,4 +1,5 @@
 'use client'
+import LoadingScreen from '@/components/LoadingScreen'
 
 import { useEffect, useState, useCallback } from 'react'
 import { getRanking, RankedUser } from '@/actions/getRanking'
@@ -127,9 +128,7 @@ export default function RankingScreen() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-yvy-muted">
-        <p>Carregando ranking...</p>
-      </div>
+      <LoadingScreen />
     )
   }
 

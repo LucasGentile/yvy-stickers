@@ -1,4 +1,5 @@
 'use client'
+import LoadingScreen from '@/components/LoadingScreen'
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
@@ -504,9 +505,7 @@ export default function AdvancedTradeScreen() {
 
   if (loading) {
     return (
-      <div className="max-w-lg mx-auto px-4 pt-20 pb-8">
-        <p className="text-sm text-yvy-muted text-center">Carregando...</p>
-      </div>
+      <LoadingScreen />
     )
   }
 

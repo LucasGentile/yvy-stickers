@@ -1,4 +1,5 @@
 'use client'
+import LoadingScreen from '@/components/LoadingScreen'
 
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { getMatches, MatchResult } from '@/lib/matching'
@@ -104,9 +105,7 @@ export default function MatchesScreen() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-yvy-muted">
-        <p>Buscando trocas...</p>
-      </div>
+      <LoadingScreen />
     )
   }
 

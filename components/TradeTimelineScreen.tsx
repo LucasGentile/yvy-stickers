@@ -1,4 +1,5 @@
 'use client'
+import LoadingScreen from '@/components/LoadingScreen'
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -31,9 +32,7 @@ export default function TradeTimelineScreen({ entryId }: { entryId: string }) {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-yvy-muted">
-        <p>Carregando timeline...</p>
-      </div>
+      <LoadingScreen />
     )
   }
 

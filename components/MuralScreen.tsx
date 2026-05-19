@@ -1,4 +1,5 @@
 'use client'
+import LoadingScreen from '@/components/LoadingScreen'
 
 import { useEffect, useState, useCallback } from 'react'
 import { getMuralInsights, Insight } from '@/actions/getMuralInsights'
@@ -103,9 +104,7 @@ export default function MuralScreen() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-yvy-muted">
-        <p>Garimpando fatos constrangedores...</p>
-      </div>
+      <LoadingScreen />
     )
   }
 

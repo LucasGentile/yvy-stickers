@@ -1,4 +1,5 @@
 'use client'
+import LoadingScreen from '@/components/LoadingScreen'
 
 import { useEffect, useState } from 'react'
 import { getAuditLog, type AuditEntry } from '@/actions/getAuditLog'
@@ -37,9 +38,7 @@ export default function AuditScreen() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-yvy-muted">
-        <p>Carregando histórico...</p>
-      </div>
+      <LoadingScreen />
     )
   }
 

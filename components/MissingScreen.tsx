@@ -1,4 +1,5 @@
 'use client'
+import LoadingScreen from '@/components/LoadingScreen'
 
 import { useState, useEffect, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
@@ -98,9 +99,7 @@ export default function MissingScreen() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-yvy-muted">
-        <p>Carregando...</p>
-      </div>
+      <LoadingScreen />
     )
   }
 
