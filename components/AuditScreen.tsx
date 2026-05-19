@@ -85,7 +85,7 @@ export default function AuditScreen() {
   )
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
+    <div className="w-full max-w-lg mx-auto px-4 py-6 space-y-6">
       <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
         Histórico
       </h2>

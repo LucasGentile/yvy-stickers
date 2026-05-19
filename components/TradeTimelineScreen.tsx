@@ -48,7 +48,7 @@ export default function TradeTimelineScreen({ entryId }: { entryId: string }) {
   if (!timeline) return null
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+    <div className="w-full max-w-lg mx-auto px-4 py-6 space-y-4">
       <div className="flex items-center gap-3">
         <Link href="/historico" className="text-yvy-accent text-sm hover:underline shrink-0">
           ← Histórico
