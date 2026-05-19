@@ -54,7 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <Header />
           <MothersDayBanner />
-          <main className="flex-1 pt-14">{children}</main>
+          <main className="flex-1 flex flex-col pt-14">{children}</main>
         </Providers>
       </body>
     </html>
