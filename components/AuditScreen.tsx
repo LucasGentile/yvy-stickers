@@ -95,7 +95,7 @@ export default function AuditScreen() {
         <div className="flex items-baseline justify-between">
           <h3 className="text-sm font-bold text-yvy-dark uppercase tracking-wide">Trocas</h3>
           {tradeEntries.length > 0 && (
-            <span className="text-xs text-yvy-muted">
+            <span className="text-xs text-yvy-muted tabular-nums min-w-[4rem] text-right">
               {filteredTradeEntries.length === tradeEntries.length
                 ? `${tradeEntries.length} registro${tradeEntries.length !== 1 ? 's' : ''}`
                 : `${filteredTradeEntries.length} de ${tradeEntries.length}`}
@@ -117,7 +117,7 @@ export default function AuditScreen() {
         )}
 
         {filteredTradeEntries.length === 0 ? (
-          <div className="text-center py-8 text-yvy-muted bg-yvy-bg rounded-xl border border-yvy-border">
+          <div className="text-center py-8 text-yvy-muted bg-yvy-bg rounded-xl border border-yvy-border min-h-[120px] flex items-center justify-center">
             <p className="text-sm">
               {searchTerm
                 ? `Nenhuma troca encontrada com "${stickerSearch.trim()}".`
