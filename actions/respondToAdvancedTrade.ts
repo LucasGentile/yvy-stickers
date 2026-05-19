@@ -38,9 +38,6 @@ export async function respondToAdvancedTrade(
   else return { success: false, error: 'Você não faz parte desta troca.' }
 
   if (action === 'cancel') {
-    if (trade.requested_by !== userId) {
-      return { success: false, error: 'Apenas quem propôs a troca pode cancelá-la.' }
-    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabaseAdmin as any)
       .from('advanced_trades')

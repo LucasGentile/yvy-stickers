@@ -229,36 +229,32 @@ function TradeCard({
           <p className="text-xs text-emerald-600 font-medium">
             ✓ Você aprovou. Aguardando os outros participantes.
           </p>
-          {trade.isRequester && (
-            <>
-              {confirming === 'cancel' ? (
-                <div className="flex items-center gap-2">
-                  <p className="text-xs text-yvy-muted flex-1">Cancelar esta troca?</p>
-                  <button
-                    onClick={() => setConfirming(null)}
-                    disabled={loading !== null}
-                    className="text-xs text-yvy-muted underline disabled:opacity-50"
-                  >
-                    Não
-                  </button>
-                  <button
-                    onClick={() => handle('cancel')}
-                    disabled={loading !== null}
-                    className="text-xs font-semibold text-red-600 underline disabled:opacity-50"
-                  >
-                    {loading === 'cancel' ? 'Cancelando...' : 'Sim, cancelar'}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setConfirming('cancel')}
-                  disabled={loading !== null}
-                  className="text-xs text-yvy-muted underline disabled:opacity-50"
-                >
-                  Cancelar proposta
-                </button>
-              )}
-            </>
+          {confirming === 'cancel' ? (
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-yvy-muted flex-1">Cancelar esta troca?</p>
+              <button
+                onClick={() => setConfirming(null)}
+                disabled={loading !== null}
+                className="text-xs text-yvy-muted underline disabled:opacity-50"
+              >
+                Não
+              </button>
+              <button
+                onClick={() => handle('cancel')}
+                disabled={loading !== null}
+                className="text-xs font-semibold text-red-600 underline disabled:opacity-50"
+              >
+                {loading === 'cancel' ? 'Cancelando...' : 'Sim, cancelar'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirming('cancel')}
+              disabled={loading !== null}
+              className="text-xs text-yvy-muted underline disabled:opacity-50"
+            >
+              Cancelar proposta
+            </button>
           )}
         </div>
       )}
