@@ -196,4 +196,42 @@ describe('TradeCardBody', () => {
     // formatName applied twice: "MARIA DE SOUZA" -> "Maria de Souza"
     expect(screen.getByText(/Maria de Souza/)).toBeInTheDocument()
   })
+
+  it('uses conditional tense for trade_rejected with stickers', () => {
+    const entry = makeEntry({
+      action: 'trade_rejected',
+      metadata: {
+        tradeId: 'trade-1',
+        partnerName: 'Ana',
+        givingIds: ['BRA1'],
+        receivingIds: ['MEX1'],
+        rejectedBy: 'Ana',
+      },
+    })
+    render(
+      <TradeCardBody entry={entry} borderClass="border-l-red-400" timeSlot={<span>now</span>} />
+    )
+    expect(screen.getByText(/Você daria 1 para/)).toBeInTheDocument()
+    expect(screen.getByText(/Você receberia 1 de/)).toBeInTheDocument()
+  })
+
+  it('uses conditional tense for trade_cancelled with stickers', () => {
+    const entry = makeEntry({
+      action: 'trade_cancelled',
+      metadata: {
+        tradeId: 'trade-1',
+        partnerName: 'Bob',
+        givingIds: ['ARG1', 'ARG2'],
+        receivingIds: ['FRA1'],
+        cancelledBy: 'Bob',
+      },
+    })
+    const { container } = render(
+      <TradeCardBody entry={entry} borderClass="border-l-yvy-border" timeSlot={<span>now</span>} />
+    )
+    expect(screen.getByText(/Você daria 2 para/)).toBeInTheDocument()
+    expect(screen.getByText(/Você receberia 1 de/)).toBeInTheDocument()
+    expect(container.textContent).toContain('ARG1')
+    expect(container.textContent).toContain('FRA1')
+  })
 })

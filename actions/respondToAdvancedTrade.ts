@@ -55,6 +55,16 @@ export async function respondToAdvancedTrade(
           .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
         const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
         const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
+        const givesMap: Record<string, string[]> = {
+          [trade.user_a_id]: trade.a_gives_ids,
+          [trade.user_b_id]: trade.b_gives_ids,
+          [trade.user_c_id]: trade.c_gives_ids,
+        }
+        const receivesMap: Record<string, string[]> = {
+          [trade.user_a_id]: trade.c_gives_ids,
+          [trade.user_b_id]: trade.a_gives_ids,
+          [trade.user_c_id]: trade.b_gives_ids,
+        }
         for (const pid of participants) {
           const others = participants
             .filter((id) => id !== pid)
@@ -63,6 +73,8 @@ export async function respondToAdvancedTrade(
             tradeId: trade.id,
             cancelledBy: nameMap[userId] ?? 'Usuário',
             partners: others,
+            givingIds: givesMap[pid],
+            receivingIds: receivesMap[pid],
           })
         }
       } catch {
@@ -95,6 +107,16 @@ export async function respondToAdvancedTrade(
           .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
         const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
         const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
+        const givesMap: Record<string, string[]> = {
+          [trade.user_a_id]: trade.a_gives_ids,
+          [trade.user_b_id]: trade.b_gives_ids,
+          [trade.user_c_id]: trade.c_gives_ids,
+        }
+        const receivesMap: Record<string, string[]> = {
+          [trade.user_a_id]: trade.c_gives_ids,
+          [trade.user_b_id]: trade.a_gives_ids,
+          [trade.user_c_id]: trade.b_gives_ids,
+        }
         for (const pid of participants) {
           const others = participants
             .filter((id) => id !== pid)
@@ -103,6 +125,8 @@ export async function respondToAdvancedTrade(
             tradeId: trade.id,
             rejectedBy: nameMap[userId] ?? 'Usuário',
             partners: others,
+            givingIds: givesMap[pid],
+            receivingIds: receivesMap[pid],
           })
         }
       } catch {
