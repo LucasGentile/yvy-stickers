@@ -9,6 +9,7 @@ import {
 } from '@/actions/getBetterMatchExcludingTrade'
 import { getTradeAvailability, type TradeAvailability } from '@/actions/getTradeAvailability'
 import { StickerList, StickerToggle } from './StickerList'
+import { relativeTime, absoluteTime } from '../audit/eventConfig'
 
 export function TradeCard({
   trade,
@@ -63,9 +64,15 @@ export function TradeCard({
     <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-yvy-dark capitalize">{trade.otherUserName}</p>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted">
-          {trade.isSender ? 'Aguardando resposta' : 'Pedido recebido'}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="flex items-center gap-1">
+            <span className="text-[10px] text-yvy-muted">{relativeTime(trade.createdAt)}</span>
+            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(trade.createdAt)}</span>
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-yvy-muted">
+            {trade.isSender ? 'Aguardando resposta' : 'Pedido recebido'}
+          </span>
+        </div>
       </div>
 
       <p className="text-[11px] text-yvy-muted">
