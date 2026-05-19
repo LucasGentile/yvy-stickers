@@ -117,7 +117,7 @@ export default function AuditScreen() {
         )}
 
         {filteredTradeEntries.length === 0 ? (
-          <div className="text-center py-8 text-yvy-muted bg-yvy-bg rounded-xl border border-yvy-border min-h-[120px] flex items-center justify-center">
+          <div className="text-center text-yvy-muted bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-8 w-full flex items-center justify-center">
             <p className="text-sm">
               {searchTerm
                 ? `Nenhuma troca encontrada com "${stickerSearch.trim()}".`
