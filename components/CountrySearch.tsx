@@ -1,26 +1,45 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ALL_TEAMS } from '@/lib/stickers'
+import { ALL_TEAMS, ALL_STICKER_SECTIONS, type StickerSpecial } from '@/lib/stickers'
+
+const SPECIAL_SECTIONS = ALL_STICKER_SECTIONS.filter(
+  (s): s is StickerSpecial => s.type === 'special'
+)
 
 export default function CountrySearch() {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  const filtered = query.trim()
+  const q = query.trim().toLowerCase()
+
+  const filteredTeams = q
     ? ALL_TEAMS.filter(
-        (t) =>
-          t.name.toLowerCase().includes(query.toLowerCase()) ||
-          t.code.toLowerCase().includes(query.toLowerCase())
+        (t) => t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q)
       )
     : ALL_TEAMS
 
-  function goTo(code: string) {
+  const filteredSections = q
+    ? SPECIAL_SECTIONS.filter(
+        (s) =>
+          s.label.toLowerCase().includes(q) ||
+          s.stickers.some((id) => id.toLowerCase().includes(q))
+      )
+    : SPECIAL_SECTIONS
+
+  const hasResults = filteredTeams.length > 0 || filteredSections.length > 0
+
+  function goToTeam(code: string) {
     setQuery('')
     setOpen(false)
-    const el = document.getElementById(`country-${code}`)
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    document.getElementById(`country-${code}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function goToSection(label: string) {
+    setQuery('')
+    setOpen(false)
+    document.getElementById(`section-${label}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   useEffect(() => {
@@ -47,7 +66,7 @@ export default function CountrySearch() {
             setOpen(true)
           }}
           onFocus={() => setOpen(true)}
-          placeholder="Ir para um país..."
+          placeholder="Ir para um país ou seção..."
           className="w-full rounded-lg border border-yvy-border pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg"
         />
         {query && (
@@ -66,27 +85,40 @@ export default function CountrySearch() {
 
       {open && (
         <div className="absolute z-40 mt-1 w-full bg-yvy-surface border border-yvy-border rounded-lg shadow-lg max-h-56 overflow-y-auto">
-          {filtered.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-yvy-muted">Nenhum país encontrado</p>
+          {!hasResults ? (
+            <p className="px-3 py-2 text-sm text-yvy-muted">Nenhum resultado encontrado</p>
           ) : (
-            filtered.map((team) => (
-              <button
-                key={team.code}
-                type="button"
-                onClick={() => goTo(team.code)}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-yvy-bg transition-colors"
-              >
-                <img
-                  src={`https://flagcdn.com/w20/${team.flagCode}.png`}
-                  width={20}
-                  height={15}
-                  alt={team.name}
-                  className="rounded-sm shrink-0"
-                />
-                <span className="text-yvy-text">{team.name}</span>
-                <span className="text-yvy-muted font-mono text-xs ml-auto">{team.code}</span>
-              </button>
-            ))
+            <>
+              {filteredSections.map((section) => (
+                <button
+                  key={section.label}
+                  type="button"
+                  onClick={() => goToSection(section.label)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-yvy-bg transition-colors"
+                >
+                  <span className="w-5 text-center shrink-0">{section.icon}</span>
+                  <span className="text-yvy-text">{section.label}</span>
+                </button>
+              ))}
+              {filteredTeams.map((team) => (
+                <button
+                  key={team.code}
+                  type="button"
+                  onClick={() => goToTeam(team.code)}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-yvy-bg transition-colors"
+                >
+                  <img
+                    src={`https://flagcdn.com/w20/${team.flagCode}.png`}
+                    width={20}
+                    height={15}
+                    alt={team.name}
+                    className="rounded-sm shrink-0"
+                  />
+                  <span className="text-yvy-text">{team.name}</span>
+                  <span className="text-yvy-muted font-mono text-xs ml-auto">{team.code}</span>
+                </button>
+              ))}
+            </>
           )}
         </div>
       )}

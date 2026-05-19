@@ -137,7 +137,7 @@ function StickerGrid({
         const sectionPct = Math.round((sectionOwned / sectionTotal) * 100)
         const sectionComplete = sectionOwned === sectionTotal
         return (
-          <div key={section.label}>
+          <div key={section.label} id={`section-${section.label}`} className="scroll-mt-20">
             {/* Section header */}
             <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-yvy-border">
               {'icon' in section ? (
