@@ -340,18 +340,18 @@ export default function StickersScreen() {
               <>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-3 rounded bg-green-600 shrink-0" />
+                    <span className="w-3 h-4 rounded-sm bg-green-600 shrink-0" />
                     Comprada/colada
                     <span className="font-semibold text-yvy-text">({boughtCount})</span>
                   </span>
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-3 rounded bg-blue-500 shrink-0" />
+                    <span className="w-3 h-4 rounded-sm bg-blue-500 shrink-0" />
                     Recebida em troca
                     <span className="font-semibold text-yvy-text">({tradeCount})</span>
                   </span>
                   {[...selected].some((id) => !lastSaved.current.has(id)) && (
                     <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                      <span className="w-3 h-3 rounded bg-green-400 shrink-0" />
+                      <span className="w-3 h-4 rounded-sm bg-green-400 shrink-0" />
                       Não salva ainda
                     </span>
                   )}
