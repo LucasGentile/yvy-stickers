@@ -118,7 +118,7 @@ export default function AdminScreen() {
                 <button
                   onClick={() => handleApprove(user.id)}
                   disabled={approving === user.id}
-                  className="shrink-0 bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-40 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+                  className="shrink-0 bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-40 text-yvy-gold text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
                 >
                   {approving === user.id ? 'Aprovando...' : 'Aprovar'}
                 </button>

@@ -12,6 +12,8 @@ interface Props {
   staged?: Set<string>
   tradeLocked?: Set<string>
   onLongPress?: (id: string) => void
+  isProtected?: boolean
+  onProtectedRemove?: () => void
 }
 
 function TrophySVG() {
@@ -59,10 +61,12 @@ function stickerColor(
   tradeReceived?: Set<string>,
   staged?: Set<string>
 ): string {
-  if (!on) return 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
-  if (staged?.has(id)) return 'bg-green-400 text-white'
-  if (tradeReceived?.has(id)) return 'bg-blue-500 text-white'
-  return tradeReceived ? 'bg-green-600 text-white' : 'bg-yvy-dark text-white'
+  if (!on) return 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border ring-2 ring-inset ring-yvy-border'
+  if (staged?.has(id)) return 'bg-green-400 text-white ring-2 ring-inset ring-green-500'
+  if (tradeReceived?.has(id)) return 'bg-blue-500 text-white ring-2 ring-inset ring-blue-400'
+  return tradeReceived
+    ? 'bg-green-600 text-white ring-2 ring-inset ring-green-700'
+    : 'bg-yvy-dark text-white ring-2 ring-inset ring-[#0f2921]'
 }
 
 function StickerGrid({
@@ -74,6 +78,8 @@ function StickerGrid({
   staged,
   tradeLocked,
   onLongPress,
+  isProtected,
+  onProtectedRemove,
 }: Props) {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const suppressNextClick = useRef(false)
@@ -101,6 +107,10 @@ function StickerGrid({
       return
     }
     if (tradeLocked?.has(id)) return
+    if (isProtected && selected.has(id) && !staged?.has(id)) {
+      onProtectedRemove?.()
+      return
+    }
     toggle(id)
   }
 
@@ -128,7 +138,7 @@ function StickerGrid({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
       {ALL_STICKER_SECTIONS.map((section) => {
         const sectionStickers =
           section.type === 'group' ? section.teams.flatMap((t) => t.stickers) : section.stickers
@@ -158,7 +168,7 @@ function StickerGrid({
             </div>
 
             {section.type === 'group' ? (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {section.teams.map((team) => {
                   const ownedCount = team.stickers.filter((id) => selected.has(id)).length
                   const total = team.stickers.length
@@ -183,17 +193,13 @@ function StickerGrid({
                         <button
                           type="button"
                           onClick={() => toggleTeam(team)}
-                          className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded transition-colors shrink-0 ${
-                            complete
-                              ? 'bg-yvy-dark text-white'
-                              : 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border'
-                          }`}
+                          className="ml-auto text-xs font-semibold px-2 py-0.5 rounded border border-yvy-muted text-yvy-muted hover:bg-yvy-bg transition-colors shrink-0"
                         >
-                          {complete ? 'Desmarcar' : 'Marcar todos'}
+                          {complete ? 'Desmarcar todas' : 'Marcar todas'}
                         </button>
                       </div>
                       {/* Sticker chips — show number only (1–20) */}
-                      <div className="flex flex-wrap gap-1">
+                      <div className="grid grid-cols-10 gap-1">
                         {team.stickers.map((id, idx) => {
                           const on = selected.has(id)
                           const isNew = on && newestFromTrade?.has(id)
@@ -212,7 +218,7 @@ function StickerGrid({
                                   onLongPress(id)
                                 }
                               }}
-                              className={`relative w-9 h-12 rounded-sm text-xs font-semibold transition-colors shadow-sm ${tradeLocked?.has(id) ? 'bg-white text-yvy-dark ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged)}`}
+                              className={`relative aspect-[4.9/6.5] w-full rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged)}`}
                             >
                               {isChromeSticker(id) ? (
                                 <span className="font-bold text-amber-400">{idx + 1}</span>
@@ -220,7 +226,7 @@ function StickerGrid({
                                 idx + 1
                               )}
                               {isNew && (
-                                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-amber-400 rounded-full" />
+                                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-amber-400 rounded-full" />
                               )}
                             </button>
                           )
@@ -251,17 +257,24 @@ function StickerGrid({
                           onLongPress(id)
                         }
                       }}
-                      className={`relative ${id.startsWith('FWC') ? 'w-12 h-12' : 'h-12 px-3'} rounded-sm text-xs font-semibold transition-colors shadow-sm ${tradeLocked?.has(id) ? 'bg-white text-yvy-dark ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged)}`}
+                      className={`relative ${id.startsWith('FWC') ? 'w-12 h-12' : 'h-12 px-3'} rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged)}`}
                     >
                       {id.startsWith('FWC') ? (
-                        <span className="font-bold text-amber-400">{id === 'FWC00' ? '00' : id}</span>
+                        <span className="flex flex-col items-center leading-none gap-[1px]">
+                          {id !== 'FWC00' && (
+                            <span className="text-[11px] font-bold text-amber-400">FWC</span>
+                          )}
+                          <span className="text-[11px] font-bold text-amber-400">
+                            {id === 'FWC00' ? '00' : id.replace('FWC', '')}
+                          </span>
+                        </span>
                       ) : isCocaColaSticker(id) ? (
-                        <span className="font-bold text-red-500 [text-shadow:0_0_4px_#fff,0_0_4px_#fff]">{id}</span>
+                        <span className="font-bold text-red-500">{id}</span>
                       ) : (
                         id
                       )}
                       {isNew && (
-                        <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-amber-400 rounded-full" />
+                        <span className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-amber-400 rounded-full" />
                       )}
                     </button>
                   )

@@ -224,7 +224,7 @@ function TradeCard({
               <button
                 onClick={() => handle('approve')}
                 disabled={loading !== null}
-                className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+                className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-yvy-gold font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
               >
                 {loading === 'approve' ? 'Aprovando...' : 'Aprovar'}
               </button>
@@ -720,7 +720,7 @@ export default function AdvancedTradeScreen() {
           <button
             onClick={handleSearch}
             disabled={isBusy || !canSearch}
-            className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-50 shadow-md"
+            className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-yvy-gold font-semibold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-50 shadow-md"
           >
             {searching ? 'Buscando combinações...' : 'Buscar Trocas Triangulares'}
           </button>
@@ -807,7 +807,7 @@ export default function AdvancedTradeScreen() {
               <button
                 onClick={() => handleConfirm(idx)}
                 disabled={isBusy}
-                className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
+                className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-yvy-gold font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
               >
                 {confirmingIdx === idx ? 'Enviando...' : 'Confirmar esta proposta'}
               </button>

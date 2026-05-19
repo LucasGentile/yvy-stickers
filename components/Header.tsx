@@ -108,7 +108,7 @@ export default function Header() {
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-[70] bg-yvy-dark text-white shadow-md"
+        className="fixed top-0 left-0 right-0 z-[70] bg-yvy-dark text-yvy-gold shadow-md"
         style={{ willChange: 'transform' }}
       >
         <div className="max-w-lg mx-auto px-4 py-3 relative flex items-center justify-center">
@@ -119,9 +119,9 @@ export default function Header() {
               aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
               className="relative flex flex-col gap-[5px] justify-center items-center w-8 h-8"
             >
-              <span className="block w-5 h-0.5 bg-white rounded-full" />
-              <span className="block w-5 h-0.5 bg-white rounded-full" />
-              <span className="block w-5 h-0.5 bg-white rounded-full" />
+              <span className="block w-5 h-0.5 bg-yvy-gold rounded-full" />
+              <span className="block w-5 h-0.5 bg-yvy-gold rounded-full" />
+              <span className="block w-5 h-0.5 bg-yvy-gold rounded-full" />
               {pendingCount + (pendingApprovalCount ?? 0) > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
                   {pendingCount + (pendingApprovalCount ?? 0) > 9
@@ -147,7 +147,7 @@ export default function Header() {
       {menuOpen && (
         <div className="fixed inset-0 z-[60] flex">
           {/* Panel */}
-          <div className="w-64 bg-yvy-dark text-white h-full flex flex-col shadow-2xl">
+          <div className="w-64 bg-yvy-dark text-yvy-gold h-full flex flex-col shadow-2xl">
             <div className="px-5 py-4 border-b border-white/10">
               <span
                 className="tracking-[0.12em] uppercase opacity-80"
@@ -167,8 +167,8 @@ export default function Header() {
                     href={item.href}
                     className={`flex items-center px-5 py-3.5 text-sm font-medium transition-colors ${
                       active
-                        ? 'bg-white/15 text-white'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        ? 'bg-yvy-gold/15 text-yvy-gold'
+                        : 'text-yvy-gold/90 hover:bg-yvy-gold/10 hover:text-yvy-gold'
                     }`}
                   >
                     {item.label}
@@ -178,7 +178,7 @@ export default function Header() {
                       </span>
                     )}
                     {active && !showDot && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                      <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yvy-gold" />
                     )}
                   </Link>
                 )
@@ -192,8 +192,8 @@ export default function Header() {
                       href="/advanced-trade"
                       className={`flex items-center mx-3 my-1 px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
                         active
-                          ? 'bg-gradient-to-r from-amber-500/30 to-sky-500/20 text-white'
-                          : 'bg-gradient-to-r from-amber-500/15 to-sky-500/10 text-white hover:from-amber-500/25 hover:to-sky-500/15'
+                          ? 'bg-gradient-to-r from-amber-500/30 to-sky-500/20 text-yvy-gold'
+                          : 'bg-gradient-to-r from-amber-500/15 to-sky-500/10 text-yvy-gold hover:from-amber-500/25 hover:to-sky-500/15'
                       }`}
                     >
                       Troca Avançada
@@ -203,7 +203,7 @@ export default function Header() {
                         </span>
                       )}
                       {active && advancedTradePending === 0 && (
-                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yvy-gold" />
                       )}
                     </Link>
                   )
@@ -219,8 +219,8 @@ export default function Header() {
                     href={item.href}
                     className={`flex items-center px-5 py-3.5 text-sm font-medium transition-colors ${
                       active
-                        ? 'bg-white/15 text-white'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        ? 'bg-yvy-gold/15 text-yvy-gold'
+                        : 'text-yvy-gold/90 hover:bg-yvy-gold/10 hover:text-yvy-gold'
                     }`}
                   >
                     {item.label}
@@ -249,7 +249,7 @@ export default function Header() {
                         </span>
                       )}
                       {active && pendingApprovalCount === 0 && (
-                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yvy-gold" />
                       )}
                     </Link>
                   )
@@ -259,7 +259,7 @@ export default function Header() {
             {/* Font size + Sticker order */}
             <div className="px-5 py-3 border-t border-white/10 space-y-2.5">
               <div className="space-y-1">
-                <p className="text-[9px] uppercase tracking-widest text-white/40 font-semibold">
+                <p className="text-[9px] uppercase tracking-widest text-yvy-gold/60 font-semibold">
                   Tamanho do texto
                 </p>
                 <div className="flex gap-1.5">
@@ -269,8 +269,8 @@ export default function Header() {
                       onClick={() => pickFontSize(i)}
                       className={`flex-1 py-1 rounded-md text-[11px] font-bold transition-colors ${
                         fontSize === i
-                          ? 'bg-white text-yvy-dark'
-                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                          ? 'bg-yvy-gold text-yvy-dark'
+                          : 'bg-yvy-gold/10 text-yvy-gold/80 hover:bg-yvy-gold/20'
                       }`}
                     >
                       {s.label}
@@ -279,7 +279,7 @@ export default function Header() {
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-[9px] uppercase tracking-widest text-white/40 font-semibold">
+                <p className="text-[9px] uppercase tracking-widest text-yvy-gold/60 font-semibold">
                   Ordem das figurinhas
                 </p>
                 <div className="flex gap-1.5">
@@ -294,8 +294,8 @@ export default function Header() {
                       onClick={() => setStickerOrder(val)}
                       className={`flex-1 py-1 rounded-md text-[11px] font-bold transition-colors ${
                         stickerOrder === val
-                          ? 'bg-white text-yvy-dark'
-                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                          ? 'bg-yvy-gold text-yvy-dark'
+                          : 'bg-yvy-gold/10 text-yvy-gold/80 hover:bg-yvy-gold/20'
                       }`}
                     >
                       {label}
@@ -311,7 +311,7 @@ export default function Header() {
                 href={groupHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2.5 text-sm text-white/60 hover:text-white transition-colors"
+                className="flex items-center gap-2.5 text-sm text-yvy-gold/80 hover:text-yvy-gold transition-colors"
               >
                 <svg
                   className="w-4 h-4 fill-current flex-shrink-0"

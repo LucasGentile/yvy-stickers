@@ -202,7 +202,7 @@ function DetailModal({
               <button
                 onClick={handleConfirmTrade}
                 disabled={trading}
-                className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+                className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-50 text-yvy-gold font-semibold py-2.5 rounded-xl text-sm transition-colors"
               >
                 {trading ? 'Enviando...' : 'Enviar pedido de troca'}
               </button>
@@ -309,7 +309,7 @@ function DetailModal({
                 </p>
                 <button
                   onClick={() => setConfirming(true)}
-                  className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+                  className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-yvy-gold font-semibold py-2.5 rounded-xl text-sm transition-colors"
                 >
                   {`Confirmar troca (${receiving.size + giving.size} figurinha${receiving.size + giving.size !== 1 ? 's' : ''})`}
                 </button>
@@ -521,7 +521,7 @@ export default function MatchCard({
             </a>
             <button
               onClick={() => setShowDetail(true)}
-              className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+              className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover text-yvy-gold font-semibold py-2.5 rounded-xl text-sm transition-colors"
             >
               Realizar Troca
             </button>

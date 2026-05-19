@@ -281,7 +281,7 @@ export default function StickerLookupScreen() {
         <button
           type="submit"
           disabled={loading || !query.trim()}
-          className="bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold px-4 py-2.5 rounded-lg text-sm disabled:opacity-50 transition-colors"
+          className="bg-yvy-dark hover:bg-yvy-dark-hover text-yvy-gold font-semibold px-4 py-2.5 rounded-lg text-sm disabled:opacity-50 transition-colors"
         >
           {loading ? '...' : 'Verificar'}
         </button>
@@ -411,7 +411,7 @@ export default function StickerLookupScreen() {
                     disabled={loading}
                     className={`text-[11px] font-mono px-2 py-0.5 rounded-md border transition-colors disabled:opacity-50 ${
                       isActive
-                        ? 'bg-yvy-dark border-yvy-dark text-white'
+                        ? 'bg-yvy-gold border-yvy-gold text-yvy-dark'
                         : 'bg-yvy-bg border-yvy-border text-yvy-text hover:border-yvy-accent'
                     }`}
                   >

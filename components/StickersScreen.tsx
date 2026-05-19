@@ -48,6 +48,12 @@ export default function StickersScreen() {
   const [duplicateMap, setDuplicateMap] = useState<Map<string, number>>(new Map())
   const [longPressedId, setLongPressedId] = useState<string | null>(null)
   const [lockedStickers, setLockedStickers] = useState<Set<string>>(new Set())
+  const [albumProtected, setAlbumProtected] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('albumProtected') === 'true'
+  })
+  const [protectionAlert, setProtectionAlert] = useState(false)
+  const protectionAlertTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Compute unsaved diff at component scope so effects can read it
   const addedCount = [...selected].filter((id) => !lastSaved.current.has(id)).length
@@ -194,20 +200,28 @@ export default function StickersScreen() {
     }
   }, [userId, selected])
 
-  function exportMissingStickers() {
-    const missingIds =
-      mode === 'have'
-        ? ALL_STICKER_IDS.filter((id) => !selected.has(id))
-        : [...selected]
-    if (missingIds.length === 0) {
-      alert('Nenhuma figurinha faltando — álbum completo!')
-      return
-    }
-    const blob = new Blob([missingIds.join('\n')], { type: 'text/plain' })
+  function toggleProtection() {
+    const next = !albumProtected
+    setAlbumProtected(next)
+    localStorage.setItem('albumProtected', String(next))
+  }
+
+  function triggerProtectionAlert() {
+    setProtectionAlert(true)
+    if (protectionAlertTimer.current) clearTimeout(protectionAlertTimer.current)
+    protectionAlertTimer.current = setTimeout(() => setProtectionAlert(false), 2500)
+  }
+
+  function exportOwnedStickers() {
+    const ownedIds = mode === 'have'
+      ? [...selected]
+      : ALL_STICKER_IDS.filter((id) => !selected.has(id))
+    if (ownedIds.length === 0) return
+    const blob = new Blob(['Minhas figurinhas:\n' + ownedIds.join('\n')], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'faltantes.txt'
+    a.download = 'minhas-figurinhas.txt'
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -261,7 +275,7 @@ export default function StickersScreen() {
             <button
               onClick={() => handleModeSelect('have')}
               disabled={selectingMode}
-              className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-white font-semibold py-4 px-4 rounded-xl text-left transition-colors disabled:opacity-50"
+              className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-yvy-gold font-semibold py-4 px-4 rounded-xl text-left transition-colors disabled:opacity-50"
             >
               <div className="text-base">
                 Vou informar as figurinhas que <strong>TENHO</strong>
@@ -290,50 +304,60 @@ export default function StickersScreen() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
           Minhas Figurinhas
         </h2>
-        <span className="text-sm font-semibold text-yvy-accent">
-          {selected.size}
-          <span className="text-yvy-muted font-normal">/{ALL_STICKER_IDS.length}</span>
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleProtection}
+            title={albumProtected ? 'Álbum protegido — clique para desbloquear' : 'Clique para proteger o álbum'}
+            className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
+              albumProtected
+                ? 'bg-yvy-dark text-yvy-gold border-yvy-dark'
+                : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              {albumProtected
+                ? <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m0 0v2m0-2h2m-2 0H10M5 11V7a7 7 0 0114 0v4M5 11h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z" />
+                : <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              }
+            </svg>
+            {albumProtected ? 'Protegido' : 'Proteger'}
+          </button>
+          <span className="text-sm font-semibold text-yvy-accent">
+            {selected.size}
+            <span className="text-yvy-muted font-normal">/{ALL_STICKER_IDS.length}</span>
+          </span>
+        </div>
       </div>
+
+      {protectionAlert && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yvy-dark text-yvy-gold text-xs font-medium">
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m0 0v2m0-2h2m-2 0H10M5 11V7a7 7 0 0114 0v4M5 11h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z" />
+          </svg>
+          Álbum protegido — remoções estão bloqueadas
+        </div>
+      )}
 
       {/* Grid */}
       <div className="bg-yvy-surface rounded-xl border border-yvy-border shadow-md p-4">
         <div className="mb-3">
           <CountrySearch />
         </div>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-medium text-yvy-text">Selecione na grade</p>
-          <div className="flex gap-2">
-            <button
-              onClick={exportMissingStickers}
-              className="text-xs text-yvy-muted underline"
-              title="Baixar lista de figurinhas faltantes"
-            >
-              ↓ Faltantes
-            </button>
-            <button
-              onClick={() => {
-                showToast('Todas as figurinhas marcadas', new Set(selected))
-                setSelected(new Set(ALL_STICKER_IDS))
-              }}
-              className="text-xs text-yvy-accent underline"
-            >
-              Todas
-            </button>
-            <button
-              onClick={() => {
-                showToast('Seleção limpa', new Set(selected))
-                setSelected(new Set())
-              }}
-              className="text-xs text-yvy-muted underline"
-            >
-              Limpar
-            </button>
-          </div>
+        <div className="flex justify-end mb-3">
+          <button
+            onClick={exportOwnedStickers}
+            title="Baixar lista de figurinhas que tenho"
+            className="flex items-center gap-1.5 text-xs text-yvy-muted hover:text-yvy-text transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+            </svg>
+            Baixar minhas figurinhas
+          </button>
         </div>
 
         {mode === 'have' &&
@@ -344,23 +368,36 @@ export default function StickersScreen() {
             const boughtCount = selected.size - tradeCount
             return (
               <>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 mb-1">
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-4 rounded-sm bg-green-600 shrink-0" />
-                    Comprada/colada
+                    <span className="w-3 h-4 rounded-[1px] bg-green-600 ring-2 ring-inset ring-green-700 shrink-0" />
+                    Comprada
                     <span className="font-semibold text-yvy-text">({boughtCount})</span>
                   </span>
                   <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-4 rounded-sm bg-blue-500 shrink-0" />
+                    <span className="w-3 h-4 rounded-[1px] bg-blue-500 ring-2 ring-inset ring-blue-400 shrink-0" />
                     Recebida em troca
                     <span className="font-semibold text-yvy-text">({tradeCount})</span>
                   </span>
                   {[...selected].some((id) => !lastSaved.current.has(id)) && (
                     <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                      <span className="w-3 h-4 rounded-sm bg-green-400 shrink-0" />
-                      Não salva ainda
+                      <span className="w-3 h-4 rounded-[1px] bg-green-400 ring-2 ring-inset ring-green-500 shrink-0" />
+                      Marcada, não salva
                     </span>
                   )}
+                  {lockedStickers.size > 0 && (
+                    <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                      <span className="w-3 h-4 rounded-[1px] bg-white ring-2 ring-inset ring-blue-400 shrink-0" />
+                      Pendente em troca
+                      <span className="font-semibold text-yvy-text">({lockedStickers.size})</span>
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                    <span className="w-3 h-4 rounded-[1px] bg-yvy-bg ring-2 ring-inset ring-yvy-border shrink-0 flex items-center justify-center">
+                      <span className="text-[10px] font-bold text-amber-500 leading-none">1</span>
+                    </span>
+                    Cromada
+                  </span>
                   {tradeOrigin.newestIds.length > 0 && (
                     <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
@@ -370,31 +407,18 @@ export default function StickersScreen() {
                       </span>
                     </span>
                   )}
-                  {lockedStickers.size > 0 && (
-                    <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                      <span className="w-3 h-4 rounded-sm bg-white ring-2 ring-inset ring-blue-400 shrink-0" />
-                      Comprometida em troca
-                      <span className="font-semibold text-yvy-text">({lockedStickers.size})</span>
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                    <span className="w-3 h-4 rounded-sm bg-yvy-bg border border-yvy-border shrink-0 flex items-center justify-center">
-                      <span className="text-[7px] font-bold text-amber-500 leading-none">1</span>
-                    </span>
-                    Cromada
-                  </span>
                 </div>
+                {mode === 'have' && (
+                  <p className="text-[11px] text-yvy-muted/70 flex items-center gap-1.5">
+                    <span>👆</span>
+                    Segure uma figurinha marcada para registrar como repetida
+                  </p>
+                )}
               </>
             )
           })()}
 
-        {mode === 'have' && (
-          <p className="text-[11px] text-yvy-muted/70 flex items-center gap-1.5 pb-1">
-            <span>👆</span>
-            Segure uma figurinha marcada para registrar como repetida
-          </p>
-        )}
-
+        <div className="mt-6">
         <StickerGrid
           selected={selected}
           onChange={setSelected}
@@ -415,7 +439,10 @@ export default function StickersScreen() {
               : undefined
           }
           onLongPress={mode === 'have' ? (id) => setLongPressedId(id) : undefined}
+          isProtected={mode === 'have' && albumProtected}
+          onProtectedRemove={triggerProtectionAlert}
         />
+        </div>
       </div>
 
       {/* File upload — collapsible */}
@@ -448,7 +475,7 @@ export default function StickersScreen() {
                   type="button"
                   onClick={handleFileImport}
                   disabled={importing}
-                  className="shrink-0 px-3 py-1.5 rounded-lg bg-yvy-dark text-white text-xs font-semibold hover:bg-yvy-dark-hover transition-colors disabled:opacity-50"
+                  className="shrink-0 px-3 py-1.5 rounded-lg bg-yvy-dark text-yvy-gold text-xs font-semibold hover:bg-yvy-dark-hover transition-colors disabled:opacity-50"
                 >
                   {importing ? 'Importando...' : 'Importar'}
                 </button>
@@ -585,13 +612,24 @@ export default function StickersScreen() {
                   Alterações não salvas — não feche o app antes de salvar
                 </p>
               )}
-              <button
-                onClick={handleSave}
-                disabled={saving || !hasChanges}
-                className="w-full bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-40 text-white font-semibold py-3.5 rounded-xl text-base transition-colors shadow-lg"
-              >
-                {label}
-              </button>
+              <div className="flex gap-2">
+                {hasChanges && (
+                  <button
+                    onClick={() => setSelected(new Set(lastSaved.current))}
+                    disabled={saving}
+                    className="px-4 py-3.5 rounded-xl border border-yvy-border text-yvy-muted text-sm font-semibold hover:bg-yvy-bg transition-colors disabled:opacity-40 shrink-0"
+                  >
+                    Cancelar
+                  </button>
+                )}
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !hasChanges}
+                  className="flex-1 bg-yvy-dark hover:bg-yvy-dark-hover disabled:opacity-40 text-yvy-gold font-semibold py-3.5 rounded-xl text-base transition-colors shadow-lg"
+                >
+                  {label}
+                </button>
+              </div>
               {saveMsg && <p className="text-center text-sm mt-2 text-yvy-muted">{saveMsg}</p>}
             </div>
           </div>
