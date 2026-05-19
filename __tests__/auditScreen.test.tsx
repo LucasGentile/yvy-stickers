@@ -18,6 +18,10 @@ vi.mock('@/actions/getTradeRollbackInfo', () => ({
   getTradeRollbackInfo: vi.fn(),
 }))
 
+vi.mock('@/actions/rollbackAdvancedTrade', () => ({
+  rollbackAdvancedTrade: vi.fn(),
+}))
+
 import AuditScreen from '@/components/AuditScreen'
 import { getAuditLog } from '@/actions/getAuditLog'
 import { getTradeLog } from '@/actions/getTradeLog'
