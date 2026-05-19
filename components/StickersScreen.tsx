@@ -174,6 +174,7 @@ export default function StickersScreen() {
       if (!ok) return
     }
 
+    const added = [...selected].filter((id) => !lastSaved.current.has(id))
     setSaving(true)
     setSaveMsg(null)
     const ids = Array.from(selected)
@@ -183,6 +184,11 @@ export default function StickersScreen() {
       lastSaved.current = new Set(selected)
       setSaveMsg(`✓ ${result.count} figurinhas salvas com sucesso!`)
       if (result.removedWithDupes.length > 0) setDupeWarning(result.removedWithDupes)
+      if (added.length > 0) {
+        setTradeOrigin((prev) =>
+          prev ? { ...prev, newestIds: [...new Set([...prev.newestIds, ...added])] } : prev
+        )
+      }
     } else {
       setSaveMsg(`Erro: ${result.error}`)
     }
