@@ -22,6 +22,9 @@ export async function getTradeLog(userId: string): Promise<AuditEntry[]> {
       'advanced_trade_rejected',
       'advanced_trade_executed',
       'advanced_trade_cancelled',
+      'advanced_trade_rollback_requested',
+      'advanced_trade_rollback_denied',
+      'advanced_trade_rolled_back',
     ])
     .order('created_at', { ascending: false })
     .limit(500)

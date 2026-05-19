@@ -188,6 +188,32 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
     detail: (m) =>
       `${m.cancelledBy ?? 'Alguém'} cancelou · com ${((m.partners as string[]) ?? []).join(' e ')}`,
   },
+  advanced_trade_rollback_requested: {
+    icon: '⏳',
+    borderColor: 'border-l-amber-300',
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-amber-500',
+    label: () => 'Desfazimento triangular solicitado',
+    detail: (m) =>
+      `${m.requestedBy} pediu para desfazer · com ${((m.partners as string[]) ?? []).join(' e ')}`,
+  },
+  advanced_trade_rollback_denied: {
+    icon: '🚫',
+    borderColor: 'border-l-yvy-border',
+    iconBg: 'bg-yvy-bg',
+    iconColor: 'text-yvy-muted',
+    label: () => 'Desfazimento triangular recusado',
+    detail: (m) =>
+      `${m.deniedBy} manteve a troca · com ${((m.partners as string[]) ?? []).join(' e ')}`,
+  },
+  advanced_trade_rolled_back: {
+    icon: '↩',
+    borderColor: 'border-l-amber-400',
+    iconBg: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+    label: (m) => (m.forced ? 'Troca triangular desfeita (forçada)' : 'Troca triangular desfeita'),
+    detail: (m) => `Com ${((m.partners as string[]) ?? []).join(' e ')}`,
+  },
   duplicate_updated: {
     icon: '＋',
     borderColor: 'border-l-yvy-gold',
@@ -281,6 +307,9 @@ export const TRADE_ACTIONS = new Set([
   'advanced_trade_rejected',
   'advanced_trade_executed',
   'advanced_trade_cancelled',
+  'advanced_trade_rollback_requested',
+  'advanced_trade_rollback_denied',
+  'advanced_trade_rolled_back',
 ])
 
 export function dayLabel(dateStr: string): string {
