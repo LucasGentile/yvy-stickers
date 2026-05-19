@@ -85,29 +85,37 @@ function TradeCard({
           Troca Triangular
         </p>
         {isAccepted && (
-          <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-            {verified && <span className="text-emerald-500">✓</span>}
-            Concluída
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {trade.acceptedAt &&
+              (trade.auditEntryId ? (
+                <Link
+                  href={`/history/${trade.auditEntryId}`}
+                  className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+                >
+                  <span className="text-[10px] text-yvy-muted">
+                    {relativeTime(trade.acceptedAt)}
+                  </span>
+                  <span className="text-[10px] text-yvy-muted/60">
+                    {absoluteTime(trade.acceptedAt)}
+                  </span>
+                </Link>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <span className="text-[10px] text-yvy-muted">
+                    {relativeTime(trade.acceptedAt)}
+                  </span>
+                  <span className="text-[10px] text-yvy-muted/60">
+                    {absoluteTime(trade.acceptedAt)}
+                  </span>
+                </span>
+              ))}
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+              {verified && <span className="text-emerald-500">✓</span>}
+              Concluída
+            </span>
+          </div>
         )}
       </div>
-
-      {isAccepted &&
-        trade.acceptedAt &&
-        (trade.auditEntryId ? (
-          <Link
-            href={`/history/${trade.auditEntryId}`}
-            className="flex flex-col items-end shrink-0 gap-0.5 hover:opacity-70 transition-opacity"
-          >
-            <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
-            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(trade.acceptedAt)}</span>
-          </Link>
-        ) : (
-          <div className="flex flex-col items-end shrink-0 gap-0.5">
-            <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
-            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(trade.acceptedAt)}</span>
-          </div>
-        ))}
 
       {/* Triangle visualization */}
       <div className="space-y-2">

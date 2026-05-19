@@ -94,27 +94,32 @@ export function RecentTradeCard({
     <div className="bg-yvy-surface rounded-xl border border-amber-200 shadow-md p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-yvy-dark capitalize">{trade.otherUserName}</p>
-        <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-          {verified && <span className="text-emerald-500 text-sm">✓</span>}
-          Troca concluída
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          {trade.acceptedAt &&
+            (trade.auditEntryId ? (
+              <Link
+                href={`/history/${trade.auditEntryId}`}
+                className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+              >
+                <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
+                <span className="text-[10px] text-yvy-muted/60">
+                  {absoluteTime(trade.acceptedAt)}
+                </span>
+              </Link>
+            ) : (
+              <span className="flex items-center gap-1">
+                <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
+                <span className="text-[10px] text-yvy-muted/60">
+                  {absoluteTime(trade.acceptedAt)}
+                </span>
+              </span>
+            ))}
+          <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+            {verified && <span className="text-emerald-500 text-sm">✓</span>}
+            Troca concluída
+          </span>
+        </div>
       </div>
-
-      {trade.acceptedAt &&
-        (trade.auditEntryId ? (
-          <Link
-            href={`/history/${trade.auditEntryId}`}
-            className="flex flex-col items-end shrink-0 gap-0.5 hover:opacity-70 transition-opacity"
-          >
-            <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
-            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(trade.acceptedAt)}</span>
-          </Link>
-        ) : (
-          <div className="flex flex-col items-end shrink-0 gap-0.5">
-            <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
-            <span className="text-[10px] text-yvy-muted/60">{absoluteTime(trade.acceptedAt)}</span>
-          </div>
-        ))}
 
       <StickerList
         ids={trade.myReceivingIds}
