@@ -81,6 +81,15 @@ function RankCard({ user, rank }: { user: RankedUser; rank: number }) {
             <p className="text-[10px] text-yvy-muted mt-0.5">
               {user.ownedCount}/{user.totalCount}
             </p>
+            {user.albumCompletedAt && (
+              <p className="text-[9px] text-emerald-600 mt-0.5">
+                Completo em{' '}
+                {new Date(user.albumCompletedAt).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                })}
+              </p>
+            )}
           </div>
         </div>
 
@@ -127,9 +136,7 @@ export default function RankingScreen() {
   }, [load])
 
   if (loading) {
-    return (
-      <LoadingScreen />
-    )
+    return <LoadingScreen />
   }
 
   if (error) {
