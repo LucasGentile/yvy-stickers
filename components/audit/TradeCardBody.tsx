@@ -47,7 +47,7 @@ export function TradeCardBody({
   const hasStickers = givingIds.length > 0 || receivingIds.length > 0
 
   return (
-    <div className={`flex gap-3 px-3 py-2 rounded-r-md ${borderClass}`}>
+    <div className={`flex gap-3 px-3 py-2 rounded-r-md w-full ${borderClass}`}>
       <div
         className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${cfg.iconBg} ${cfg.iconColor}`}
       >
