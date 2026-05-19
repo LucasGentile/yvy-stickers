@@ -260,7 +260,7 @@ function TradeCard({
                   disabled={rollbackLoading !== null}
                   className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
                 >
-                  {rollbackLoading === 'confirm' ? 'Desfazendo...' : 'Confirmar desfazimento'}
+                  {rollbackLoading === 'confirm' ? 'Confirmando...' : 'Confirmar desfazimento'}
                 </button>
               </div>
             </div>

@@ -35,6 +35,16 @@ async function removeFromCollection(userId: string, ids: string[]) {
   await supabaseAdmin.from('user_stickers').delete().eq('user_id', userId).in('sticker_id', ids)
 }
 
+function getUserSlot(
+  trade: { user_a_id: string; user_b_id: string; user_c_id: string },
+  userId: string
+) {
+  if (trade.user_a_id === userId) return 'a'
+  if (trade.user_b_id === userId) return 'b'
+  if (trade.user_c_id === userId) return 'c'
+  return null
+}
+
 export async function rollbackAdvancedTrade(
   tradeId: string,
   userId: string,
@@ -46,7 +56,7 @@ export async function rollbackAdvancedTrade(
   const { data: trade } = await (supabaseAdmin as any)
     .from('advanced_trades')
     .select(
-      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, rollback_requested_by, rollback_requested_at'
+      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, rollback_requested_by, rollback_requested_at, rollback_a_status, rollback_b_status, rollback_c_status'
     )
     .eq('id', tradeId)
     .eq('status', 'accepted')
@@ -55,9 +65,10 @@ export async function rollbackAdvancedTrade(
   if (!trade) return { success: false, error: 'Troca não encontrada ou já processada.' }
 
   const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
-  if (!participants.includes(userId)) {
-    return { success: false, error: 'Você não faz parte desta troca.' }
-  }
+  const slot = getUserSlot(trade, userId)
+  if (!slot) return { success: false, error: 'Você não faz parte desta troca.' }
+
+  const rollbackStatusCol = `rollback_${slot}_status` as const
 
   if (action === 'request') {
     if (trade.rollback_requested_by) {
@@ -70,6 +81,7 @@ export async function rollbackAdvancedTrade(
       .update({
         rollback_requested_by: userId,
         rollback_requested_at: new Date().toISOString(),
+        [rollbackStatusCol]: 'approved',
       })
       .eq('id', tradeId)
       .eq('status', 'accepted')
@@ -80,7 +92,9 @@ export async function rollbackAdvancedTrade(
           .from('users')
           .select('id, name')
           .in('id', participants)
-        const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
+        const nameMap = Object.fromEntries(
+          (users ?? []).map((u: { id: string; name: string }) => [u.id, formatName(u.name)])
+        )
         for (const pid of participants) {
           const others = participants
             .filter((id) => id !== pid)
@@ -100,17 +114,23 @@ export async function rollbackAdvancedTrade(
   }
 
   if (action === 'deny') {
-    if (trade.rollback_requested_by === userId) {
-      return { success: false, error: 'Você não pode negar sua própria solicitação.' }
-    }
     if (!trade.rollback_requested_by) {
       return { success: false, error: 'Nenhuma solicitação pendente.' }
+    }
+    if (trade.rollback_requested_by === userId) {
+      return { success: false, error: 'Você não pode negar sua própria solicitação.' }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabaseAdmin as any)
       .from('advanced_trades')
-      .update({ rollback_requested_by: null, rollback_requested_at: null })
+      .update({
+        rollback_requested_by: null,
+        rollback_requested_at: null,
+        rollback_a_status: 'none',
+        rollback_b_status: 'none',
+        rollback_c_status: 'none',
+      })
       .eq('id', tradeId)
     if (error) return { success: false, error: 'Erro ao recusar desfazimento.' }
     ;(async () => {
@@ -119,7 +139,9 @@ export async function rollbackAdvancedTrade(
           .from('users')
           .select('id, name')
           .in('id', participants)
-        const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
+        const nameMap = Object.fromEntries(
+          (users ?? []).map((u: { id: string; name: string }) => [u.id, formatName(u.name)])
+        )
         for (const pid of participants) {
           const others = participants
             .filter((id) => id !== pid)
@@ -154,19 +176,45 @@ export async function rollbackAdvancedTrade(
         error: 'Aguarde 7 dias após a solicitação para forçar o desfazimento.',
       }
     }
+    // Force skips the all-approved check — fall through to execute rollback
   }
 
-  // action === 'confirm' or 'force' (after 7 days)
-  if (!trade.rollback_requested_by) {
-    return { success: false, error: 'Nenhuma solicitação de desfazimento pendente.' }
-  }
-  if (action === 'confirm' && trade.rollback_requested_by === userId) {
-    return { success: false, error: 'Aguardando confirmação dos outros participantes.' }
+  // action === 'confirm'
+  if (action === 'confirm') {
+    if (!trade.rollback_requested_by) {
+      return { success: false, error: 'Nenhuma solicitação de desfazimento pendente.' }
+    }
+    if (trade[rollbackStatusCol] === 'approved') {
+      return { success: false, error: 'Você já confirmou o desfazimento.' }
+    }
+
+    // Mark this user as approved
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updated } = await (supabaseAdmin as any)
+      .from('advanced_trades')
+      .update({ [rollbackStatusCol]: 'approved' })
+      .eq('id', tradeId)
+      .eq('status', 'accepted')
+      .select('id, rollback_a_status, rollback_b_status, rollback_c_status')
+      .maybeSingle()
+
+    if (!updated) return { success: false, error: 'Troca já foi processada em outro dispositivo.' }
+
+    const allApproved = [
+      updated.rollback_a_status,
+      updated.rollback_b_status,
+      updated.rollback_c_status,
+    ].every((s: string) => s === 'approved')
+
+    if (!allApproved) {
+      return { success: true }
+    }
+    // All 3 approved — fall through to execute rollback
   }
 
-  // Atomic transition to rolled_back
+  // Execute the rollback (all approved or forced)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: updated } = await (supabaseAdmin as any)
+  const { data: rolledBack } = await (supabaseAdmin as any)
     .from('advanced_trades')
     .update({ status: 'rolled_back' })
     .eq('id', tradeId)
@@ -174,10 +222,8 @@ export async function rollbackAdvancedTrade(
     .select('id')
     .maybeSingle()
 
-  if (!updated) return { success: false, error: 'Troca já foi processada em outro dispositivo.' }
+  if (!rolledBack) return { success: false, error: 'Troca já foi processada em outro dispositivo.' }
 
-  // Revert: A gave to B, B gave to C, C gave to A
-  // Restore givers' dupes, remove from receivers' collections
   await Promise.all([
     restoreDupe(trade.user_a_id, trade.a_gives_ids),
     removeFromCollection(trade.user_b_id, trade.a_gives_ids),
@@ -192,7 +238,9 @@ export async function rollbackAdvancedTrade(
         .from('users')
         .select('id, name')
         .in('id', participants)
-      const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
+      const nameMap = Object.fromEntries(
+        (users ?? []).map((u: { id: string; name: string }) => [u.id, formatName(u.name)])
+      )
       for (const pid of participants) {
         const others = participants.filter((id) => id !== pid).map((id) => nameMap[id] ?? 'Usuário')
         logAction(pid, 'advanced_trade_rolled_back', {
