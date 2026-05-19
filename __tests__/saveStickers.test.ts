@@ -4,14 +4,30 @@ vi.mock('@/lib/supabase', () => ({
   supabase: { from: vi.fn() },
 }))
 
+vi.mock('@/lib/supabaseAdmin', () => ({
+  supabaseAdmin: { from: vi.fn() },
+}))
+
 vi.mock('@/actions/logAction', () => ({
   logAction: vi.fn(),
 }))
 
 import { saveStickers } from '@/actions/saveStickers'
 import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>
+const mockAdminFrom = supabaseAdmin.from as ReturnType<typeof vi.fn>
+
+function makeAdminChain() {
+  const chain: Record<string, ReturnType<typeof vi.fn>> = {}
+  chain.update = vi.fn().mockReturnValue(chain)
+  chain.eq = vi.fn().mockReturnValue(chain)
+  chain.is = vi.fn().mockReturnValue(chain)
+  chain.not = vi.fn().mockReturnValue(chain)
+  chain.then = vi.fn().mockResolvedValue(undefined)
+  return chain
+}
 
 // saveStickers makes these from() calls:
 // 1. select existing stickers (to compute delta)
@@ -42,7 +58,10 @@ function makeDeleteChain(error: unknown = null) {
 }
 
 describe('saveStickers', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockAdminFrom.mockReturnValue(makeAdminChain())
+  })
 
   it('returns error when userId is empty', async () => {
     const result = await saveStickers('', ['MEX1', 'MEX2', 'MEX3'])

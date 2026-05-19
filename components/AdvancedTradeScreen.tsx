@@ -9,6 +9,7 @@ import { findAdvancedTrade } from '@/actions/findAdvancedTrade'
 import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previewAdvancedTrade'
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
 import { verifyTrade } from '@/actions/verifyTrade'
+import { rollbackAdvancedTrade } from '@/actions/rollbackAdvancedTrade'
 import { StickerList } from '@/components/trades/StickerList'
 import { ColorLegend } from '@/components/trades/ColorLegend'
 import { TradeAssistant } from '@/components/audit/TradeAssistant'
@@ -48,10 +49,16 @@ function TradeCard({
   onDone: () => void
 }) {
   const [loading, setLoading] = useState<'approve' | 'reject' | 'cancel' | null>(null)
+  const [rollbackLoading, setRollbackLoading] = useState<
+    'request' | 'confirm' | 'deny' | 'force' | null
+  >(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [confirming, setConfirming] = useState<'approve' | 'reject' | 'cancel' | null>(null)
+  const [rollbackStep, setRollbackStep] = useState<'idle' | 'confirming'>('idle')
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [verified, setVerified] = useState(trade.verified)
+  const [rollbackRequestedBy, setRollbackRequestedBy] = useState(trade.rollbackRequestedBy)
+  const [rollbackRequestedAt, setRollbackRequestedAt] = useState(trade.rollbackRequestedAt)
 
   async function handle(action: 'approve' | 'reject' | 'cancel') {
     setLoading(action)
@@ -185,6 +192,120 @@ function TradeCard({
                     }
               }
             />
+          )}
+
+          {/* Rollback UI */}
+          {rollbackRequestedBy && rollbackRequestedBy === userId && (
+            <p className="text-xs text-yvy-muted">
+              Aguardando os outros participantes confirmarem o desfazimento.
+              {rollbackRequestedAt &&
+                Date.now() - new Date(rollbackRequestedAt).getTime() >= 7 * 24 * 60 * 60 * 1000 && (
+                  <button
+                    onClick={async () => {
+                      setRollbackLoading('force')
+                      setMsg(null)
+                      const result = await rollbackAdvancedTrade(trade.id, userId, 'force')
+                      if (result.success) {
+                        onDone()
+                      } else {
+                        setMsg(result.error)
+                      }
+                      setRollbackLoading(null)
+                    }}
+                    disabled={rollbackLoading !== null}
+                    className="ml-2 text-xs font-semibold text-amber-600 underline disabled:opacity-50"
+                  >
+                    {rollbackLoading === 'force' ? 'Forçando...' : 'Forçar desfazimento'}
+                  </button>
+                )}
+            </p>
+          )}
+
+          {rollbackRequestedBy && rollbackRequestedBy !== userId && (
+            <div className="space-y-2">
+              <p className="text-xs text-amber-700 font-medium">
+                Um participante quer desfazer esta troca.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    setRollbackLoading('deny')
+                    setMsg(null)
+                    const result = await rollbackAdvancedTrade(trade.id, userId, 'deny')
+                    if (result.success) {
+                      setRollbackRequestedBy(null)
+                      setRollbackRequestedAt(null)
+                    } else {
+                      setMsg(result.error)
+                    }
+                    setRollbackLoading(null)
+                  }}
+                  disabled={rollbackLoading !== null}
+                  className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+                >
+                  {rollbackLoading === 'deny' ? '...' : 'Manter troca'}
+                </button>
+                <button
+                  onClick={async () => {
+                    setRollbackLoading('confirm')
+                    setMsg(null)
+                    const result = await rollbackAdvancedTrade(trade.id, userId, 'confirm')
+                    if (result.success) {
+                      onDone()
+                    } else {
+                      setMsg(result.error)
+                    }
+                    setRollbackLoading(null)
+                  }}
+                  disabled={rollbackLoading !== null}
+                  className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+                >
+                  {rollbackLoading === 'confirm' ? 'Confirmando...' : 'Confirmar desfazimento'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!rollbackRequestedBy && rollbackStep === 'idle' && (
+            <button
+              onClick={() => setRollbackStep('confirming')}
+              disabled={rollbackLoading !== null}
+              className="text-xs text-amber-600 underline disabled:opacity-50"
+            >
+              Desfazer troca
+            </button>
+          )}
+
+          {!rollbackRequestedBy && rollbackStep === 'confirming' && (
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-yvy-muted flex-1">Solicitar desfazimento?</p>
+              <button
+                onClick={() => setRollbackStep('idle')}
+                disabled={rollbackLoading !== null}
+                className="text-xs text-yvy-muted underline disabled:opacity-50"
+              >
+                Não
+              </button>
+              <button
+                onClick={async () => {
+                  setRollbackLoading('request')
+                  setMsg(null)
+                  const result = await rollbackAdvancedTrade(trade.id, userId, 'request')
+                  if (result.success) {
+                    setRollbackRequestedBy(userId)
+                    setRollbackRequestedAt(new Date().toISOString())
+                    setRollbackStep('idle')
+                  } else {
+                    setMsg(result.error)
+                  }
+                  setRollbackLoading(null)
+                }}
+                disabled={rollbackLoading !== null}
+                className="text-xs font-semibold text-amber-600 underline disabled:opacity-50"
+              >
+                {rollbackLoading === 'request' ? 'Solicitando...' : 'Sim, desfazer'}
+              </button>
+            </div>
           )}
         </>
       )}

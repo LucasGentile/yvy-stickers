@@ -14,6 +14,7 @@ interface Props {
   isProtected?: boolean
   onProtectedRemove?: () => void
   incomingStickers?: Set<string>
+  tradeLocked?: Set<string>
 }
 
 function TrophySVG() {
@@ -84,6 +85,7 @@ function StickerGrid({
   isProtected,
   onProtectedRemove,
   incomingStickers,
+  tradeLocked,
 }: Props) {
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const suppressNextClick = useRef(false)
@@ -111,6 +113,7 @@ function StickerGrid({
       return
     }
     if (incomingStickers?.has(id) && !selected.has(id)) return
+    if (tradeLocked?.has(id) && !selected.has(id)) return
     if (isProtected && selected.has(id) && !staged?.has(id)) {
       onProtectedRemove?.()
       return
@@ -222,7 +225,7 @@ function StickerGrid({
                                   onLongPress(id)
                                 }
                               }}
-                              className={`relative aspect-[4.9/6.5] w-full rounded-[2px] text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
+                              className={`relative aspect-[4.9/6.5] w-full rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) && !on ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
                             >
                               {isChromeSticker(id) ? (
                                 <span className="font-bold text-amber-400">{idx + 1}</span>
@@ -261,7 +264,7 @@ function StickerGrid({
                           onLongPress(id)
                         }
                       }}
-                      className={`relative ${id.startsWith('FWC') ? 'w-12 h-12' : 'h-12 px-3'} rounded-[2px] text-xs font-semibold transition-colors ${stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
+                      className={`relative ${id.startsWith('FWC') ? 'w-12 h-12' : 'h-12 px-3'} rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) && !on ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
                     >
                       {id.startsWith('FWC') ? (
                         <span className="flex flex-col items-center leading-none gap-[1px]">

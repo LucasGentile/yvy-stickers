@@ -9,6 +9,7 @@ import { removeDuplicate } from '@/actions/removeDuplicate'
 import { getUserData } from '@/actions/getUserData'
 import { getTradeOriginStickers, type TradeOriginResult } from '@/actions/getTradeOriginStickers'
 import { getIncomingTradeStickers } from '@/actions/getIncomingTradeStickers'
+import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
 import { getDuplicates } from '@/actions/getDuplicates'
 import { DuplicateQuickAdd } from './DuplicateQuickAdd'
 import { parseStickerFile } from '@/lib/parser'
@@ -47,6 +48,7 @@ export default function StickersScreen() {
   const lastSaved = useRef<Set<string>>(new Set())
   const [duplicateMap, setDuplicateMap] = useState<Map<string, number>>(new Map())
   const [longPressedId, setLongPressedId] = useState<string | null>(null)
+  const [lockedStickers, setLockedStickers] = useState<Set<string>>(new Set())
   const [incomingStickers, setIncomingStickers] = useState<Set<string>>(new Set())
   const [albumProtected, setAlbumProtected] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -95,9 +97,11 @@ export default function StickersScreen() {
       getUserData(id),
       getTradeOriginStickers(id),
       getDuplicates(id),
+      getReservedStickerIds(id),
       getIncomingTradeStickers(id),
-    ]).then(([data, origin, dupes, incoming]) => {
+    ]).then(([data, origin, dupes, reserved, incoming]) => {
       setTradeOrigin(origin)
+      setLockedStickers(new Set(Object.keys(reserved)))
       setIncomingStickers(new Set(incoming))
       setDuplicateMap(new Map(dupes.map((d) => [d.stickerId, d.count])))
       if (data) {
@@ -424,10 +428,17 @@ export default function StickersScreen() {
                       Marcada, não salva
                     </span>
                   )}
+                  {lockedStickers.size > 0 && (
+                    <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
+                      <span className="w-3 h-4 rounded-[1px] bg-white ring-2 ring-inset ring-blue-400 shrink-0" />
+                      Comprometida em troca
+                      <span className="font-semibold text-yvy-text">({lockedStickers.size})</span>
+                    </span>
+                  )}
                   {incomingStickers.size > 0 && (
                     <span className="flex items-center gap-1.5 text-[11px] text-yvy-muted">
-                      <span className="w-3 h-4 rounded-[2px] bg-white ring-2 ring-inset ring-blue-400 shrink-0" />
-                      Pendente em troca
+                      <span className="w-3 h-4 rounded-[1px] bg-white ring-2 ring-inset ring-blue-400 shrink-0" />
+                      A receber em troca
                       <span className="font-semibold text-yvy-text">({incomingStickers.size})</span>
                     </span>
                   )}
@@ -484,6 +495,7 @@ export default function StickersScreen() {
             incomingStickers={
               mode === 'have' && incomingStickers.size > 0 ? incomingStickers : undefined
             }
+            tradeLocked={mode === 'have' && lockedStickers.size > 0 ? lockedStickers : undefined}
           />
         </div>
       </div>

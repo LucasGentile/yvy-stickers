@@ -81,6 +81,15 @@ function RankCard({ user, rank }: { user: RankedUser; rank: number }) {
             <p className="text-[10px] text-yvy-gold/60 mt-0.5">
               {user.ownedCount}/{user.totalCount}
             </p>
+            {user.albumCompletedAt && (
+              <p className="text-[9px] text-emerald-600 mt-0.5">
+                Completo em{' '}
+                {new Date(user.albumCompletedAt).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                })}
+              </p>
+            )}
           </div>
         </div>
 
@@ -174,11 +183,40 @@ export default function RankingScreen() {
           <p>Nenhum participante ainda.</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {ranking.map((user, i) => (
-            <RankCard key={user.id} user={user} rank={i + 1} />
-          ))}
-        </div>
+        <>
+          {(() => {
+            const completed = ranking.filter((u) => u.completionPct === 100)
+            const inProgress = ranking.filter((u) => u.completionPct < 100)
+
+            return (
+              <>
+                {completed.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-emerald-700 flex items-center gap-1.5">
+                      Álbuns completos
+                    </h3>
+                    {completed.map((user, i) => (
+                      <RankCard key={user.id} user={user} rank={i + 1} />
+                    ))}
+                  </div>
+                )}
+
+                {inProgress.length > 0 && (
+                  <div className="space-y-2">
+                    {completed.length > 0 && (
+                      <h3 className="text-sm font-bold text-yvy-dark border-l-[3px] border-yvy-dark pl-2.5 mt-4">
+                        Em progresso
+                      </h3>
+                    )}
+                    {inProgress.map((user, i) => (
+                      <RankCard key={user.id} user={user} rank={i + 1} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )
+          })()}
+        </>
       )}
     </div>
   )

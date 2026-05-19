@@ -12,14 +12,16 @@ export type RankedUser = {
   ownedCount: number
   totalCount: number
   completionPct: number
+  albumCompletedAt: string | null
 }
 
 export async function getRanking(): Promise<RankedUser[]> {
   const total = ALL_STICKER_IDS.length
 
-  const { data: users } = await supabaseAdmin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: users } = await (supabaseAdmin as any)
     .from('users')
-    .select('id, name, apartment, tower')
+    .select('id, name, apartment, tower, album_completed_at')
     .eq('approved', true)
 
   if (!users || users.length === 0) return []
@@ -34,11 +36,18 @@ export async function getRanking(): Promise<RankedUser[]> {
     countByUser[row.user_id] = Number(row.sticker_count)
   }
 
-  const ranked: RankedUser[] = users
-    .filter((u) => (countByUser[u.id] ?? 0) > 0) // exclude users who haven't submitted any sticker data
+  type UserRow = {
+    id: string
+    name: string
+    apartment: string
+    tower: string
+    album_completed_at: string | null
+  }
+  const ranked: RankedUser[] = (users as UserRow[])
+    .filter((u) => (countByUser[u.id] ?? 0) > 0)
     .map((u) => {
       const ownedCount = countByUser[u.id]!
-      const completionPct = Math.round((ownedCount / total) * 100)
+      const completionPct = ownedCount >= total ? 100 : Math.floor((ownedCount / total) * 100)
       return {
         id: u.id,
         name: formatName(u.name),
@@ -47,8 +56,20 @@ export async function getRanking(): Promise<RankedUser[]> {
         ownedCount,
         totalCount: total,
         completionPct,
+        albumCompletedAt: u.album_completed_at ?? null,
       }
     })
 
-  return ranked.sort((a, b) => b.ownedCount - a.ownedCount || a.name.localeCompare(b.name))
+  return ranked.sort((a, b) => {
+    const aComplete = a.completionPct === 100
+    const bComplete = b.completionPct === 100
+    if (aComplete && bComplete) {
+      const aTime = a.albumCompletedAt ? new Date(a.albumCompletedAt).getTime() : Infinity
+      const bTime = b.albumCompletedAt ? new Date(b.albumCompletedAt).getTime() : Infinity
+      return aTime - bTime
+    }
+    if (aComplete) return -1
+    if (bComplete) return 1
+    return b.ownedCount - a.ownedCount || a.name.localeCompare(b.name)
+  })
 }

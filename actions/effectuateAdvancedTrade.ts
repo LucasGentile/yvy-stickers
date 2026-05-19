@@ -112,19 +112,32 @@ export async function effectuateAdvancedTrade(
 
   const modeMap = Object.fromEntries(users.map((u) => [u.id, u.input_mode]))
 
-  // Validate availability: check each giver still has the dupes
+  // Validate availability: check each giver still has free copies
+  // (raw count minus copies reserved in other pending normal trades)
   for (const [giverId, ids] of [
     [userAId, aGivesIds],
     [userBId, bGivesIds],
     [userCId, cGivesIds],
   ] as [string, string[]][]) {
-    const { data: dupes } = await supabaseAdmin
-      .from('user_duplicates')
-      .select('sticker_id, count')
-      .eq('user_id', giverId)
-      .in('sticker_id', ids)
+    const [{ data: dupes }, { data: pendingTrades }] = await Promise.all([
+      supabaseAdmin
+        .from('user_duplicates')
+        .select('sticker_id, count')
+        .eq('user_id', giverId)
+        .in('sticker_id', ids),
+      supabaseAdmin
+        .from('pending_trades')
+        .select('initiator_id, giving_ids, receiving_ids')
+        .or(`initiator_id.eq.${giverId},receiver_id.eq.${giverId}`)
+        .eq('status', 'pending'),
+    ])
     const dupeMap = Object.fromEntries((dupes ?? []).map((d) => [d.sticker_id, d.count]))
-    const missing = ids.filter((id) => (dupeMap[id] ?? 0) <= 0)
+    const reserved: Record<string, number> = {}
+    for (const trade of pendingTrades ?? []) {
+      const giving = trade.initiator_id === giverId ? trade.giving_ids : trade.receiving_ids
+      for (const id of giving ?? []) reserved[id] = (reserved[id] ?? 0) + 1
+    }
+    const missing = ids.filter((id) => (dupeMap[id] ?? 0) - (reserved[id] ?? 0) <= 0)
     if (missing.length > 0) {
       return {
         success: false,

@@ -67,6 +67,9 @@ vi.mock('@/actions/verifyTrade', () => ({
 vi.mock('@/actions/getIncomingTradeStickers', () => ({
   getIncomingTradeStickers: vi.fn().mockResolvedValue([]),
 }))
+vi.mock('@/actions/rollbackAdvancedTrade', () => ({
+  rollbackAdvancedTrade: vi.fn(),
+}))
 
 import { setInputMode } from '@/actions/setInputMode'
 import { getUserData } from '@/actions/getUserData'

@@ -19,6 +19,7 @@ export default function AuditScreen() {
   const [activityPage, setActivityPage] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [userId, setUserId] = useState<string>('')
+  const [stickerSearch, setStickerSearch] = useState('')
 
   useEffect(() => {
     const uid = localStorage.getItem('userId') ?? ''
@@ -59,8 +60,20 @@ export default function AuditScreen() {
     )
   }
 
-  const tradeTotalPages = Math.max(1, Math.ceil(tradeEntries.length / TRADE_PAGE_SIZE))
-  const tradePageEntries = tradeEntries.slice(
+  const searchTerm = stickerSearch.trim().toUpperCase()
+  const filteredTradeEntries = searchTerm
+    ? tradeEntries.filter((e) => {
+        const giving = (e.metadata.givingIds as string[] | undefined) ?? []
+        const receiving = (e.metadata.receivingIds as string[] | undefined) ?? []
+        const thirdParty = (e.metadata.thirdPartyIds as string[] | undefined) ?? []
+        return [...giving, ...receiving, ...thirdParty].some((id) =>
+          id.toUpperCase().includes(searchTerm)
+        )
+      })
+    : tradeEntries
+
+  const tradeTotalPages = Math.max(1, Math.ceil(filteredTradeEntries.length / TRADE_PAGE_SIZE))
+  const tradePageEntries = filteredTradeEntries.slice(
     tradePage * TRADE_PAGE_SIZE,
     tradePage * TRADE_PAGE_SIZE + TRADE_PAGE_SIZE
   )
@@ -82,15 +95,34 @@ export default function AuditScreen() {
         <div className="flex items-baseline justify-between">
           <h3 className="text-sm font-bold text-yvy-dark uppercase tracking-wide">Trocas</h3>
           {tradeEntries.length > 0 && (
-            <span className="text-xs text-yvy-muted">
-              {tradeEntries.length} registro{tradeEntries.length !== 1 ? 's' : ''}
+            <span className="text-xs text-yvy-muted tabular-nums min-w-[4rem] text-right">
+              {filteredTradeEntries.length === tradeEntries.length
+                ? `${tradeEntries.length} registro${tradeEntries.length !== 1 ? 's' : ''}`
+                : `${filteredTradeEntries.length} de ${tradeEntries.length}`}
             </span>
           )}
         </div>
 
-        {tradeEntries.length === 0 ? (
-          <div className="text-center py-8 text-yvy-muted bg-yvy-bg rounded-xl border border-yvy-border">
-            <p className="text-sm">Nenhuma troca registrada ainda.</p>
+        {tradeEntries.length > 0 && (
+          <input
+            type="text"
+            placeholder="Buscar figurinha (ex: NED17)"
+            value={stickerSearch}
+            onChange={(e) => {
+              setStickerSearch(e.target.value)
+              setTradePage(0)
+            }}
+            className="w-full px-3 py-2 text-sm rounded-lg border border-yvy-border bg-yvy-surface text-yvy-text placeholder:text-yvy-muted/50 focus:outline-none focus:border-yvy-accent"
+          />
+        )}
+
+        {filteredTradeEntries.length === 0 ? (
+          <div className="text-center text-yvy-muted bg-yvy-surface rounded-xl border border-yvy-border shadow-md px-4 py-8 w-full flex items-center justify-center">
+            <p className="text-sm">
+              {searchTerm
+                ? `Nenhuma troca encontrada com "${stickerSearch.trim()}".`
+                : 'Nenhuma troca registrada ainda.'}
+            </p>
           </div>
         ) : (
           <>
