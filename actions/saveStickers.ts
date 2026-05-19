@@ -1,6 +1,8 @@
 'use server'
 
 import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { ALL_STICKER_IDS } from '@/lib/stickers'
 import { logAction } from './logAction'
 
 export type SaveStickersResult =
@@ -64,5 +66,29 @@ export async function saveStickers(
     removed,
     total: stickerIds.length,
   })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (stickerIds.length >= ALL_STICKER_IDS.length) {
+    ;(supabaseAdmin as any)
+      .from('users')
+      .update({ album_completed_at: new Date().toISOString() })
+      .eq('id', userId)
+      .is('album_completed_at', null)
+      .then(
+        () => {},
+        () => {}
+      )
+  } else {
+    ;(supabaseAdmin as any)
+      .from('users')
+      .update({ album_completed_at: null })
+      .eq('id', userId)
+      .not('album_completed_at', 'is', null)
+      .then(
+        () => {},
+        () => {}
+      )
+  }
+
   return { success: true, count: stickerIds.length, removedWithDupes }
 }
