@@ -36,6 +36,11 @@ export function TradeCardBody({
 
   const isAccepted = entry.action === 'trade_accepted'
   const isAdvancedExecuted = entry.action === 'advanced_trade_executed'
+  const isCanceled =
+    entry.action === 'trade_cancelled' ||
+    entry.action === 'trade_rejected' ||
+    entry.action === 'advanced_trade_cancelled' ||
+    entry.action === 'advanced_trade_rejected'
 
   const givingIds = sort((entry.metadata.givingIds as string[] | undefined) ?? [])
   const receivingIds = sort((entry.metadata.receivingIds as string[] | undefined) ?? [])
@@ -63,7 +68,7 @@ export function TradeCardBody({
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500 mb-1">
                   {entry.action === 'trade_rolled_back'
                     ? `Você recuperou ${givingIds.length} ←`
-                    : `Você ${isAccepted || isAdvancedExecuted ? 'deu' : 'dá'} ${givingIds.length} para ${isAdvancedExecuted ? (entry.metadata.giveToName as string) : ''} →`}
+                    : `Você ${isAccepted || isAdvancedExecuted ? 'deu' : isCanceled ? 'daria' : 'dá'} ${givingIds.length} para ${isAdvancedExecuted ? (entry.metadata.giveToName as string) : ''} →`}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {givingIds.map((id) => (
@@ -81,7 +86,7 @@ export function TradeCardBody({
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-green-600 mb-1">
                   {entry.action === 'trade_rolled_back'
                     ? `→ Você devolveu ${receivingIds.length}`
-                    : `← Você ${isAccepted || isAdvancedExecuted ? 'recebeu' : 'recebe'} ${receivingIds.length} de ${isAdvancedExecuted ? (entry.metadata.receiveFromName as string) : ''}`}
+                    : `← Você ${isAccepted || isAdvancedExecuted ? 'recebeu' : isCanceled ? 'receberia' : 'recebe'} ${receivingIds.length} de ${isAdvancedExecuted ? (entry.metadata.receiveFromName as string) : ''}`}
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {receivingIds.map((id) => (
