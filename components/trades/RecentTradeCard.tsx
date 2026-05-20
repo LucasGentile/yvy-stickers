@@ -96,11 +96,15 @@ export function RecentTradeCard({
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-yvy-dark capitalize">{trade.otherUserName}</p>
         <div className="flex items-center gap-2 shrink-0">
+          <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+            {verified && <span className="text-emerald-500 text-sm">✓</span>}
+            Troca concluída
+          </span>
           {trade.acceptedAt &&
             (trade.auditEntryId ? (
               <Link
                 href={`/history/${trade.auditEntryId}`}
-                className="flex items-center gap-1 hover:opacity-70 transition-opacity"
+                className="flex flex-col items-end shrink-0 gap-0.5 hover:opacity-70 transition-opacity"
               >
                 <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
                 <span className="text-[10px] text-yvy-muted/60">
@@ -108,17 +112,13 @@ export function RecentTradeCard({
                 </span>
               </Link>
             ) : (
-              <span className="flex items-center gap-1">
+              <span className="flex flex-col items-end shrink-0 gap-0.5">
                 <span className="text-[10px] text-yvy-muted">{relativeTime(trade.acceptedAt)}</span>
                 <span className="text-[10px] text-yvy-muted/60">
                   {absoluteTime(trade.acceptedAt)}
                 </span>
               </span>
             ))}
-          <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-            {verified && <span className="text-emerald-500 text-sm">✓</span>}
-            Troca concluída
-          </span>
         </div>
       </div>
 
