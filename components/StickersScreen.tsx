@@ -375,11 +375,13 @@ export default function StickersScreen() {
         </div>
       )}
 
+      {/* Country search — sticky */}
+      <div className="sticky top-0 z-30 bg-yvy-bg py-2">
+        <CountrySearch />
+      </div>
+
       {/* Grid */}
       <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 shadow-md p-4">
-        <div className="mb-3">
-          <CountrySearch />
-        </div>
         <div className="flex justify-end mb-3">
           <button
             onClick={exportOwnedStickers}
