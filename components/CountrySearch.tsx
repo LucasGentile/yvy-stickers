@@ -68,7 +68,7 @@ export default function CountrySearch() {
           }}
           onFocus={() => setOpen(true)}
           placeholder="Ir para um país ou seção..."
-          className="w-full rounded-lg border border-yvy-border pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg"
+          className="w-full rounded-lg border border-yvy-border pl-8 pr-3 py-2 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg"
         />
         {query && (
           <button
