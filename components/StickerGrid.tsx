@@ -225,7 +225,7 @@ function StickerGrid({
                                   onLongPress(id)
                                 }
                               }}
-                              className={`relative aspect-[4.9/6.5] w-full rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) && !on ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
+                              className={`relative select-none aspect-[4.9/6.5] w-full rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) && !on ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
                             >
                               {isChromeSticker(id) ? (
                                 <span className="font-bold text-amber-400">{idx + 1}</span>
@@ -264,7 +264,7 @@ function StickerGrid({
                           onLongPress(id)
                         }
                       }}
-                      className={`relative ${id.startsWith('FWC') ? 'w-12 h-12' : 'h-12 px-3'} rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) && !on ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
+                      className={`relative select-none ${id.startsWith('FWC') ? 'w-12 h-12' : 'h-12 px-3'} rounded-[1px] text-xs font-semibold transition-colors ${tradeLocked?.has(id) && !on ? 'bg-white text-yvy-muted ring-2 ring-inset ring-blue-400' : stickerColor(id, on, tradeReceived, staged, incomingStickers)}`}
                     >
                       {id.startsWith('FWC') ? (
                         <span className="flex flex-col items-center leading-none gap-[1px]">
