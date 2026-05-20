@@ -376,7 +376,7 @@ export default function StickersScreen() {
       )}
 
       {/* Country search — sticky */}
-      <div className="sticky top-0 z-30 bg-yvy-bg py-2">
+      <div className="sticky top-14 z-30 bg-yvy-bg py-2">
         <CountrySearch />
       </div>
 
