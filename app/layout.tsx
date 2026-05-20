@@ -49,10 +49,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="pt-BR"
       className={`${geist.variable} ${josefinSans.variable} ${bebasNeue.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-yvy-bg text-yvy-text">
+      <body className="h-full flex flex-col bg-yvy-bg text-yvy-text">
         <Providers>
           <Header />
-          <main className="flex-1 flex flex-col pt-14">{children}</main>
+          <main className="flex-1 flex flex-col pt-14 overflow-y-auto">{children}</main>
         </Providers>
       </body>
     </html>
