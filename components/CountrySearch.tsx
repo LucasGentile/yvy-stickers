@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { ALL_TEAMS, ALL_STICKER_SECTIONS, type StickerSpecial } from '@/lib/stickers'
+import { CountryFlag } from '@/components/CountryFlag'
 
 const SPECIAL_SECTIONS = ALL_STICKER_SECTIONS.filter(
   (s): s is StickerSpecial => s.type === 'special'
@@ -115,13 +116,7 @@ export default function CountrySearch() {
                   onClick={() => goToTeam(team.code)}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-yvy-bg transition-colors"
                 >
-                  <img
-                    src={`https://flagcdn.com/w20/${team.flagCode}.png`}
-                    width={20}
-                    height={15}
-                    alt={team.name}
-                    className="rounded-sm shrink-0"
-                  />
+                  <CountryFlag code={team.flagCode} name={team.name} size="md" />
                   <span className="text-yvy-text">{team.name}</span>
                   <span className="text-yvy-muted font-mono text-xs ml-auto">{team.code}</span>
                 </button>
