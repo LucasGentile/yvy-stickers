@@ -32,8 +32,10 @@ export default function CountrySearch() {
     const scroller = document.querySelector('main')
     if (!el || !scroller) return
     const stickyHeight = ref.current?.offsetHeight ?? 0
-    const top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop
-    scroller.scrollTo({ top: top - stickyHeight - 8, behavior: 'smooth' })
+    const top =
+      el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop
+    const scrollToY = top - stickyHeight - 100
+    scroller.scrollTo({ top: scrollToY, behavior: 'smooth' })
   }
 
   function goToTeam(code: string) {
