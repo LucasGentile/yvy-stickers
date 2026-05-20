@@ -60,14 +60,25 @@ export default function AuditScreen() {
     )
   }
 
-  const searchTerm = stickerSearch.trim().toUpperCase()
+  const searchTerm = stickerSearch.trim()
+  const searchUpper = searchTerm.toUpperCase()
+  const searchLower = searchTerm.toLowerCase()
   const filteredTradeEntries = searchTerm
     ? tradeEntries.filter((e) => {
         const giving = (e.metadata.givingIds as string[] | undefined) ?? []
         const receiving = (e.metadata.receivingIds as string[] | undefined) ?? []
         const thirdParty = (e.metadata.thirdPartyIds as string[] | undefined) ?? []
-        return [...giving, ...receiving, ...thirdParty].some((id) =>
-          id.toUpperCase().includes(searchTerm)
+        const stickerMatch = [...giving, ...receiving, ...thirdParty].some((id) =>
+          id.toUpperCase().includes(searchUpper)
+        )
+        if (stickerMatch) return true
+        const partnerName = (e.metadata.partnerName as string | undefined) ?? ''
+        const giveToName = (e.metadata.giveToName as string | undefined) ?? ''
+        const receiveFromName = (e.metadata.receiveFromName as string | undefined) ?? ''
+        return (
+          partnerName.toLowerCase().includes(searchLower) ||
+          giveToName.toLowerCase().includes(searchLower) ||
+          receiveFromName.toLowerCase().includes(searchLower)
         )
       })
     : tradeEntries
@@ -106,7 +117,7 @@ export default function AuditScreen() {
         {tradeEntries.length > 0 && (
           <input
             type="text"
-            placeholder="Buscar figurinha (ex: NED17)"
+            placeholder="Buscar figurinha ou pessoa (ex: NED17, Lucas)"
             value={stickerSearch}
             onChange={(e) => {
               setStickerSearch(e.target.value)
