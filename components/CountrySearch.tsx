@@ -27,25 +27,20 @@ export default function CountrySearch() {
 
   const hasResults = filteredTeams.length > 0 || filteredSections.length > 0
 
-  function scrollToElement(id: string) {
-    const el = document.getElementById(id)
-    const scroller = document.querySelector('main')
-    if (!el || !scroller) return
-    const offset = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop
-    const stickyHeight = ref.current?.offsetHeight ?? 0
-    scroller.scrollTo({ top: offset - stickyHeight - 8, behavior: 'smooth' })
-  }
-
   function goToTeam(code: string) {
     setQuery('')
     setOpen(false)
-    scrollToElement(`country-${code}`)
+    document
+      .getElementById(`country-${code}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   function goToSection(label: string) {
     setQuery('')
     setOpen(false)
-    scrollToElement(`section-${label}`)
+    document
+      .getElementById(`section-${label}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   useEffect(() => {
