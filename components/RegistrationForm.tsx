@@ -3,10 +3,12 @@
 import { useActionState, useState, useEffect } from 'react'
 import { registerUser, RegisterUserResult } from '@/actions/registerUser'
 import { loginByPhone, LoginResult } from '@/actions/loginByPhone'
+import LoadingScreen from './LoadingScreen'
 
 const initialState = null
 
 export default function RegistrationForm() {
+  const [checking, setChecking] = useState(true)
   const [mode, setMode] = useState<'register' | 'login'>('register')
   const [phoneValue, setPhoneValue] = useState('')
   const [phoneError, setPhoneError] = useState<string | null>(null)
@@ -37,7 +39,9 @@ export default function RegistrationForm() {
   useEffect(() => {
     if (localStorage.getItem('userId')) {
       window.location.href = '/stickers'
+      return
     }
+    setChecking(false)
   }, [])
 
   useEffect(() => {
@@ -59,6 +63,10 @@ export default function RegistrationForm() {
         : null
 
   const pending = mode === 'register' ? regPending : loginPending
+
+  if (checking) {
+    return <LoadingScreen />
+  }
 
   return (
     <div className="space-y-5">
