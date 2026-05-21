@@ -18,18 +18,19 @@ import { StickerChip } from './StickerChip'
 import StickerGrid from './StickerGrid'
 import CountrySearch from './CountrySearch'
 import { usePrefs } from '@/contexts/PreferencesContext'
+import { useNotification } from '@/contexts/NotificationContext'
 
 type Mode = 'have' | 'need'
 type Step = 'mode' | 'input' | 'pending'
 
 export default function StickersScreen() {
+  const { showSuccess, showError } = useNotification()
   const [userId, setUserId] = useState<string | null>(null)
   const [step, setStep] = useState<Step>('mode')
   const [mode, setMode] = useState<Mode>('have')
   const [tradeOrigin, setTradeOrigin] = useState<TradeOriginResult | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [parseErrors, setParseErrors] = useState<string[]>([])
-  const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [dupeWarning, setDupeWarning] = useState<string[] | null>(null)
   const [clearingDupes, setClearingDupes] = useState(false)
@@ -153,7 +154,7 @@ export default function StickersScreen() {
     setImporting(false)
     setPendingFile(null)
     if (!result.success) {
-      setSaveMsg(`Erro na importação: ${result.error}`)
+      showError(`Erro na importação: ${result.error} Tente novamente ou procure ajuda.`)
       return
     }
     const loaded = new Set<string>(parsed.stickers)
@@ -164,10 +165,10 @@ export default function StickersScreen() {
 
     const failures = [...result.failedStickers, ...result.failedDuplicates]
     if (failures.length > 0)
-      setSaveMsg(
+      showError(
         `Importado com erros — ${failures.length} não salvos: ${failures.slice(0, 5).join(', ')}${failures.length > 5 ? ` e mais ${failures.length - 5}` : ''}`
       )
-    else setSaveMsg(null)
+    else showSuccess('Arquivo importado com sucesso!')
 
     setImportSummary({
       addedToAlbumIds: result.addedToAlbumIds,
@@ -189,13 +190,12 @@ export default function StickersScreen() {
 
     const added = [...selected].filter((id) => !lastSaved.current.has(id))
     setSaving(true)
-    setSaveMsg(null)
     const ids = Array.from(selected)
     const result = await saveStickers(userId, ids)
     setSaving(false)
     if (result.success) {
       lastSaved.current = new Set(selected)
-      setSaveMsg(`✓ ${result.count} figurinhas salvas com sucesso!`)
+      showSuccess(`${result.count} figurinhas salvas com sucesso!`)
       if (result.removedWithDupes.length > 0) setDupeWarning(result.removedWithDupes)
       if (added.length > 0) {
         setTradeOrigin((prev) =>
@@ -203,7 +203,7 @@ export default function StickersScreen() {
         )
       }
     } else {
-      setSaveMsg(`Erro: ${result.error}`)
+      showError(`Erro ao salvar: ${result.error} Tente novamente ou procure ajuda.`)
     }
   }, [userId, selected])
 
@@ -557,7 +557,6 @@ export default function StickersScreen() {
                   )
                     return
                   setSelected(new Set())
-                  setSaveMsg(null)
                   setStep('mode')
                 }}
                 className="text-xs text-red-600 underline"
@@ -686,7 +685,6 @@ export default function StickersScreen() {
                   {label}
                 </button>
               </div>
-              {saveMsg && <p className="text-center text-sm mt-2 text-yvy-muted">{saveMsg}</p>}
             </div>
           </div>
         )

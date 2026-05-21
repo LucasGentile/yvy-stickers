@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { upsertDuplicate } from '@/actions/upsertDuplicate'
+import { useNotification } from '@/contexts/NotificationContext'
 import { isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 
 export function DuplicateQuickAdd({
@@ -17,18 +18,18 @@ export function DuplicateQuickAdd({
   onClose: () => void
   onSaved: (id: string, count: number) => void
 }) {
+  const { showSuccess, showError } = useNotification()
   const [count, setCount] = useState(currentCount + 1)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   async function handleSave() {
     setSaving(true)
-    setError(null)
     const result = await upsertDuplicate(userId, id, count)
     if (result.success) {
+      showSuccess(`${id} salva com ${count} repetida${count !== 1 ? 's' : ''}.`)
       onSaved(id, count)
     } else {
-      setError(result.error)
+      showError(`Erro ao registrar repetida: ${result.error} Tente novamente ou procure ajuda.`)
       setSaving(false)
     }
   }
@@ -86,8 +87,6 @@ export function DuplicateQuickAdd({
             +
           </button>
         </div>
-
-        {error && <p className="text-xs text-red-600 text-center mb-3">{error}</p>}
 
         <button
           onClick={handleSave}

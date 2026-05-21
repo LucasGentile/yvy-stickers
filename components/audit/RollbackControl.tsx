@@ -5,6 +5,7 @@ import { rollbackTrade } from '@/actions/rollbackTrade'
 import { getTradeRollbackInfo } from '@/actions/getTradeRollbackInfo'
 import { sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
+import { useNotification } from '@/contexts/NotificationContext'
 import { StickerChip } from '../StickerChip'
 
 type RollbackStep =
@@ -30,6 +31,7 @@ export function RollbackControl({
   givingIds: string[]
   receivingIds: string[]
 }) {
+  const { showSuccess, showError } = useNotification()
   const [step, setStep] = useState<RollbackStep>('closed')
   const [submitting, setSubmitting] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
@@ -80,10 +82,14 @@ export function RollbackControl({
     setMsg(null)
     try {
       const result = await rollbackTrade(tradeId, userId, 'request')
-      if (result.success) setStep('requested')
-      else setMsg(result.error)
+      if (result.success) {
+        showSuccess('Solicitação de desfazimento enviada com sucesso!')
+        setStep('requested')
+      } else {
+        showError(`${result.error} Tente novamente ou procure ajuda.`)
+      }
     } catch {
-      setMsg('Erro inesperado.')
+      showError('Erro inesperado ao solicitar desfazimento. Tente novamente ou procure ajuda.')
     } finally {
       setSubmitting(false)
     }
@@ -98,10 +104,14 @@ export function RollbackControl({
     setMsg(null)
     try {
       const result = await rollbackTrade(tradeId, userId, 'request', tradePGiving, tradePReceiving)
-      if (result.success) setStep('requested')
-      else setMsg(result.error)
+      if (result.success) {
+        showSuccess('Solicitação de desfazimento parcial enviada com sucesso!')
+        setStep('requested')
+      } else {
+        showError(`${result.error} Tente novamente ou procure ajuda.`)
+      }
     } catch {
-      setMsg('Erro inesperado.')
+      showError('Erro inesperado ao solicitar desfazimento. Tente novamente ou procure ajuda.')
     } finally {
       setSubmitting(false)
     }
@@ -112,10 +122,18 @@ export function RollbackControl({
     setMsg(null)
     try {
       const result = await rollbackTrade(tradeId, userId, action)
-      if (result.success) setStep(action === 'deny' ? 'closed' : 'requested')
-      else setMsg(result.error)
+      if (result.success) {
+        if (action === 'confirm') {
+          showSuccess('Troca desfeita com sucesso!')
+        } else {
+          showSuccess('Desfazimento recusado.')
+        }
+        setStep(action === 'deny' ? 'closed' : 'requested')
+      } else {
+        showError(`${result.error} Tente novamente ou procure ajuda.`)
+      }
     } catch {
-      setMsg('Erro inesperado.')
+      showError('Erro inesperado. Tente novamente ou procure ajuda.')
     } finally {
       setSubmitting(false)
     }

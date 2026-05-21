@@ -9,6 +9,7 @@ import { findAdvancedTrade } from '@/actions/findAdvancedTrade'
 import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previewAdvancedTrade'
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
 import { verifyTrade } from '@/actions/verifyTrade'
+import { useNotification } from '@/contexts/NotificationContext'
 import { StickerList } from '@/components/trades/StickerList'
 import { ColorLegend } from '@/components/trades/ColorLegend'
 import { TradeAssistant } from '@/components/audit/TradeAssistant'
@@ -47,24 +48,30 @@ function TradeCard({
   userId: string
   onDone: () => void
 }) {
+  const { showSuccess, showError } = useNotification()
   const [loading, setLoading] = useState<'approve' | 'reject' | 'cancel' | null>(null)
-  const [msg, setMsg] = useState<string | null>(null)
   const [confirming, setConfirming] = useState<'approve' | 'reject' | 'cancel' | null>(null)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [verified, setVerified] = useState(trade.verified)
 
+  const advancedActionLabels = {
+    approve: 'Troca triangular aprovada!',
+    reject: 'Troca triangular recusada.',
+    cancel: 'Proposta de troca triangular cancelada.',
+  } as const
+
   async function handle(action: 'approve' | 'reject' | 'cancel') {
     setLoading(action)
-    setMsg(null)
     try {
       const result = await respondToAdvancedTrade(trade.id, userId, action)
       if (result.success) {
+        showSuccess(advancedActionLabels[action])
         onDone()
       } else {
-        setMsg(result.error)
+        showError(`${result.error} Tente novamente ou procure ajuda.`)
       }
     } catch {
-      setMsg('Erro inesperado. Tente novamente.')
+      showError('Erro inesperado. Tente novamente ou procure ajuda.')
     } finally {
       setLoading(null)
       setConfirming(null)
@@ -189,7 +196,6 @@ function TradeCard({
         </>
       )}
 
-      {msg && <p className="text-xs text-red-600">{msg}</p>}
 
       {/* Actions */}
       {isPending && trade.status === 'pending' && (
