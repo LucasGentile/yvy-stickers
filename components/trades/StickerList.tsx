@@ -36,10 +36,12 @@ export function StickerList({
   ids,
   label,
   variant = 'default',
+  alreadyOwnedIds,
 }: {
   ids: string[]
   label: string
   variant?: StickerListVariant
+  alreadyOwnedIds?: Set<string>
 }) {
   const { stickerOrder } = usePrefs()
   if (ids.length === 0) return null
@@ -66,7 +68,11 @@ export function StickerList({
       )}
       <div className="flex flex-wrap gap-1">
         {sorted.map((id) => (
-          <StickerChip key={id} id={id} variant={chipVariant} />
+          <StickerChip
+            key={id}
+            id={id}
+            variant={alreadyOwnedIds?.has(id) ? 'already-owned' : chipVariant}
+          />
         ))}
       </div>
     </div>
