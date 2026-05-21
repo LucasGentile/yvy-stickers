@@ -15,6 +15,15 @@ export type PendingTrade = {
   isSender: boolean
 }
 
+export type CancelledTrade = {
+  id: string
+  otherUserName: string
+  myGivingIds: string[]
+  myReceivingIds: string[]
+  status: 'cancelled' | 'rejected'
+  createdAt: string
+}
+
 export type RecentTrade = {
   id: string
   otherUserId: string
@@ -35,15 +44,19 @@ export async function getPendingTrades(userId: string): Promise<{
   received: PendingTrade[]
   sent: PendingTrade[]
   recentlyAccepted: RecentTrade[]
+  recentlyCancelled: CancelledTrade[]
 }> {
-  const empty = { received: [], sent: [], recentlyAccepted: [] }
+  const empty = { received: [], sent: [], recentlyAccepted: [], recentlyCancelled: [] }
   if (!userId) return empty
 
   try {
+    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+
     const [
       { data: pendingTrades, error: pendingError },
       { data: acceptedTrades },
       { data: auditEntries },
+      { data: cancelledTrades },
     ] = await Promise.all([
       supabaseAdmin
         .from('pending_trades')
@@ -65,11 +78,22 @@ export async function getPendingTrades(userId: string): Promise<{
         .select('id, metadata')
         .eq('user_id', userId)
         .eq('action', 'trade_accepted'),
+      supabaseAdmin
+        .from('pending_trades')
+        .select('id, initiator_id, receiver_id, giving_ids, receiving_ids, status, created_at')
+        .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
+        .in('status', ['cancelled', 'rejected'])
+        .gte('created_at', cutoff)
+        .order('created_at', { ascending: false }),
     ])
 
     if (pendingError) return empty
 
-    const allTrades = [...(pendingTrades ?? []), ...(acceptedTrades ?? [])]
+    const allTrades = [
+      ...(pendingTrades ?? []),
+      ...(acceptedTrades ?? []),
+      ...(cancelledTrades ?? []),
+    ]
     const otherIds = [
       ...new Set(
         allTrades.map((t) => (t.initiator_id === userId ? t.receiver_id : t.initiator_id))
@@ -148,7 +172,26 @@ export async function getPendingTrades(userId: string): Promise<{
       })
     }
 
-    return { received, sent, recentlyAccepted }
+    const recentlyCancelled: CancelledTrade[] = []
+    for (const trade of cancelledTrades ?? []) {
+      const isInitiator = trade.initiator_id === userId
+      const otherId = isInitiator ? trade.receiver_id : trade.initiator_id
+      const other = userMap[otherId]
+      if (!other) continue
+      const myGivingIds: string[] = isInitiator ? trade.giving_ids : trade.receiving_ids
+      // Only surface trades where the user had stickers to give — those need physical retrieval
+      if (myGivingIds.length === 0) continue
+      recentlyCancelled.push({
+        id: trade.id,
+        otherUserName: formatName(other.name),
+        myGivingIds,
+        myReceivingIds: isInitiator ? trade.receiving_ids : trade.giving_ids,
+        status: trade.status as 'cancelled' | 'rejected',
+        createdAt: trade.created_at,
+      })
+    }
+
+    return { received, sent, recentlyAccepted, recentlyCancelled }
   } catch {
     return empty
   }

@@ -6,6 +6,7 @@ import { getMatches, MatchResult } from '@/lib/matching'
 import { getPendingTrades, PendingTrade } from '@/actions/getPendingTrades'
 import MatchCard from './MatchCard'
 import PendingTradesSection from './PendingTradesSection'
+import CancelledTradesSection from './CancelledTradesSection'
 import { CompletedTradesSection } from './CompletedTradesSection'
 import { ColorLegend } from './trades/ColorLegend'
 
@@ -51,10 +52,12 @@ export default function MatchesScreen() {
     received: PendingTrade[]
     sent: PendingTrade[]
     recentlyAccepted: import('@/actions/getPendingTrades').RecentTrade[]
+    recentlyCancelled: import('@/actions/getPendingTrades').CancelledTrade[]
   }>({
     received: [],
     sent: [],
     recentlyAccepted: [],
+    recentlyCancelled: [],
   })
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -118,7 +121,7 @@ export default function MatchesScreen() {
     )
   }
 
-  const pendingCount = pending.received.length + pending.sent.length
+  const pendingCount = pending.received.length + pending.sent.length + pending.recentlyCancelled.length
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
@@ -172,6 +175,10 @@ export default function MatchesScreen() {
             />
           )
         })()}
+
+      {pending.recentlyCancelled.length > 0 && (
+        <CancelledTradesSection trades={pending.recentlyCancelled} />
+      )}
 
       <ColorLegend />
 
