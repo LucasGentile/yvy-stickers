@@ -113,7 +113,6 @@ function StickerGrid({
       suppressNextClick.current = false
       return
     }
-    if (incomingStickers?.has(id) && !selected.has(id)) return
     if (tradeLocked?.has(id) && !selected.has(id)) return
     if (isProtected && selected.has(id) && !staged?.has(id)) {
       onProtectedRemove?.()
