@@ -33,7 +33,7 @@ O app funciona direto pelo celular, sem precisar baixar nada da loja. Siga as in
 Informe seu **nome completo**, **torre**, **apartamento** e **WhatsApp com DDD**.
 Depois escolha se vai marcar as figurinhas que **tem** ou as que **faltam**.
 
-Já tem cadastro? Toque em **"Já sou cadastrado"** e informe apenas o WhatsApp — o app recupera seu perfil automaticamente.
+Já tem cadastro? Toque em **"Já sou cadastrado"** e informe apenas o WhatsApp — o app recupera seu perfil automaticamente. Você pode editar seu nome de exibição a qualquer momento pela tela de Perfil.
 
 ### 2. Minhas Figurinhas
 
@@ -86,13 +86,14 @@ Quando uma troca direta entre dois moradores não é possível, o app busca auto
 - Use o botão ↻ no topo para atualizar propostas e buscar novas combinações
 - Quando não há combinações, o botão fica desabilitado com uma explicação
 - Trocas concluídas ficam em seção recolhível no final da página
+- Após concluída, a troca pode ser desfeita — solicite e os 3 participantes confirmam; se alguém não responder em 3 dias, o desfazimento forçado fica disponível
 - O Histórico mostra figurinhas dadas em vermelho, recebidas em verde e do terceiro participante em azul
 
 **Exemplo:** Você dá para A, A dá para B, B dá para você — cada um recebe figurinhas que precisa, mesmo sem ter troca direta com quem as tem.
 
 ### 6. Ranking do Álbum
 
-Veja o percentual de conclusão de todos os moradores, com medalhas para o top 3.
+Veja o percentual de conclusão de todos os moradores, com medalhas para o top 3. Moradores que completaram o álbum aparecem em seção separada no topo com a data de conclusão.
 
 ### 7. Faltantes
 
@@ -100,7 +101,7 @@ Lista completa das figurinhas que ainda precisam. Use a busca para filtrar por p
 
 ### 8. Histórico
 
-Registro das suas últimas 50 ações no app. As ações marcadas com **⚑** indicam algo a fazer no álbum físico — use como checklist para não esquecer de colar as figurinhas trocadas.
+Registro das suas últimas 50 ações no app. As ações marcadas com **⚑** indicam algo a fazer no álbum físico — use como checklist para não esquecer de colar as figurinhas trocadas. Busque por código de figurinha ou nome de morador na barra de pesquisa. Na timeline detalhada de cada troca, é possível executar ações (aceitar, recusar, desfazer) diretamente sem voltar à tela de trocas.
 
 ---
 

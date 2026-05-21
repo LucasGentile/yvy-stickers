@@ -25,3 +25,10 @@ These apply to every migration and every server action — no exceptions.
 - **All `DELETE` and `UPDATE` statements must have a `WHERE` clause.** A statement that could affect all rows must never be written or run without explicit user confirmation.
 - **Never run `supabase db push` automatically.** Always tell the user to run it manually after reviewing the migration file.
 - **Prefer soft deletes or status columns** over hard deletes for user-generated data (stickers, duplicates, trades).
+
+# UI interaction rules
+
+These apply to every component that triggers a server action — no exceptions.
+
+- **Block UI during server actions.** Every button or form that triggers a server action must be disabled (and show a loading indicator when appropriate) while the action is in-flight. This prevents double submissions. Use `useTransition` or local `pending` state — never rely solely on network latency to protect against duplicate calls.
+- **Notify on confirmation screens.** Every confirmation screen or modal that results in a server action completing (success or failure) must trigger a notification via `useNotification()` (`showSuccess` / `showError`) with a message describing the outcome. The notification should be contextual to the action performed (e.g. "Troca aceita com sucesso", "Erro ao desfazer troca"). Never leave the user without feedback after a confirmation action.

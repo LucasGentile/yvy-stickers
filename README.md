@@ -132,6 +132,7 @@ Quando uma troca direta não é possível, o app busca automaticamente ciclos de
 - O botão de atualizar (↻) no topo re-busca propostas e atualiza o status das pendentes
 - Quando não há combinações disponíveis, o botão de busca fica desabilitado com uma explicação
 - Trocas concluídas ficam em uma seção recolhível e paginada, com os mesmos filtros de parceiro e verificação disponíveis na tela de trocas normais
+- Após concluída, a troca pode ser desfeita — basta solicitar e os 3 participantes confirmarem; se alguém não responder em 3 dias, o _desfazimento forçado_ fica disponível (com confirmação antes de executar)
 - O Histórico mostra figurinhas dadas em _vermelho_, recebidas em _verde_ e do terceiro participante em _azul_
 - Exemplo: você dá para A, A dá para B, B dá para você — todos ganham figurinhas que precisam
 
@@ -144,6 +145,9 @@ Consulte rapidamente se uma figurinha está disponível para troca fora do app (
 
 🏅 _7. Ranking do Álbum_
 Veja quem está mais perto de completar o álbum — moradores ordenados por número de figurinhas, com medalhas para o top 3.
+
+- Moradores que completaram o álbum aparecem em seção separada no topo com a data de conclusão
+- Percentual usa arredondamento para baixo — 100% aparece somente quando _todas_ as figurinhas foram coletadas
 
 🏆 _8. Panelinhas do YVYs_
 Ranking dos pares que mais realizaram trocas entre si. Quanto mais trocas, mais inseparáveis — e mais suspeitos de panelinha! Atualiza automaticamente ao abrir o app.
@@ -164,6 +168,7 @@ Seus dados pessoais e estatísticas do álbum em um só lugar.
 - Histórico de trocas: quantas fez, quantas figurinhas deu e recebeu, e quem é seu melhor parceiro de trocas
 - Repetidas: total de cópias extras, figurinha mais e menos duplicada, país com mais e menos repetidas
 - Destaques de coleção: seleção mais e menos completa com barra de progresso
+- Edite seu nome de exibição diretamente pela tela de perfil
 
 📜 _12. Histórico_
 Seção de trocas (paginada em 3/página) e seção de atividade geral do app. As ações marcadas com ⚑ indicam algo que você ainda precisa fazer no álbum físico.
@@ -173,6 +178,9 @@ Seção de trocas (paginada em 3/página) e seção de atividade geral do app. A
 - O pin ⚑ aparece apenas para ações das últimas 12h, evitando alertas desnecessários sobre eventos antigos
 - Múltiplas ações do mesmo tipo no mesmo dia são consolidadas em uma única entrada
 - Toque no horário de qualquer entrada de troca para abrir a _linha do tempo_ — uma visualização cronológica com todos os eventos relacionados àquela troca (envio, aceite, desfazimento etc.), com destaque no evento selecionado
+- Na timeline detalhada, ações disponíveis (aceitar, recusar, desfazer) podem ser executadas diretamente sem precisar voltar para a tela de trocas
+- Busque por código de figurinha _ou_ nome de morador na barra de pesquisa do histórico
+- A barra de busca nas telas de figurinhas fica fixa (sticky) no topo enquanto você rola a página
 
 ➖➖➖➖➖➖➖➖➖
 
@@ -188,6 +196,7 @@ Toque no ícone ≡ no canto superior esquerdo para navegar entre as telas, ajus
 - Não precisa de senha — o acesso fica salvo pelo número de WhatsApp
 - Trocou de aparelho? Entre com _"Já sou cadastrado"_ e seu WhatsApp
 - Ajuste o tamanho da fonte no menu (≡) no canto superior esquerdo
+- Notificações aparecem no topo da tela confirmando o resultado de cada ação (aceitar troca, desfazer, etc.)
 
 ➖➖➖➖➖➖➖➖➖
 
@@ -268,7 +277,7 @@ Usuários com `is_admin = true` veem um item **Aprovações** no menu lateral co
 ### Testes
 
 ```bash
-npm test                  # roda todos os testes (269 testes, 27 suítes)
+npm test                  # roda todos os testes (1411 testes, 157 suítes)
 npm run test:watch        # modo watch durante desenvolvimento
 npm run test:coverage     # relatório de cobertura
 ```
@@ -303,6 +312,9 @@ supabase db push
 | 013_advanced_trade          | Tabela `advanced_trades` para trocas triangulares (3 participantes, ciclo A→B→C→A)              |
 | 014_backfill_audit_trade_id | Backfill `tradeId` em `metadata` de entradas antigas + índice parcial em `metadata->>'tradeId'` |
 | 015_trade_verified          | Coluna `verified_at` em `pending_trades` para marcar trocas entregues fisicamente               |
+| 016_rollback_requested_at   | Coluna `rollback_requested_at` em `pending_trades` para controlar prazo de desfazimento forçado |
+| 017_advanced_trade_rollback | Colunas de rollback em `advanced_trades` (solicitação, aprovações dos 3 participantes)          |
+| 018_album_completed_at      | Coluna `album_completed_at` em `users` para registrar data de conclusão do álbum                |
 
 ### Variáveis de ambiente
 
