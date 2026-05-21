@@ -1,5 +1,33 @@
 # Changelog
 
+## [v2.2.0] — 2026-05-21
+
+### Novidades
+
+- **Desfazimento de trocas avançadas (triangulares)** — trocas triangulares concluídas agora podem ser desfeitas; os 3 participantes precisam aprovar o rollback. Se alguém não responder em 3 dias, o desfazimento forçado fica disponível com confirmação
+- **Ações na timeline detalhada** — aceitar, recusar e desfazer trocas diretamente na página de linha do tempo, sem precisar voltar para a tela de trocas
+- **Sistema de notificações globais** — banner de feedback (sucesso/erro) aparece no topo da tela após cada ação confirmada, com auto-dismiss em 5 segundos
+- **Editar nome de exibição** — moradores podem editar seu nome diretamente pela tela de perfil
+- **Busca por nome de morador no histórico** — além de buscar por código de figurinha, agora é possível filtrar entradas do histórico por nome
+- **Seção de álbuns completos no ranking** — moradores que completaram o álbum aparecem em seção separada no topo com a data de conclusão
+- **Busca sticky (fixa)** — a barra de busca nas telas de figurinhas fica fixa no topo enquanto rola a página, facilitando a navegação
+
+### Melhorias
+
+- **CountryFlag compartilhado** — componente de bandeira extraído com aspect ratio 3:2 consistente em todas as telas
+- **Loading screen aprimorado** — tela de carregamento exibida até que a sessão do usuário seja determinada, evitando flash de conteúdo
+- **Percentual de álbum preciso** — usa arredondamento para baixo; 100% aparece somente quando todas as figurinhas foram coletadas
+
+### Correções
+
+- Cores das labels de rollback no histórico corrigidas (deu/recebeu estavam invertidas)
+- Ações de desfazer restritas apenas às rotas de histórico (não aparecem mais em outras telas)
+- Seleção de texto durante long press em figurinhas prevenida
+- Scroll offset ajustado para não cobrir conteúdo abaixo da busca sticky
+- Cards de histórico ocupam 100% da largura do container em todas as telas
+
+---
+
 ## [v2.1.0] — 2026-05-19
 
 ### Novidades
