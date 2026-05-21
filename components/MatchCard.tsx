@@ -5,6 +5,7 @@ import type { MatchResult, CanceledTradeDetail } from '@/lib/matching'
 import { createTradeRequest } from '@/actions/createTradeRequest'
 import { isChromeSticker, sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
+import { useNotification } from '@/contexts/NotificationContext'
 import { StickerChip } from './StickerChip'
 
 function setsEqual(a: string[], b: string[]) {
@@ -49,6 +50,7 @@ function DetailModal({
   onTradeCreated?: () => void
 }) {
   const { stickerOrder } = usePrefs()
+  const { showSuccess, showError } = useNotification()
   const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
   const [receiving, setReceiving] = useState<Set<string>>(new Set())
   const [giving, setGiving] = useState<Set<string>>(new Set())
@@ -90,6 +92,7 @@ function DetailModal({
         [...receiving]
       )
       if (result.success) {
+        showSuccess(`Pedido enviado para ${match.name.split(' ')[0]}! Ele/ela verá na tela de Trocas.`)
         setTradeMsg({
           ok: true,
           text: `Pedido enviado para ${match.name.split(' ')[0]}! Ele/ela verá na tela de Trocas.`,
@@ -99,9 +102,11 @@ function DetailModal({
         setConfirming(false)
         onTradeCreated?.()
       } else {
+        showError(result.error)
         setTradeMsg({ ok: false, text: result.error })
       }
     } catch {
+      showError('Erro inesperado. Tente novamente.')
       setTradeMsg({ ok: false, text: 'Erro inesperado. Tente novamente.' })
     } finally {
       setTrading(false)
