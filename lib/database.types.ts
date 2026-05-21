@@ -183,6 +183,7 @@ export type Database = {
           name: string
           phone: string
           tower: string
+          trades_blocked: boolean
         }
         Insert: {
           apartment: string
@@ -195,6 +196,7 @@ export type Database = {
           name: string
           phone: string
           tower: string
+          trades_blocked?: boolean
         }
         Update: {
           apartment?: string
@@ -207,6 +209,7 @@ export type Database = {
           name?: string
           phone?: string
           tower?: string
+          trades_blocked?: boolean
         }
         Relationships: []
       }

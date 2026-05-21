@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { getMuralInsights, Insight } from '@/actions/getMuralInsights'
 import PanelinhasSection from '@/components/PanelinhasSection'
 import RankingScreen from '@/components/RankingScreen'
+import { useMuralTab, MURAL_TABS } from '@/contexts/MuralTabContext'
 
 const COLOR_MAP: Record<
   Insight['color'],
@@ -76,16 +77,8 @@ function InsightCard({ insight }: { insight: Insight }) {
   )
 }
 
-const TABS = [
-  { id: 'ranking', label: 'Ranking' },
-  { id: 'mural', label: 'Mural' },
-  { id: 'panelinhas', label: 'Panelinhas' },
-] as const
-
-type Tab = (typeof TABS)[number]['id']
-
 export default function MuralScreen() {
-  const [tab, setTab] = useState<Tab>('ranking')
+  const { tab } = useMuralTab()
   const [insights, setInsights] = useState<Insight[]>([])
   const [muralLoading, setMuralLoading] = useState(false)
   const [muralLoaded, setMuralLoaded] = useState(false)
@@ -120,19 +113,11 @@ export default function MuralScreen() {
 
   return (
     <div className="flex flex-col flex-1">
-      {/* Tab bar */}
-      <div className="-mt-2 sticky top-12 z-10 bg-yvy-dark border-b border-yvy-gold/20">
+      {/* Invisible spacer — matches the tab bar rendered inside <header> */}
+      <div aria-hidden="true" className="invisible shrink-0">
         <div className="max-w-lg mx-auto px-3 py-2 flex gap-1">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                tab === t.id
-                  ? 'bg-yvy-gold/20 text-yvy-gold'
-                  : 'text-yvy-gold/50 hover:bg-yvy-gold/10 hover:text-yvy-gold/80'
-              }`}
-            >
+          {MURAL_TABS.map((t) => (
+            <button key={t.id} className="flex-1 py-2 rounded-lg text-sm font-semibold">
               {t.label}
             </button>
           ))}

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { useMuralTab, MURAL_TABS } from '@/contexts/MuralTabContext'
 import { getPendingTrades } from '@/actions/getPendingTrades'
 import { getPendingApprovalCount } from '@/actions/getPendingApprovalCount'
 import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
@@ -42,6 +43,7 @@ export default function Header() {
   const [advancedTradePending, setAdvancedTradePending] = useState(0)
   const pathname = usePathname()
   const { stickerOrder, setStickerOrder } = usePrefs()
+  const { tab: muralTab, setTab: setMuralTab } = useMuralTab()
 
   function refreshBadges(uid: string) {
     getPendingTrades(uid)
@@ -143,6 +145,26 @@ export default function Header() {
             YVY Figurinhas
           </Link>
         </div>
+
+        {pathname === '/mural' && (
+          <div className="border-t border-yvy-gold/20">
+            <div className="max-w-lg mx-auto px-3 py-2 flex gap-1">
+              {MURAL_TABS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setMuralTab(t.id)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    muralTab === t.id
+                      ? 'bg-yvy-gold/20 text-yvy-gold'
+                      : 'text-yvy-gold/50 hover:bg-yvy-gold/10 hover:text-yvy-gold/80'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Drawer */}

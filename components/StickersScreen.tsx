@@ -7,6 +7,7 @@ import { saveStickers } from '@/actions/saveStickers'
 import { importStickerFile } from '@/actions/importStickerFile'
 import { removeDuplicate } from '@/actions/removeDuplicate'
 import { getUserData } from '@/actions/getUserData'
+import { setTradesBlocked } from '@/actions/setTradesBlocked'
 import { getTradeOriginStickers, type TradeOriginResult } from '@/actions/getTradeOriginStickers'
 import { getIncomingTradeStickers } from '@/actions/getIncomingTradeStickers'
 import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
@@ -55,6 +56,7 @@ export default function StickersScreen() {
     if (typeof window === 'undefined') return false
     return localStorage.getItem('albumProtected') === 'true'
   })
+  const [tradesBlocked, setTradesBlockedState] = useState(false)
   const [protectionAlert, setProtectionAlert] = useState(false)
   const protectionAlertTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -112,6 +114,7 @@ export default function StickersScreen() {
           return
         }
         setMode(data.inputMode)
+        setTradesBlockedState(data.tradesBlocked)
         const loaded = new Set<string>(data.stickerIds)
         setSelected(loaded)
         lastSaved.current = new Set(loaded)
@@ -211,6 +214,13 @@ export default function StickersScreen() {
     const next = !albumProtected
     setAlbumProtected(next)
     localStorage.setItem('albumProtected', String(next))
+  }
+
+  async function handleToggleTradesBlocked() {
+    if (!userId) return
+    const next = !tradesBlocked
+    setTradesBlockedState(next)
+    await setTradesBlocked(userId, next)
   }
 
   function triggerProtectionAlert() {
@@ -348,6 +358,31 @@ export default function StickersScreen() {
               )}
             </svg>
             {albumProtected ? 'Protegido' : 'Proteger'}
+          </button>
+          <button
+            onClick={handleToggleTradesBlocked}
+            title={
+              tradesBlocked
+                ? 'Trocas bloqueadas — clique para desbloquear'
+                : 'Clique para bloquear novas trocas'
+            }
+            className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
+              tradesBlocked
+                ? 'bg-yvy-dark text-yvy-gold border-yvy-dark'
+                : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
+            }`}
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
+            </svg>
+            {tradesBlocked ? 'Bloqueado' : 'Bloquear'}
           </button>
           <span className="text-sm font-semibold text-yvy-accent">
             {selected.size}

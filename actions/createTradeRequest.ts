@@ -20,6 +20,16 @@ export async function createTradeRequest(
   if (initiatorId === receiverId) {
     return { success: false, error: 'Não é possível criar uma troca consigo mesmo.' }
   }
+
+  const { data: receiverUser } = await supabaseAdmin
+    .from('users')
+    .select('trades_blocked')
+    .eq('id', receiverId)
+    .maybeSingle()
+  if (receiverUser?.trades_blocked) {
+    return { success: false, error: 'Este usuário não está aceitando novas trocas no momento.' }
+  }
+
   if (givingIds.length === 0 && receivingIds.length === 0) {
     return { success: false, error: 'Nenhuma figurinha selecionada.' }
   }
