@@ -158,6 +158,8 @@ export default function MatchesScreen() {
         </button>
       </div>
 
+      <ColorLegend />
+
       {/* Action items: pending responses */}
       {userId &&
         (() => {
@@ -185,9 +187,6 @@ export default function MatchesScreen() {
           onRefresh={() => refreshMatches(userId)}
         />
       )}
-
-      {/* Match discovery */}
-      <ColorLegend />
 
       {matches.length === 0 ? (
         <div className="text-center py-16 text-yvy-muted">
