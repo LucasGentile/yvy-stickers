@@ -9,15 +9,18 @@ vi.mock('@/actions/logAction', () => ({
 }))
 
 import { rollbackAdvancedTrade } from '@/actions/rollbackAdvancedTrade'
+import { getAdvancedTradeRollbackInfo } from '@/actions/getAdvancedTradeRollbackInfo'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 const mockFrom = supabaseAdmin.from as ReturnType<typeof vi.fn>
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
 
 function makeSelectChain(result: unknown) {
   const chain = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
-    in: vi.fn().mockResolvedValue(result),
+    in: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn().mockResolvedValue(result),
   }
   return chain
@@ -29,11 +32,9 @@ function makeUpdateChain(result: unknown = { error: null }) {
   chain.eq = vi.fn().mockReturnValue(chain)
   chain.select = vi.fn().mockReturnValue(chain)
   chain.maybeSingle = vi.fn().mockResolvedValue(result)
+  chain.then = (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
+    Promise.resolve(result).then(resolve, reject)
   return chain
-}
-
-function makeInsertChain(result: unknown = { error: null }) {
-  return { insert: vi.fn().mockResolvedValue(result) }
 }
 
 function makeDeleteChain(result: unknown = { error: null }) {
@@ -62,6 +63,78 @@ function makeTrade(overrides: Record<string, unknown> = {}) {
     ...overrides,
   }
 }
+
+// ─── getAdvancedTradeRollbackInfo ────────────────────────────────────────────
+
+describe('getAdvancedTradeRollbackInfo', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('returns found: false for empty tradeId', async () => {
+    const result = await getAdvancedTradeRollbackInfo('', 'user-a')
+    expect(result.found).toBe(false)
+  })
+
+  it('returns found: false for empty userId', async () => {
+    const result = await getAdvancedTradeRollbackInfo('trade-1', '')
+    expect(result.found).toBe(false)
+  })
+
+  it('returns found: false when trade not found', async () => {
+    mockFrom.mockReturnValue(makeSelectChain({ data: null, error: null }))
+    const result = await getAdvancedTradeRollbackInfo('trade-1', 'user-a')
+    expect(result.found).toBe(false)
+  })
+
+  it('returns alreadyRolledBack: true when status is rolled_back', async () => {
+    mockFrom.mockReturnValue(
+      makeSelectChain({
+        data: { ...makeTrade(), status: 'rolled_back' },
+        error: null,
+      })
+    )
+    const result = await getAdvancedTradeRollbackInfo('trade-1', 'user-a')
+    expect(result).toEqual({ found: true, alreadyRolledBack: true })
+  })
+
+  it('returns found: false when userId is not a participant', async () => {
+    mockFrom.mockReturnValue(makeSelectChain({ data: makeTrade(), error: null }))
+    const result = await getAdvancedTradeRollbackInfo('trade-1', 'user-z')
+    expect(result.found).toBe(false)
+  })
+
+  it('returns rollback info when no rollback is pending', async () => {
+    mockFrom.mockReturnValue(makeSelectChain({ data: makeTrade(), error: null }))
+    const result = await getAdvancedTradeRollbackInfo('trade-1', 'user-a')
+    expect(result).toEqual({
+      found: true,
+      alreadyRolledBack: false,
+      rollbackRequestedBy: null,
+      rollbackRequestedAt: null,
+    })
+  })
+
+  it('returns rollback info with requestedBy and requestedAt', async () => {
+    const requestedAt = '2026-05-10T00:00:00.000Z'
+    mockFrom.mockReturnValue(
+      makeSelectChain({
+        data: makeTrade({
+          rollback_requested_by: 'user-a',
+          rollback_requested_at: requestedAt,
+        }),
+        error: null,
+      })
+    )
+    const result = await getAdvancedTradeRollbackInfo('trade-1', 'user-a')
+    expect(result).toEqual({
+      found: true,
+      alreadyRolledBack: false,
+      rollbackRequestedBy: 'user-a',
+      rollbackRequestedAt: requestedAt,
+    })
+  })
+})
+
+// ─── rollbackAdvancedTrade ───────────────────────────────────────────────────
 
 describe('rollbackAdvancedTrade', () => {
   beforeEach(() => vi.clearAllMocks())

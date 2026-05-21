@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { rollbackAdvancedTrade } from '@/actions/rollbackAdvancedTrade'
+import { getAdvancedTradeRollbackInfo } from '@/actions/getAdvancedTradeRollbackInfo'
 
 const FORCE_DELAY_MS = 7 * 24 * 60 * 60 * 1000
 
 export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; userId: string }) {
-  const [step, setStep] = useState<'closed' | 'confirming' | 'requested' | 'other-requested'>(
-    'closed'
-  )
+  const [step, setStep] = useState<
+    'closed' | 'loading-info' | 'confirming' | 'requested' | 'other-requested'
+  >('closed')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [requestedAt, setRequestedAt] = useState<string | null>(null)
   const [canForce, setCanForce] = useState(false)
+  const [confirmingForce, setConfirmingForce] = useState(false)
 
   useEffect(() => {
     if (!requestedAt) return
@@ -23,6 +25,35 @@ export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; 
     const interval = setInterval(check, 60000)
     return () => clearInterval(interval)
   }, [requestedAt])
+
+  async function open() {
+    setStep('loading-info')
+    setMsg(null)
+    try {
+      const info = await getAdvancedTradeRollbackInfo(tradeId, userId)
+      if (!info.found) {
+        setMsg('Troca não encontrada.')
+        setStep('closed')
+        return
+      }
+      if (info.alreadyRolledBack) {
+        setMsg('Esta troca já foi desfeita.')
+        setStep('closed')
+        return
+      }
+      if (info.rollbackRequestedBy === userId) {
+        setRequestedAt(info.rollbackRequestedAt)
+        setStep('requested')
+      } else if (info.rollbackRequestedBy !== null) {
+        setStep('other-requested')
+      } else {
+        setStep('confirming')
+      }
+    } catch {
+      setMsg('Erro ao verificar status da troca.')
+      setStep('closed')
+    }
+  }
 
   async function handleRequest() {
     setLoading(true)
@@ -77,20 +108,22 @@ export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; 
       setMsg(result.error)
     }
     setLoading(false)
+    setConfirmingForce(false)
   }
 
   if (step === 'closed') {
     return (
       <div className="mt-1.5 space-y-1">
         {msg && <p className="text-[11px] text-amber-700 font-medium">{msg}</p>}
-        <button
-          onClick={() => setStep('confirming')}
-          className="text-[11px] text-amber-600 underline"
-        >
+        <button onClick={open} className="text-[11px] text-amber-600 underline">
           Desfazer troca
         </button>
       </div>
     )
+  }
+
+  if (step === 'loading-info') {
+    return <p className="text-[11px] text-yvy-muted mt-1.5">Verificando...</p>
   }
 
   if (step === 'confirming') {
@@ -128,13 +161,42 @@ export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; 
           Solicitação enviada — aguardando todos os participantes confirmarem.
         </p>
         {canForce && (
-          <button
-            onClick={handleForce}
-            disabled={loading}
-            className="text-[11px] text-amber-600 underline disabled:opacity-50"
-          >
-            {loading ? 'Forçando...' : 'Forçar desfazimento (7 dias sem resposta)'}
-          </button>
+          <div className="space-y-1.5 pt-1">
+            <p className="text-[11px] text-amber-700 leading-snug">
+              Já se passaram 7 dias sem resposta. Você pode forçar o desfazimento.
+            </p>
+            {confirmingForce ? (
+              <div className="space-y-2">
+                <p className="text-xs text-red-700 font-medium">
+                  Tem certeza? Os álbuns de todos os participantes serão revertidos imediatamente.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmingForce(false)}
+                    disabled={loading}
+                    className="flex-1 border border-yvy-border text-yvy-text font-semibold py-1.5 rounded-lg text-xs transition-colors hover:bg-yvy-bg disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleForce}
+                    disabled={loading}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Desfazendo...' : 'Confirmar desfazimento'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmingForce(true)}
+                disabled={loading}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                Forçar desfazimento
+              </button>
+            )}
+          </div>
         )}
       </div>
     )

@@ -2,6 +2,7 @@
 
 import { memo, useRef } from 'react'
 import { ALL_STICKER_SECTIONS, isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
+import { CountryFlag } from '@/components/CountryFlag'
 
 interface Props {
   selected: Set<string>
@@ -185,11 +186,7 @@ function StickerGrid({
                     <div key={team.code} id={`country-${team.code}`}>
                       {/* Country row header */}
                       <div className="flex items-center gap-2 mb-1.5">
-                        <img
-                          src={`https://flagcdn.com/w40/${team.flagCode}.png`}
-                          alt={team.name}
-                          className="rounded-sm shrink-0 object-cover w-8 h-[18px]"
-                        />
+                        <CountryFlag code={team.flagCode} name={team.name} size="md" />
                         <span className="text-sm font-semibold text-yvy-text">{team.name}</span>
                         <span className="text-xs text-yvy-muted font-mono">{team.code}</span>
                         <span
