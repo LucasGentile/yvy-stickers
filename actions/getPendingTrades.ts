@@ -50,7 +50,7 @@ export async function getPendingTrades(userId: string): Promise<{
   if (!userId) return empty
 
   try {
-    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+    const cutoff = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
 
     const [
       { data: pendingTrades, error: pendingError },
