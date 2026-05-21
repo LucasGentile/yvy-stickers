@@ -1,5 +1,6 @@
 'use client'
 import LoadingScreen from '@/components/LoadingScreen'
+import { CountryFlag } from '@/components/CountryFlag'
 
 import { useState, useEffect, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
@@ -189,13 +190,7 @@ export default function MissingScreen() {
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-yvy-bg transition-colors"
                 >
                   {opt.flagCode ? (
-                    <img
-                      src={`https://flagcdn.com/w20/${opt.flagCode}.png`}
-                      width={20}
-                      height={15}
-                      alt={opt.label}
-                      className="rounded-sm shrink-0"
-                    />
+                    <CountryFlag code={opt.flagCode} name={opt.label} size="sm" />
                   ) : (
                     <span className="text-base shrink-0">{opt.icon}</span>
                   )}
@@ -227,11 +222,7 @@ export default function MissingScreen() {
                   {teamsWithMissing.map((team) => (
                     <div key={team.code} id={`missing-${team.code}`} className="scroll-mt-20">
                       <div className="flex items-center gap-2 mb-1.5">
-                        <img
-                          src={`https://flagcdn.com/w40/${team.flagCode}.png`}
-                          alt={team.name}
-                          className="rounded-sm shrink-0 object-cover w-8 h-[18px]"
-                        />
+                        <CountryFlag code={team.flagCode} name={team.name} size="md" />
                         <span className="text-xs font-semibold text-yvy-text truncate">
                           {team.name}
                         </span>

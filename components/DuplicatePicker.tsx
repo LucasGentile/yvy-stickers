@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { ALL_STICKER_SECTIONS, isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
+import { CountryFlag } from '@/components/CountryFlag'
 
 // Unified shape for both country teams and special sections
 type PickerSection = {
@@ -135,13 +136,7 @@ export default function DuplicatePicker({
                   {section.isSpecial ? (
                     <span className="w-5 text-center shrink-0">{section.icon}</span>
                   ) : (
-                    <img
-                      src={`https://flagcdn.com/w20/${section.flagCode}.png`}
-                      width={20}
-                      height={15}
-                      alt={section.label}
-                      className="rounded-sm shrink-0"
-                    />
+                    <CountryFlag code={section.flagCode!} name={section.label} size="sm" />
                   )}
                   <span className="text-yvy-text">{section.label}</span>
                   {!section.isSpecial && (

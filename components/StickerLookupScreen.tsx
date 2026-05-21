@@ -12,6 +12,7 @@ import {
   ALL_STICKER_SECTIONS,
   type StickerSpecial,
 } from '@/lib/stickers'
+import { CountryFlag } from '@/components/CountryFlag'
 
 // ─── Browse entries ───────────────────────────────────────────────────────────
 
@@ -355,13 +356,7 @@ export default function StickerLookupScreen() {
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-yvy-bg transition-colors"
                   >
                     {entry.kind === 'team' ? (
-                      <img
-                        src={`https://flagcdn.com/w20/${entry.flagCode}.png`}
-                        width={20}
-                        height={15}
-                        alt={entry.name}
-                        className="rounded-sm shrink-0"
-                      />
+                      <CountryFlag code={entry.flagCode} name={entry.name} size="sm" />
                     ) : (
                       <span className="w-5 text-center text-base shrink-0">{entry.icon}</span>
                     )}
@@ -383,13 +378,7 @@ export default function StickerLookupScreen() {
           <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 p-3 space-y-2">
             <div className="flex items-center gap-2">
               {selectedEntry.kind === 'team' ? (
-                <img
-                  src={`https://flagcdn.com/w20/${selectedEntry.flagCode}.png`}
-                  width={20}
-                  height={15}
-                  alt={selectedEntry.name}
-                  className="rounded-sm"
-                />
+                <CountryFlag code={selectedEntry.flagCode} name={selectedEntry.name} size="sm" />
               ) : (
                 <span className="text-base">{selectedEntry.icon}</span>
               )}
