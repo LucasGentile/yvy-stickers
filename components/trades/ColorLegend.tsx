@@ -13,7 +13,7 @@ export function ColorLegend() {
       </span>
       <span className="flex items-center gap-1">
         <span className="inline-block w-2.5 h-2.5 rounded-sm bg-sky-100 border border-sky-200" />
-        Terceiro
+        Terceiro (troca avançada)
       </span>
     </div>
   )

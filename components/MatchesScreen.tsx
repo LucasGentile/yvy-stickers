@@ -25,10 +25,10 @@ function CollapsibleMatchSection({
     <div className="space-y-2">
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="flex items-center gap-2 w-full text-left"
+        className="flex items-center gap-2 w-full text-left py-1"
       >
         <span
-          className="text-[10px] text-yvy-muted transition-transform"
+          className="text-[10px] text-yvy-muted shrink-0 transition-transform"
           style={{ transform: expanded ? 'rotate(90deg)' : undefined }}
         >
           ▶
@@ -158,6 +158,7 @@ export default function MatchesScreen() {
         </button>
       </div>
 
+      {/* Action items: pending responses */}
       {userId &&
         (() => {
           const rollbackTrades = pending.recentlyAccepted.filter(
@@ -176,10 +177,16 @@ export default function MatchesScreen() {
           )
         })()}
 
-      {pending.recentlyCancelled.length > 0 && (
-        <CancelledTradesSection trades={pending.recentlyCancelled} />
+      {/* Action items: accepted trades waiting to be glued */}
+      {userId && pending.recentlyAccepted.length > 0 && (
+        <CompletedTradesSection
+          trades={pending.recentlyAccepted}
+          userId={userId}
+          onRefresh={() => refreshMatches(userId)}
+        />
       )}
 
+      {/* Match discovery */}
       <ColorLegend />
 
       {matches.length === 0 ? (
@@ -309,12 +316,9 @@ export default function MatchesScreen() {
         </>
       )}
 
-      {userId && pending.recentlyAccepted.length > 0 && (
-        <CompletedTradesSection
-          trades={pending.recentlyAccepted}
-          userId={userId}
-          onRefresh={() => refreshMatches(userId)}
-        />
+      {/* Traceability: cancelled/rejected trades (collapsed by default) */}
+      {pending.recentlyCancelled.length > 0 && (
+        <CancelledTradesSection trades={pending.recentlyCancelled} />
       )}
     </div>
   )
