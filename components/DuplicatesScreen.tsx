@@ -258,7 +258,7 @@ export default function DuplicatesScreen() {
             <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
           </svg>
-          Você está oculto nas buscas de troca. Vá em <a href="/stickers" className="underline font-semibold">Minhas Figurinhas</a> para reaparecer.
+          Você está oculto nas buscas de troca. Vá em <a href="/matches" className="underline font-semibold">Ranking de Trocas</a> para desbloquear.
         </div>
       )}
 

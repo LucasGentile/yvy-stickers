@@ -4,6 +4,8 @@ import LoadingScreen from '@/components/LoadingScreen'
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { getMatches, MatchResult } from '@/lib/matching'
 import { getPendingTrades, PendingTrade } from '@/actions/getPendingTrades'
+import { getUserData } from '@/actions/getUserData'
+import { setTradesBlocked } from '@/actions/setTradesBlocked'
 import MatchCard from './MatchCard'
 import PendingTradesSection from './PendingTradesSection'
 import CancelledTradesSection from './CancelledTradesSection'
@@ -63,6 +65,7 @@ export default function MatchesScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [tradesBlocked, setTradesBlockedState] = useState(false)
 
   const refreshMatches = useCallback(async (uid: string) => {
     setRefreshing(true)
@@ -96,6 +99,10 @@ export default function MatchesScreen() {
       .catch(() => {
         /* pending trades failing silently — matches still show */
       })
+
+    getUserData(uid)
+      .then((data) => { if (data) setTradesBlockedState(data.tradesBlocked) })
+      .catch(() => {})
 
     // Refresh full match list when the tab regains focus — another user may have
     // completed a trade while this user was away, making some stickers stale.
@@ -136,26 +143,40 @@ export default function MatchesScreen() {
             </span>
           )}
         </div>
-        <button
-          onClick={() => userId && refreshMatches(userId)}
-          disabled={refreshing}
-          aria-label="Atualizar ranking"
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-yvy-border bg-yvy-surface text-yvy-muted hover:text-yvy-dark hover:border-yvy-dark transition-colors disabled:opacity-40"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={async () => {
+              if (!userId) return
+              const next = !tradesBlocked
+              setTradesBlockedState(next)
+              await setTradesBlocked(userId, next)
+            }}
+            title={tradesBlocked ? 'Clique para voltar a receber trocas' : 'Clique para bloquear novas trocas'}
+            className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
+              tradesBlocked
+                ? 'bg-yvy-dark text-yvy-gold border-yvy-dark'
+                : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
+            }`}
           >
-            <path d="M23 4v6h-6" />
-            <path d="M1 20v-6h6" />
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-          </svg>
-        </button>
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
+            </svg>
+            {tradesBlocked ? 'Bloqueado' : 'Bloquear recebimento'}
+          </button>
+          <button
+            onClick={() => userId && refreshMatches(userId)}
+            disabled={refreshing}
+            aria-label="Atualizar ranking"
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-yvy-border bg-yvy-surface text-yvy-muted hover:text-yvy-dark hover:border-yvy-dark transition-colors disabled:opacity-40"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}>
+              <path d="M23 4v6h-6" />
+              <path d="M1 20v-6h6" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <ColorLegend />
