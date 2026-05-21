@@ -8,8 +8,10 @@ import {
   type BetterMatchResult,
 } from '@/actions/getBetterMatchExcludingTrade'
 import { getTradeAvailability, type TradeAvailability } from '@/actions/getTradeAvailability'
+import { checkAlreadyOwnedIncoming, type AlreadyOwnedResult } from '@/actions/checkAlreadyOwnedIncoming'
 import { useNotification } from '@/contexts/NotificationContext'
 import { StickerList, StickerToggle } from './StickerList'
+import { AlreadyOwnedWarningModal } from './AlreadyOwnedWarningModal'
 import { relativeTime, absoluteTime } from '../audit/eventConfig'
 
 export function TradeCard({
@@ -33,6 +35,9 @@ export function TradeCard({
     id: string
     side: 'giving' | 'receiving'
   } | null>(null)
+  const [alreadyOwned, setAlreadyOwned] = useState<AlreadyOwnedResult>({ myAlreadyOwned: [], theirAlreadyOwned: [] })
+  const [showAlreadyOwnedModal, setShowAlreadyOwnedModal] = useState(false)
+  const [modalLoading, setModalLoading] = useState<'confirm' | 'reject' | null>(null)
 
   const totalReceiving = trade.myReceivingIds.length
   const totalGiving = trade.myGivingIds.length
@@ -44,6 +49,13 @@ export function TradeCard({
       .then(setBetterMatch)
       .catch(() => setBetterMatch(null))
   }, [trade.id])
+
+  useEffect(() => {
+    if (trade.myReceivingIds.length === 0 && trade.myGivingIds.length === 0) return
+    checkAlreadyOwnedIncoming(userId, trade.otherUserId, trade.myReceivingIds, trade.myGivingIds)
+      .then(setAlreadyOwned)
+      .catch(() => setAlreadyOwned({ myAlreadyOwned: [], theirAlreadyOwned: [] }))
+  }, [userId, trade.otherUserId, trade.myReceivingIds, trade.myGivingIds])
 
   const actionLabels = {
     accept: 'Troca aceita com sucesso!',
@@ -57,6 +69,29 @@ export function TradeCard({
       const result = await respondToTrade(trade.id, userId, action)
       if (result.success) {
         showSuccess(actionLabels[action])
+        onDone()
+      } else {
+        showError(`${result.error} Tente novamente ou procure ajuda.`)
+      }
+    } catch {
+      showError('Erro inesperado. Tente novamente ou procure ajuda.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  async function handleConfirmAccept() {
+    setLoading('accept')
+    try {
+      const result = await respondToTrade(
+        trade.id,
+        userId,
+        'accept',
+        [...selectedMyGiving],
+        [...selectedMyReceiving]
+      )
+      if (result.success) {
+        showSuccess('Troca aceita com sucesso!')
         onDone()
       } else {
         showError(`${result.error} Tente novamente ou procure ajuda.`)
@@ -91,8 +126,8 @@ export function TradeCard({
             : `${totalGiving} figurinha${totalGiving !== 1 ? 's' : ''} você dá`}
       </p>
 
-      <StickerList ids={trade.myReceivingIds} label="Você vai receber" variant="receiving" />
-      <StickerList ids={trade.myGivingIds} label="Você vai dar" variant="giving" />
+      <StickerList ids={trade.myReceivingIds} label="Você vai receber" variant="receiving" alreadyOwnedIds={alreadyOwned.myAlreadyOwned.length > 0 ? new Set(alreadyOwned.myAlreadyOwned) : undefined} />
+      <StickerList ids={trade.myGivingIds} label="Você vai dar" variant="giving" alreadyOwnedIds={alreadyOwned.theirAlreadyOwned.length > 0 ? new Set(alreadyOwned.theirAlreadyOwned) : undefined} />
 
       {!trade.isSender && betterMatch && (
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
@@ -350,27 +385,12 @@ export function TradeCard({
                       Voltar
                     </button>
                     <button
-                      onClick={async () => {
-                        setLoading('accept')
-                        try {
-                          const result = await respondToTrade(
-                            trade.id,
-                            userId,
-                            'accept',
-                            [...selectedMyGiving],
-                            [...selectedMyReceiving]
-                          )
-                          if (result.success) {
-                            showSuccess('Troca aceita com sucesso!')
-                            onDone()
-                          } else {
-                            showError(`${result.error} Tente novamente ou procure ajuda.`)
-                          }
-                        } catch {
-                          showError('Erro inesperado. Tente novamente ou procure ajuda.')
-                        } finally {
-                          setLoading(null)
+                      onClick={() => {
+                        if (alreadyOwned.myAlreadyOwned.length > 0 || alreadyOwned.theirAlreadyOwned.length > 0) {
+                          setShowAlreadyOwnedModal(true)
+                          return
                         }
+                        handleConfirmAccept()
                       }}
                       disabled={
                         loading !== null ||
@@ -409,6 +429,27 @@ export function TradeCard({
           )}
         </div>
       )}
+
+      <AlreadyOwnedWarningModal
+        open={showAlreadyOwnedModal}
+        myAlreadyOwnedIds={alreadyOwned.myAlreadyOwned}
+        theirAlreadyOwnedIds={alreadyOwned.theirAlreadyOwned}
+        otherUserName={trade.otherUserName}
+        loading={modalLoading}
+        onConfirm={async () => {
+          setModalLoading('confirm')
+          setShowAlreadyOwnedModal(false)
+          setModalLoading(null)
+          await handleConfirmAccept()
+        }}
+        onReject={async () => {
+          setModalLoading('reject')
+          setShowAlreadyOwnedModal(false)
+          setModalLoading(null)
+          await handle('reject')
+        }}
+        onDismiss={() => setShowAlreadyOwnedModal(false)}
+      />
     </div>
   )
 }

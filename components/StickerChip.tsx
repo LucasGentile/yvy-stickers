@@ -9,6 +9,7 @@ export type StickerChipVariant =
   | 'giving'
   | 'receiving'
   | 'third-party'
+  | 'already-owned'
 
 export function StickerChip({
   id,
@@ -67,16 +68,19 @@ export function StickerChip({
       : 'bg-green-50 border-green-300 text-green-700'
   } else if (variant === 'third-party') {
     containerClass = 'bg-sky-50 border-sky-200 text-sky-700'
+  } else if (variant === 'already-owned') {
+    containerClass = 'border-red-400 text-red-800 font-semibold'
   }
 
   const showSparkle =
-    (variant === 'giving' || variant === 'receiving' || variant === 'third-party') && isChrome
+    (variant === 'giving' || variant === 'receiving' || variant === 'third-party' || variant === 'already-owned') && isChrome
   const label = showSparkle ? `✨${id}` : id
 
   const skipSpecialColor =
     variant === 'giving' ||
     variant === 'receiving' ||
     variant === 'third-party' ||
+    variant === 'already-owned' ||
     (checked && (variant === 'green' || variant === 'amber'))
   const chromeClass =
     variant === 'default' && selected ? 'font-bold text-amber-300' : 'font-bold text-amber-500'
@@ -107,6 +111,14 @@ export function StickerChip({
 
   const baseClass = `relative font-mono transition-colors select-none ${sizeClass} ${containerClass}`
 
+  const alreadyOwnedStyle: React.CSSProperties | undefined =
+    variant === 'already-owned'
+      ? {
+          backgroundImage:
+            'repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(239,68,68,0.15) 4px, rgba(239,68,68,0.15) 6px)',
+        }
+      : undefined
+
   if (interactive) {
     return (
       <button
@@ -114,11 +126,12 @@ export function StickerChip({
         onClick={onToggle}
         disabled={disabled}
         className={`${baseClass} disabled:opacity-50`}
+        style={alreadyOwnedStyle}
       >
         {content}
       </button>
     )
   }
 
-  return <span className={`${baseClass} cursor-default`}>{content}</span>
+  return <span className={`${baseClass} cursor-default`} style={alreadyOwnedStyle}>{content}</span>
 }
