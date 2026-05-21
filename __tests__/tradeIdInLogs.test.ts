@@ -72,15 +72,16 @@ describe('createTradeRequest logs include tradeId', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // initiator pending_trades
-      if (callCount === 2)
+      if (callCount === 1) return makeSelectChain({ data: { trades_blocked: false }, error: null }) // receiver trades_blocked check
+      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // initiator pending_trades
+      if (callCount === 3)
         return makeSelectChain({ data: [{ sticker_id: 'MEX1', count: 1 }], error: null }) // initiator dupes
-      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // initiator advanced_trades
-      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // receiver pending_trades
-      if (callCount === 5)
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // initiator advanced_trades
+      if (callCount === 5) return makeSelectChain({ data: [], error: null }) // receiver pending_trades
+      if (callCount === 6)
         return makeSelectChain({ data: [{ sticker_id: 'BRA1', count: 1 }], error: null }) // receiver dupes
-      if (callCount === 6) return makeSelectChain({ data: [], error: null }) // receiver advanced_trades
-      if (callCount === 7) return makeInsertChain({ data: { id: 'trade-new-123' }, error: null })
+      if (callCount === 7) return makeSelectChain({ data: [], error: null }) // receiver advanced_trades
+      if (callCount === 8) return makeInsertChain({ data: { id: 'trade-new-123' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'Ana' },
@@ -259,8 +260,8 @@ describe('rollbackTrade logs include tradeId', () => {
         const chain: Record<string, ReturnType<typeof vi.fn>> = {}
         chain.update = vi.fn().mockReturnValue(chain)
         chain.eq = vi.fn().mockReturnValue(chain)
-        chain.then = (resolve: (v: unknown) => unknown) =>
-          Promise.resolve({ error: null }).then(resolve)
+        chain.then = vi.fn().mockImplementation((resolve: (v: unknown) => unknown) =>
+          Promise.resolve({ error: null }).then(resolve))
         return chain
       }
       // user lookup
@@ -376,8 +377,8 @@ describe('rollbackTrade logs include tradeId', () => {
         const chain: Record<string, ReturnType<typeof vi.fn>> = {}
         chain.update = vi.fn().mockReturnValue(chain)
         chain.eq = vi.fn().mockReturnValue(chain)
-        chain.then = (resolve: (v: unknown) => unknown) =>
-          Promise.resolve({ error: null }).then(resolve)
+        chain.then = vi.fn().mockImplementation((resolve: (v: unknown) => unknown) =>
+          Promise.resolve({ error: null }).then(resolve))
         return chain
       }
       return {
@@ -555,7 +556,7 @@ describe('respondToAdvancedTrade: final approver logs approval', () => {
 
     // All cancellation logs should include tradeId
     const cancelCalls = mockLogAction.mock.calls.filter(
-      ([, action]: [string, string]) => action === 'advanced_trade_cancelled'
+      (args: unknown[]) => args[1] === 'advanced_trade_cancelled'
     )
     expect(cancelCalls.length).toBe(3)
     for (const [, , metadata] of cancelCalls) {

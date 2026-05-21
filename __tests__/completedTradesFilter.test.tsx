@@ -34,10 +34,12 @@ function makeTrade(overrides: Partial<RecentTrade> = {}): RecentTrade {
     myReceivingIds: ['MEX1'],
     acceptedAt: '2026-05-10T12:00:00Z',
     rollbackRequestedBy: null,
+    rollbackRequestedAt: null,
     isSender: true,
     verified: false,
     rollbackMyGivingIds: null,
     rollbackMyReceivingIds: null,
+    auditEntryId: null,
     ...overrides,
   }
 }

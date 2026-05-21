@@ -36,11 +36,12 @@ function makeSelectChain(result: { data: unknown; error: unknown }) {
     or: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn().mockResolvedValue(result),
     order: vi.fn().mockResolvedValue(result),
     // Thenable: allows `await chain.select().eq()` without a terminal method
-    then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown): Promise<unknown> =>
-      Promise.resolve(result).then(resolve, reject),
+    then: vi.fn().mockImplementation((resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown): Promise<unknown> =>
+      Promise.resolve(result).then(resolve, reject)),
   }
   return chain
 }
@@ -80,6 +81,9 @@ describe('createTradeRequest', () => {
   })
 
   it('returns error when both id arrays are empty', async () => {
+    mockFrom.mockImplementationOnce(() =>
+      makeSelectChain({ data: { trades_blocked: false }, error: null })
+    ) // receiver trades_blocked check
     const result = await createTradeRequest('user-a', 'user-b', [], [])
     expect(result.success).toBe(false)
     if (!result.success) expect(result.error).toMatch(/nenhuma/i)
@@ -89,15 +93,16 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // initiator: pending_trades
-      if (callCount === 2)
+      if (callCount === 1) return makeSelectChain({ data: { trades_blocked: false }, error: null }) // receiver: trades_blocked
+      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // initiator: pending_trades
+      if (callCount === 3)
         return makeSelectChain({ data: [{ sticker_id: 'MEX1', count: 1 }], error: null }) // initiator: user_duplicates
-      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // initiator: advanced_trades
-      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
-      if (callCount === 5)
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // initiator: advanced_trades
+      if (callCount === 5) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
+      if (callCount === 6)
         return makeSelectChain({ data: [{ sticker_id: 'BRA1', count: 1 }], error: null }) // receiver: user_duplicates
-      if (callCount === 6) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
-      if (callCount === 7) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
+      if (callCount === 7) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
+      if (callCount === 8) return makeInsertChain({ data: { id: 'trade-123' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'Iniciador' },
@@ -116,9 +121,10 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // pending_trades
-      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // user_duplicates
-      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // advanced_trades
+      if (callCount === 1) return makeSelectChain({ data: { trades_blocked: false }, error: null }) // receiver: trades_blocked
+      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // pending_trades
+      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // user_duplicates
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // advanced_trades
       return makeInsertChain({ data: null, error: { message: 'db error' } })
     })
 
@@ -130,12 +136,13 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
+      if (callCount === 1) return makeSelectChain({ data: { trades_blocked: false }, error: null }) // receiver: trades_blocked
       // No givingIds → skip initiator check; receiver check runs first
-      if (callCount === 1) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
-      if (callCount === 2)
+      if (callCount === 2) return makeSelectChain({ data: [], error: null }) // receiver: pending_trades
+      if (callCount === 3)
         return makeSelectChain({ data: [{ sticker_id: 'BRA1', count: 1 }], error: null }) // receiver: user_duplicates
-      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
-      if (callCount === 4) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
+      if (callCount === 5) return makeInsertChain({ data: { id: 'trade-456' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'Iniciador' },
@@ -153,17 +160,18 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1)
+      if (callCount === 1) return makeSelectChain({ data: { trades_blocked: false }, error: null }) // receiver: trades_blocked
+      if (callCount === 2)
         return makeSelectChain({
           data: [{ initiator_id: 'user-a', giving_ids: ['MEX1'], receiving_ids: [] }],
           error: null,
         }) // pending_trades: MEX1 reserved once
-      if (callCount === 2)
+      if (callCount === 3)
         return makeSelectChain({
           data: [{ sticker_id: 'MEX1', count: 1 }],
           error: null,
         }) // user_duplicates: MEX1 has count=1 → fully reserved
-      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // advanced_trades
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // advanced_trades
       return makeInsertChain({ data: null, error: null })
     })
 
@@ -179,18 +187,19 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
+      if (callCount === 1) return makeSelectChain({ data: { trades_blocked: false }, error: null }) // receiver: trades_blocked
       // No givingIds → skip initiator check
-      if (callCount === 1)
+      if (callCount === 2)
         return makeSelectChain({
           data: [{ initiator_id: 'user-b', giving_ids: ['BRA1'], receiving_ids: [] }],
           error: null,
         }) // receiver: pending_trades — BRA1 reserved once
-      if (callCount === 2)
+      if (callCount === 3)
         return makeSelectChain({
           data: [{ sticker_id: 'BRA1', count: 1 }],
           error: null,
         }) // receiver: user_duplicates — BRA1 count=1, fully reserved
-      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
       return makeInsertChain({ data: null, error: null })
     })
 
@@ -206,19 +215,20 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
+      if (callCount === 1) return makeSelectChain({ data: { trades_blocked: false }, error: null }) // receiver: trades_blocked
       // No givingIds → skip initiator check
-      if (callCount === 1)
+      if (callCount === 2)
         return makeSelectChain({
           data: [{ initiator_id: 'user-b', giving_ids: ['BRA1'], receiving_ids: [] }],
           error: null,
         }) // receiver: pending_trades — BRA1 reserved once
-      if (callCount === 2)
+      if (callCount === 3)
         return makeSelectChain({
           data: [{ sticker_id: 'BRA1', count: 2 }],
           error: null,
         }) // receiver: user_duplicates — BRA1 count=2, 1 free copy
-      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
-      if (callCount === 4) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // receiver: advanced_trades
+      if (callCount === 5) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'A' },
@@ -236,18 +246,19 @@ describe('createTradeRequest', () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount === 1)
+      if (callCount === 1) return makeSelectChain({ data: { trades_blocked: false }, error: null }) // receiver: trades_blocked
+      if (callCount === 2)
         return makeSelectChain({
           data: [{ initiator_id: 'user-a', giving_ids: ['MEX1'], receiving_ids: [] }],
           error: null,
         }) // pending_trades: MEX1 reserved once
-      if (callCount === 2)
+      if (callCount === 3)
         return makeSelectChain({
           data: [{ sticker_id: 'MEX1', count: 2 }],
           error: null,
         }) // user_duplicates: MEX1 has count=2 → 1 free copy remaining
-      if (callCount === 3) return makeSelectChain({ data: [], error: null }) // advanced_trades
-      if (callCount === 4) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
+      if (callCount === 4) return makeSelectChain({ data: [], error: null }) // advanced_trades
+      if (callCount === 5) return makeInsertChain({ data: { id: 'trade-789' }, error: null })
       return makeSelectChain({
         data: [
           { id: 'user-a', name: 'A' },
@@ -281,11 +292,11 @@ describe('getPendingTrades', () => {
   })
 
   it('returns empty when no trades exist', async () => {
-    // Both parallel queries return empty
+    // All 4 parallel queries return empty; users query is skipped (no otherIds)
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
-      if (callCount <= 2) return makeSelectChain({ data: [], error: null })
+      if (callCount <= 4) return makeSelectChain({ data: [], error: null })
       return { select: vi.fn().mockReturnThis(), in: vi.fn().mockResolvedValue({ data: [] }) }
     })
     const result = await getPendingTrades('user-a')
@@ -350,7 +361,11 @@ describe('getPendingTrades', () => {
         chain.eq.mockReturnValue(chain)
         return chain
       }
-      // users query
+      if (callCount === 4) {
+        // cancelled/rejected trades (new query)
+        return makeSelectChain({ data: [], error: null })
+      }
+      // callCount >= 5: users query
       return {
         select: vi.fn().mockReturnThis(),
         in: vi.fn().mockResolvedValue({
@@ -428,7 +443,11 @@ describe('getPendingTrades', () => {
         chain.eq.mockReturnValue(chain)
         return chain
       }
-      // users query
+      if (callCount === 4) {
+        // cancelled/rejected trades (new query)
+        return makeSelectChain({ data: [], error: null })
+      }
+      // callCount >= 5: users query
       return {
         select: vi.fn().mockReturnThis(),
         in: vi.fn().mockResolvedValue({

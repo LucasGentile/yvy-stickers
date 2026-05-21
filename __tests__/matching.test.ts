@@ -33,12 +33,14 @@ function makeEqChain(data: unknown) {
   }
 }
 
-// Chain for: from('users').select(...).neq(...).eq('approved', true)  → resolves
+// Chain for: from('users').select(...).neq(...).eq('approved', true).eq('trades_blocked', false)
 function makeOthersChain(data: unknown) {
   return {
     select: vi.fn().mockReturnThis(),
     neq: vi.fn().mockReturnValue({
-      eq: vi.fn().mockResolvedValue({ data, error: null }),
+      eq: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ data, error: null }),
+      }),
     }),
   }
 }

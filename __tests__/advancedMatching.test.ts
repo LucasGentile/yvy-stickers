@@ -51,10 +51,12 @@ function mockTradeData(
   mockFrom.mockImplementation(() => {
     callCount++
     if (callCount === 1) {
-      // users with stickers and duplicates
+      // users with stickers and duplicates (.eq('approved', true).eq('trades_blocked', false))
       return {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({ data: users }),
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: users }),
+        }),
       }
     }
     if (callCount === 2) {

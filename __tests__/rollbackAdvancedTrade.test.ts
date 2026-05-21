@@ -32,8 +32,8 @@ function makeUpdateChain(result: unknown = { error: null }) {
   chain.eq = vi.fn().mockReturnValue(chain)
   chain.select = vi.fn().mockReturnValue(chain)
   chain.maybeSingle = vi.fn().mockResolvedValue(result)
-  chain.then = (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
-    Promise.resolve(result).then(resolve, reject)
+  chain.then = vi.fn().mockImplementation((resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
+    Promise.resolve(result).then(resolve, reject))
   return chain
 }
 
