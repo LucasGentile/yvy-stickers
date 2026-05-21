@@ -121,7 +121,7 @@ export default function MatchesScreen() {
     )
   }
 
-  const pendingCount = pending.received.length + pending.sent.length + pending.recentlyCancelled.length
+  const pendingCount = pending.received.length + pending.sent.length
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
