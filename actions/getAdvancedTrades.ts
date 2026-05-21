@@ -3,6 +3,11 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { formatName } from '@/lib/format'
 
+export type RollbackParticipantStatus = {
+  name: string
+  status: 'none' | 'approved' | 'denied'
+}
+
 export type AdvancedTradeView = {
   id: string
   status: string
@@ -25,6 +30,9 @@ export type AdvancedTradeView = {
   verified: boolean
   rollbackRequestedBy: string | null
   rollbackRequestedAt: string | null
+  rollbackRequesterName: string | null
+  myRollbackStatus: 'none' | 'approved' | 'denied'
+  rollbackOtherStatuses: RollbackParticipantStatus[]
   auditEntryId: string | null
 }
 
@@ -35,7 +43,7 @@ export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeVi
   const { data: trades } = await (supabaseAdmin as any)
     .from('advanced_trades')
     .select(
-      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status, created_at, accepted_at, requested_by, verified_at, rollback_requested_by, rollback_requested_at'
+      'id, status, user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids, user_a_status, user_b_status, user_c_status, created_at, accepted_at, requested_by, verified_at, rollback_requested_by, rollback_requested_at, rollback_a_status, rollback_b_status, rollback_c_status'
     )
     .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
     .in('status', ['pending', 'accepted'])
@@ -150,6 +158,54 @@ export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeVi
       ]
     }
 
+    const rollbackRequestedBy =
+      ((t as Record<string, unknown>).rollback_requested_by as string | null) ?? null
+
+    const rollbackAStatus = ((t as Record<string, unknown>).rollback_a_status as string) ?? 'none'
+    const rollbackBStatus = ((t as Record<string, unknown>).rollback_b_status as string) ?? 'none'
+    const rollbackCStatus = ((t as Record<string, unknown>).rollback_c_status as string) ?? 'none'
+
+    let myRollbackStatus: 'none' | 'approved' | 'denied'
+    let rollbackOtherStatuses: RollbackParticipantStatus[]
+
+    if (trade.user_a_id === userId) {
+      myRollbackStatus = rollbackAStatus as 'none' | 'approved' | 'denied'
+      rollbackOtherStatuses = [
+        {
+          name: nameMap[trade.user_b_id] ?? 'Usuário',
+          status: rollbackBStatus as 'none' | 'approved' | 'denied',
+        },
+        {
+          name: nameMap[trade.user_c_id] ?? 'Usuário',
+          status: rollbackCStatus as 'none' | 'approved' | 'denied',
+        },
+      ]
+    } else if (trade.user_b_id === userId) {
+      myRollbackStatus = rollbackBStatus as 'none' | 'approved' | 'denied'
+      rollbackOtherStatuses = [
+        {
+          name: nameMap[trade.user_a_id] ?? 'Usuário',
+          status: rollbackAStatus as 'none' | 'approved' | 'denied',
+        },
+        {
+          name: nameMap[trade.user_c_id] ?? 'Usuário',
+          status: rollbackCStatus as 'none' | 'approved' | 'denied',
+        },
+      ]
+    } else {
+      myRollbackStatus = rollbackCStatus as 'none' | 'approved' | 'denied'
+      rollbackOtherStatuses = [
+        {
+          name: nameMap[trade.user_a_id] ?? 'Usuário',
+          status: rollbackAStatus as 'none' | 'approved' | 'denied',
+        },
+        {
+          name: nameMap[trade.user_b_id] ?? 'Usuário',
+          status: rollbackBStatus as 'none' | 'approved' | 'denied',
+        },
+      ]
+    }
+
     return {
       id: trade.id,
       status: trade.status,
@@ -170,10 +226,14 @@ export async function getAdvancedTrades(userId: string): Promise<AdvancedTradeVi
       acceptedAt: trade.accepted_at,
       isRequester: trade.requested_by === userId,
       verified: !!(t as Record<string, unknown>).verified_at,
-      rollbackRequestedBy:
-        ((t as Record<string, unknown>).rollback_requested_by as string | null) ?? null,
+      rollbackRequestedBy,
       rollbackRequestedAt:
         ((t as Record<string, unknown>).rollback_requested_at as string | null) ?? null,
+      rollbackRequesterName: rollbackRequestedBy
+        ? (nameMap[rollbackRequestedBy] ?? 'Usuário')
+        : null,
+      myRollbackStatus,
+      rollbackOtherStatuses,
       auditEntryId: auditByTradeId.get(trade.id) ?? null,
     }
   })
