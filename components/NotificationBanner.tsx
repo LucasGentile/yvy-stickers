@@ -14,9 +14,7 @@ export default function NotificationBanner() {
       role="alert"
       aria-live="assertive"
       className={`w-full max-w-lg mx-auto flex items-center gap-3 px-4 py-3 shadow-lg rounded-b-xl animate-slideDown ${
-        isSuccess
-          ? 'bg-emerald-600 text-white'
-          : 'bg-red-600 text-white'
+        isSuccess ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
       }`}
     >
       <span className="text-sm shrink-0">{isSuccess ? '✓' : '✕'}</span>

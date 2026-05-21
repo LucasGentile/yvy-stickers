@@ -77,9 +77,7 @@ describe('Already-owned trade warning', () => {
   it('does not show striped variant when no one owns redundant stickers', async () => {
     mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: [], theirAlreadyOwned: [] })
 
-    const { container } = render(
-      <TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />
-    )
+    const { container } = render(<TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />)
 
     await waitFor(() => {
       expect(mockCheckAlreadyOwned).toHaveBeenCalledWith('user-a', 'user-b', ['CAN3'], ['BRA1'])
@@ -92,9 +90,7 @@ describe('Already-owned trade warning', () => {
   it('shows striped variant on stickers I already own (receiving)', async () => {
     mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: ['CAN3'], theirAlreadyOwned: [] })
 
-    const { container } = render(
-      <TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />
-    )
+    const { container } = render(<TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />)
 
     await waitFor(() => {
       const chips = container.querySelectorAll('[class*="border-red-400"]')
@@ -105,9 +101,7 @@ describe('Already-owned trade warning', () => {
   it('shows striped variant on stickers the other user already owns (giving)', async () => {
     mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: [], theirAlreadyOwned: ['BRA1'] })
 
-    const { container } = render(
-      <TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />
-    )
+    const { container } = render(<TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />)
 
     await waitFor(() => {
       const chips = container.querySelectorAll('[class*="border-red-400"]')

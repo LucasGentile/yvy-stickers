@@ -38,8 +38,11 @@ function makeUpdateChain(result: unknown = { error: null }) {
   const chain: Record<string, ReturnType<typeof vi.fn>> = {}
   chain.update = vi.fn().mockReturnValue(chain)
   chain.eq = vi.fn().mockReturnValue(chain)
-  chain.then = vi.fn().mockImplementation((resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
-    Promise.resolve(result).then(resolve, reject))
+  chain.then = vi
+    .fn()
+    .mockImplementation((resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
+      Promise.resolve(result).then(resolve, reject)
+    )
   return chain
 }
 
@@ -155,8 +158,11 @@ describe('rollbackTrade', () => {
         return chain
       })
       chain.eq = vi.fn().mockReturnValue(chain)
-      chain.then = vi.fn().mockImplementation((resolve: (v: unknown) => unknown) =>
-        Promise.resolve({ error: null }).then(resolve))
+      chain.then = vi
+        .fn()
+        .mockImplementation((resolve: (v: unknown) => unknown) =>
+          Promise.resolve({ error: null }).then(resolve)
+        )
       return chain
     })
 

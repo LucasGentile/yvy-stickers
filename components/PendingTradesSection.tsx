@@ -57,7 +57,13 @@ export default function PendingTradesSection({
         <div className="space-y-2">
           <h3 className="text-base font-bold text-yvy-dark">Desfazimentos pendentes</h3>
           {rollbackTrades.map((t) => (
-            <RecentTradeCard key={`rb-${t.id}`} trade={t} userId={userId} onDone={onRefresh} hideRollback />
+            <RecentTradeCard
+              key={`rb-${t.id}`}
+              trade={t}
+              userId={userId}
+              onDone={onRefresh}
+              hideRollback
+            />
           ))}
         </div>
       )}

@@ -46,10 +46,20 @@ function CancelledTradeCard({ trade }: { trade: CancelledTrade }) {
         </span>
       </div>
 
-      <div className={`rounded-lg px-3 py-2 space-y-2 ${isRejected ? 'bg-rose-100/60' : 'bg-amber-100/60'}`}>
-        <StickerList ids={trade.myGivingIds} label="Suas figurinhas — pegar de volta" variant="giving" />
+      <div
+        className={`rounded-lg px-3 py-2 space-y-2 ${isRejected ? 'bg-rose-100/60' : 'bg-amber-100/60'}`}
+      >
+        <StickerList
+          ids={trade.myGivingIds}
+          label="Suas figurinhas — pegar de volta"
+          variant="giving"
+        />
         {trade.myReceivingIds.length > 0 && (
-          <StickerList ids={trade.myReceivingIds} label="Figurinhas que você esperava receber" variant="receiving" />
+          <StickerList
+            ids={trade.myReceivingIds}
+            label="Figurinhas que você esperava receber"
+            variant="receiving"
+          />
         )}
       </div>
     </a>

@@ -10,7 +10,10 @@ import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previ
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
 import { rollbackAdvancedTrade } from '@/actions/rollbackAdvancedTrade'
 import { verifyTrade } from '@/actions/verifyTrade'
-import { checkAlreadyOwnedIncoming, type AlreadyOwnedResult } from '@/actions/checkAlreadyOwnedIncoming'
+import {
+  checkAlreadyOwnedIncoming,
+  type AlreadyOwnedResult,
+} from '@/actions/checkAlreadyOwnedIncoming'
 import { useNotification } from '@/contexts/NotificationContext'
 import { StickerList } from '@/components/trades/StickerList'
 import { AlreadyOwnedWarningModal } from '@/components/trades/AlreadyOwnedWarningModal'
@@ -42,7 +45,6 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-
 function TradeCard({
   trade,
   userId,
@@ -58,7 +60,10 @@ function TradeCard({
   const [confirming, setConfirming] = useState<'approve' | 'reject' | 'cancel' | null>(null)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [verified, setVerified] = useState(trade.verified)
-  const [alreadyOwned, setAlreadyOwned] = useState<AlreadyOwnedResult>({ myAlreadyOwned: [], theirAlreadyOwned: [] })
+  const [alreadyOwned, setAlreadyOwned] = useState<AlreadyOwnedResult>({
+    myAlreadyOwned: [],
+    theirAlreadyOwned: [],
+  })
   const [showAlreadyOwnedModal, setShowAlreadyOwnedModal] = useState(false)
   const [modalLoading, setModalLoading] = useState<'confirm' | 'reject' | null>(null)
 
@@ -98,7 +103,9 @@ function TradeCard({
     try {
       const result = await rollbackAdvancedTrade(trade.id, userId, action)
       if (result.success) {
-        showSuccess(action === 'confirm' ? 'Troca triangular desfeita com sucesso!' : 'Desfazimento recusado.')
+        showSuccess(
+          action === 'confirm' ? 'Troca triangular desfeita com sucesso!' : 'Desfazimento recusado.'
+        )
         onDone()
       } else {
         showError(`${result.error} Tente novamente ou procure ajuda.`)
@@ -164,7 +171,16 @@ function TradeCard({
             Você dá {trade.myGivingIds.length} para{' '}
             <span className="capitalize">{trade.giveTo.name}</span> →
           </p>
-          <StickerList ids={trade.myGivingIds} label="" variant="giving" alreadyOwnedIds={alreadyOwned.theirAlreadyOwned.length > 0 ? new Set(alreadyOwned.theirAlreadyOwned) : undefined} />
+          <StickerList
+            ids={trade.myGivingIds}
+            label=""
+            variant="giving"
+            alreadyOwnedIds={
+              alreadyOwned.theirAlreadyOwned.length > 0
+                ? new Set(alreadyOwned.theirAlreadyOwned)
+                : undefined
+            }
+          />
         </div>
 
         <div className="bg-green-50/50 rounded-lg p-3 space-y-2 border border-green-100">
@@ -172,7 +188,16 @@ function TradeCard({
             ← Você recebe {trade.myReceivingIds.length} de{' '}
             <span className="capitalize">{trade.receiveFrom.name}</span>
           </p>
-          <StickerList ids={trade.myReceivingIds} label="" variant="receiving" alreadyOwnedIds={alreadyOwned.myAlreadyOwned.length > 0 ? new Set(alreadyOwned.myAlreadyOwned) : undefined} />
+          <StickerList
+            ids={trade.myReceivingIds}
+            label=""
+            variant="receiving"
+            alreadyOwnedIds={
+              alreadyOwned.myAlreadyOwned.length > 0
+                ? new Set(alreadyOwned.myAlreadyOwned)
+                : undefined
+            }
+          />
         </div>
 
         <div className="bg-sky-50/50 rounded-lg p-3 space-y-2 border border-sky-100">
@@ -292,7 +317,10 @@ function TradeCard({
               </button>
               <button
                 onClick={() => {
-                  if (alreadyOwned.myAlreadyOwned.length > 0 || alreadyOwned.theirAlreadyOwned.length > 0) {
+                  if (
+                    alreadyOwned.myAlreadyOwned.length > 0 ||
+                    alreadyOwned.theirAlreadyOwned.length > 0
+                  ) {
                     setShowAlreadyOwnedModal(true)
                     return
                   }

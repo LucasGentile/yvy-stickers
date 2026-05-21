@@ -4,7 +4,10 @@ import { supabase } from '@/lib/supabase'
 
 export type UpdateUserNameResult = { success: true } | { success: false; error: string }
 
-export async function updateUserName(userId: string, newName: string): Promise<UpdateUserNameResult> {
+export async function updateUserName(
+  userId: string,
+  newName: string
+): Promise<UpdateUserNameResult> {
   const trimmed = newName.trim()
 
   if (!trimmed) {
@@ -22,10 +25,7 @@ export async function updateUserName(userId: string, newName: string): Promise<U
     return { success: false, error: 'Esse nome já está em uso por outro morador.' }
   }
 
-  const { error } = await supabase
-    .from('users')
-    .update({ name: trimmed })
-    .eq('id', userId)
+  const { error } = await supabase.from('users').update({ name: trimmed }).eq('id', userId)
 
   if (error) {
     return { success: false, error: 'Erro ao atualizar o nome. Tente novamente.' }

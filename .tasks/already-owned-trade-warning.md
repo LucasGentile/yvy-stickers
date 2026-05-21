@@ -30,11 +30,13 @@ When a user has a pending trade and subsequently acquires a sticker they were go
 ## Impact on Codebase
 
 ### New Files
+
 - `components/trades/AlreadyOwnedWarningModal.tsx` — Modal component
 - `actions/checkAlreadyOwnedIncoming.ts` — Server action to check if user owns any incoming stickers
 - `__tests__/alreadyOwnedTradeWarning.test.tsx` — Test suite
 
 ### Modified Files
+
 - `components/StickerChip.tsx` — Add new `already-owned` variant with red striped background
 - `components/trades/StickerList.tsx` — Support highlighting already-owned stickers
 - `components/trades/TradeCard.tsx` — Integrate ownership check + modal trigger on approve
@@ -48,11 +50,11 @@ When a user has a pending trade and subsequently acquires a sticker they were go
 
 ## Risks & Mitigations
 
-| Risk | Mitigation |
-|------|-----------|
+| Risk                                                                       | Mitigation                                                                              |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Race condition: user marks sticker as owned between modal open and confirm | The approval action already has an atomic status check; the modal is purely UX guidance |
-| Performance: extra DB call on trade card render | Lazy-load ownership check only when trade card is visible or user interacts |
-| Stale data after tab switch | Already handled by existing `handleVisibility` refresh in MatchesScreen |
+| Performance: extra DB call on trade card render                            | Lazy-load ownership check only when trade card is visible or user interacts             |
+| Stale data after tab switch                                                | Already handled by existing `handleVisibility` refresh in MatchesScreen                 |
 
 ## Dependencies
 
@@ -80,6 +82,7 @@ When a user has a pending trade and subsequently acquires a sticker they were go
 ### Detection
 
 Create `actions/checkAlreadyOwnedIncoming.ts`:
+
 - Input: `userId`, `receivingIds: string[]`
 - Queries `user_stickers` for the user to find which of `receivingIds` are already owned
 - Returns `string[]` of already-owned sticker IDs
@@ -87,12 +90,14 @@ Create `actions/checkAlreadyOwnedIncoming.ts`:
 ### Visual Treatment (StickerChip)
 
 Add variant `already-owned` to `StickerChipVariant`:
+
 - Uses CSS `repeating-linear-gradient` with red/transparent diagonal stripes as background
 - Maintains readability of the sticker ID text
 
 ### Modal Component
 
 `AlreadyOwnedWarningModal`:
+
 - Props: `open`, `alreadyOwnedIds: string[]`, `onConfirm`, `onReject`, `onDismiss`
 - Backdrop overlay with centered card
 - Lists the already-owned sticker IDs

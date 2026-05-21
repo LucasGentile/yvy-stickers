@@ -101,7 +101,9 @@ export default function MatchesScreen() {
       })
 
     getUserData(uid)
-      .then((data) => { if (data) setTradesBlockedState(data.tradesBlocked) })
+      .then((data) => {
+        if (data) setTradesBlockedState(data.tradesBlocked)
+      })
       .catch(() => {})
 
     // Refresh full match list when the tab regains focus — another user may have
@@ -156,14 +158,24 @@ export default function MatchesScreen() {
               setTradesBlockedState(next)
               await setTradesBlocked(userId, next)
             }}
-            title={tradesBlocked ? 'Clique para voltar a receber trocas' : 'Clique para bloquear novas trocas'}
+            title={
+              tradesBlocked
+                ? 'Clique para voltar a receber trocas'
+                : 'Clique para bloquear novas trocas'
+            }
             className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
               tradesBlocked
                 ? 'bg-yvy-dark text-yvy-gold border-yvy-dark'
                 : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
             }`}
           >
-            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <svg
+              className="w-3.5 h-3.5 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
               <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
             </svg>
@@ -175,7 +187,15 @@ export default function MatchesScreen() {
             aria-label="Atualizar ranking"
             className="w-8 h-8 flex items-center justify-center rounded-full border border-yvy-border bg-yvy-surface text-yvy-muted hover:text-yvy-dark hover:border-yvy-dark transition-colors disabled:opacity-40"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+            >
               <path d="M23 4v6h-6" />
               <path d="M1 20v-6h6" />
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />

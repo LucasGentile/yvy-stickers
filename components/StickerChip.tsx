@@ -73,7 +73,11 @@ export function StickerChip({
   }
 
   const showSparkle =
-    (variant === 'giving' || variant === 'receiving' || variant === 'third-party' || variant === 'already-owned') && isChrome
+    (variant === 'giving' ||
+      variant === 'receiving' ||
+      variant === 'third-party' ||
+      variant === 'already-owned') &&
+    isChrome
   const label = showSparkle ? `✨${id}` : id
 
   const skipSpecialColor =
@@ -133,5 +137,9 @@ export function StickerChip({
     )
   }
 
-  return <span className={`${baseClass} cursor-default`} style={alreadyOwnedStyle}>{content}</span>
+  return (
+    <span className={`${baseClass} cursor-default`} style={alreadyOwnedStyle}>
+      {content}
+    </span>
+  )
 }

@@ -184,10 +184,7 @@ export function RecentTradeCard({
           {isPartialRequest && (
             <div className="space-y-1.5">
               {trade.rollbackMyGivingIds && trade.rollbackMyGivingIds.length > 0 && (
-                <StickerList
-                  ids={trade.rollbackMyGivingIds}
-                  label="Das figurinhas que você deu"
-                />
+                <StickerList ids={trade.rollbackMyGivingIds} label="Das figurinhas que você deu" />
               )}
               {trade.rollbackMyReceivingIds && trade.rollbackMyReceivingIds.length > 0 && (
                 <StickerList
@@ -200,7 +197,8 @@ export function RecentTradeCard({
           {!hideRollback &&
             (() => {
               const canForce = trade.rollbackRequestedAt
-                ? Date.now() - new Date(trade.rollbackRequestedAt).getTime() >= 3 * 24 * 60 * 60 * 1000
+                ? Date.now() - new Date(trade.rollbackRequestedAt).getTime() >=
+                  3 * 24 * 60 * 60 * 1000
                 : Date.now() - new Date(trade.acceptedAt).getTime() >= 7 * 24 * 60 * 60 * 1000
 
               if (!canForce) return null

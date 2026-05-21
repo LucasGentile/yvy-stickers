@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-const TRIGGER_PX = 64   // raw finger travel to trigger refresh
-const MAX_VISUAL = 60   // max px the indicator travels below the header
+const TRIGGER_PX = 64 // raw finger travel to trigger refresh
+const MAX_VISUAL = 60 // max px the indicator travels below the header
 
 export function PullToRefresh() {
   const startY = useRef(0)
@@ -91,9 +91,7 @@ export function PullToRefresh() {
     >
       <div
         className={`w-8 h-8 rounded-full shadow-md flex items-center justify-center transition-colors duration-100 ${
-          ready || refreshing
-            ? 'bg-yvy-gold text-yvy-dark'
-            : 'bg-white text-yvy-muted'
+          ready || refreshing ? 'bg-yvy-gold text-yvy-dark' : 'bg-white text-yvy-muted'
         }`}
         style={{ opacity: pct }}
       >

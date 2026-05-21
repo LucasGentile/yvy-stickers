@@ -262,11 +262,21 @@ export default function DuplicatesScreen() {
 
       {tradesBlocked && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium">
-          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <svg
+            className="w-4 h-4 shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
             <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
           </svg>
-          Você está oculto nas buscas de troca. Vá em <a href="/matches" className="underline font-semibold">Ranking de Trocas</a> para desbloquear.
+          Você está oculto nas buscas de troca. Vá em{' '}
+          <a href="/matches" className="underline font-semibold">
+            Ranking de Trocas
+          </a>{' '}
+          para desbloquear.
         </div>
       )}
 
@@ -318,7 +328,6 @@ export default function DuplicatesScreen() {
             </button>
           </div>
         )}
-
       </div>
 
       {/* Check external list */}

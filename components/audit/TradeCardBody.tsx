@@ -65,7 +65,9 @@ export function TradeCardBody({
           <div className="mt-2 space-y-2">
             {givingIds.length > 0 && (
               <div>
-                <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${entry.action === 'trade_rolled_back' ? 'text-green-600' : 'text-rose-500'}`}>
+                <p
+                  className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${entry.action === 'trade_rolled_back' ? 'text-green-600' : 'text-rose-500'}`}
+                >
                   {entry.action === 'trade_rolled_back'
                     ? `Você recuperou ${givingIds.length} ←`
                     : `Você ${isAccepted || isAdvancedExecuted ? 'deu' : isCanceled ? 'daria' : 'dá'} ${givingIds.length} para ${isAdvancedExecuted ? (entry.metadata.giveToName as string) : ''} →`}
@@ -83,7 +85,9 @@ export function TradeCardBody({
             )}
             {receivingIds.length > 0 && (
               <div>
-                <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${entry.action === 'trade_rolled_back' ? 'text-rose-500' : 'text-green-600'}`}>
+                <p
+                  className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${entry.action === 'trade_rolled_back' ? 'text-rose-500' : 'text-green-600'}`}
+                >
                   {entry.action === 'trade_rolled_back'
                     ? `→ Você devolveu ${receivingIds.length}`
                     : `← Você ${isAccepted || isAdvancedExecuted ? 'recebeu' : isCanceled ? 'receberia' : 'recebe'} ${receivingIds.length} de ${isAdvancedExecuted ? (entry.metadata.receiveFromName as string) : ''}`}

@@ -38,18 +38,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [])
 
-  const show = useCallback(
-    (type: NotificationType, message: string) => {
-      if (timerRef.current) clearTimeout(timerRef.current)
-      const id = crypto.randomUUID()
-      setNotification({ id, type, message })
-      timerRef.current = setTimeout(() => {
-        setNotification(null)
-        timerRef.current = null
-      }, AUTO_DISMISS_MS)
-    },
-    []
-  )
+  const show = useCallback((type: NotificationType, message: string) => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    const id = crypto.randomUUID()
+    setNotification({ id, type, message })
+    timerRef.current = setTimeout(() => {
+      setNotification(null)
+      timerRef.current = null
+    }, AUTO_DISMISS_MS)
+  }, [])
 
   const showSuccess = useCallback((message: string) => show('success', message), [show])
   const showError = useCallback((message: string) => show('error', message), [show])

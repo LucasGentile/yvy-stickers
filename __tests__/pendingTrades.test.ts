@@ -40,8 +40,12 @@ function makeSelectChain(result: { data: unknown; error: unknown }) {
     maybeSingle: vi.fn().mockResolvedValue(result),
     order: vi.fn().mockResolvedValue(result),
     // Thenable: allows `await chain.select().eq()` without a terminal method
-    then: vi.fn().mockImplementation((resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown): Promise<unknown> =>
-      Promise.resolve(result).then(resolve, reject)),
+    then: vi
+      .fn()
+      .mockImplementation(
+        (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown): Promise<unknown> =>
+          Promise.resolve(result).then(resolve, reject)
+      ),
   }
   return chain
 }

@@ -92,7 +92,9 @@ function DetailModal({
         [...receiving]
       )
       if (result.success) {
-        showSuccess(`Pedido enviado para ${match.name.split(' ')[0]}! Ele/ela verá na tela de Trocas.`)
+        showSuccess(
+          `Pedido enviado para ${match.name.split(' ')[0]}! Ele/ela verá na tela de Trocas.`
+        )
         setTradeMsg({
           ok: true,
           text: `Pedido enviado para ${match.name.split(' ')[0]}! Ele/ela verá na tela de Trocas.`,

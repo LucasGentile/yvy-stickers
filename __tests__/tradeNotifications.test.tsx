@@ -75,9 +75,7 @@ describe('Trade submission notifications — normal trade', () => {
     fireEvent.click(screen.getByText('Enviar pedido de troca'))
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Pedido enviado para Bob!'
-      )
+      expect(screen.getByRole('alert')).toHaveTextContent('Pedido enviado para Bob!')
     })
     expect(screen.getByRole('alert')).toHaveClass('bg-emerald-600')
   })
@@ -116,9 +114,8 @@ describe('NotificationBanner width constraint', () => {
   })
 
   it('renders with max-w-lg when notification is active', async () => {
-    const { NotificationProvider: NP, useNotification } = await import(
-      '@/contexts/NotificationContext'
-    )
+    const { NotificationProvider: NP, useNotification } =
+      await import('@/contexts/NotificationContext')
 
     function Trigger() {
       const { showSuccess } = useNotification()
