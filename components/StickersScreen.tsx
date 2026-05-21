@@ -318,72 +318,54 @@ export default function StickersScreen() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)] shrink-0">
           Minhas Figurinhas
         </h2>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={toggleProtection}
-            title={
-              albumProtected
-                ? 'Álbum protegido — clique para desbloquear'
-                : 'Clique para proteger o álbum'
-            }
-            className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
-              albumProtected
-                ? 'bg-yvy-dark text-yvy-gold border-yvy-dark'
-                : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
-            }`}
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-col gap-1">
+            <button
+              onClick={toggleProtection}
+              title={
+                albumProtected
+                  ? 'Álbum protegido — clique para desbloquear'
+                  : 'Clique para proteger o álbum'
+              }
+              className={`flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md border transition-colors ${
+                albumProtected
+                  ? 'bg-yvy-dark text-yvy-gold border-yvy-dark'
+                  : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
+              }`}
             >
-              {albumProtected ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 15v2m0 0v2m0-2h2m-2 0H10M5 11V7a7 7 0 0114 0v4M5 11h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
-                />
-              )}
-            </svg>
-            {albumProtected ? 'Protegido' : 'Proteger'}
-          </button>
-          <button
-            onClick={handleToggleTradesBlocked}
-            title={
-              tradesBlocked
-                ? 'Você está oculto nas buscas — clique para aparecer'
-                : 'Clique para se ocultar nas buscas de troca'
-            }
-            className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
-              tradesBlocked
-                ? 'bg-yvy-dark text-yvy-gold border-yvy-dark'
-                : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
-            }`}
-          >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
+              <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                {albumProtected ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m0 0v2m0-2h2m-2 0H10M5 11V7a7 7 0 0114 0v4M5 11h14a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                )}
+              </svg>
+              {albumProtected ? 'Protegido' : 'Proteger'}
+            </button>
+            <button
+              onClick={handleToggleTradesBlocked}
+              title={
+                tradesBlocked
+                  ? 'Você está oculto nas buscas — clique para aparecer'
+                  : 'Clique para se ocultar nas buscas de troca'
+              }
+              className={`flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md border transition-colors ${
+                tradesBlocked
+                  ? 'bg-yvy-dark text-yvy-gold border-yvy-dark'
+                  : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
+              }`}
             >
-              <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
-              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
-            </svg>
-            {tradesBlocked ? 'Oculto' : 'Ocultar'}
-          </button>
+              <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
+              </svg>
+              {tradesBlocked ? 'Oculto' : 'Ocultar'}
+            </button>
+          </div>
           <span className="text-sm font-semibold text-yvy-accent">
             {selected.size}
             <span className="text-yvy-muted font-normal">/{ALL_STICKER_IDS.length}</span>
