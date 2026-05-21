@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { getPersonalInsights, PersonalInsights } from '@/actions/getPersonalInsights'
 import { updateUserName } from '@/actions/updateUserName'
+import { useNotification } from '@/contexts/NotificationContext'
 
 function initials(name: string): string {
   return name
@@ -72,6 +73,7 @@ export default function ProfileScreen() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { showSuccess } = useNotification()
 
   const load = useCallback(async () => {
     const id = localStorage.getItem('userId')
@@ -115,6 +117,7 @@ export default function ProfileScreen() {
     setData({ ...data, name: nameInput.trim().toLowerCase() })
     setEditing(false)
     setSaving(false)
+    showSuccess('Nome atualizado com sucesso!')
   }
 
   useEffect(() => {
