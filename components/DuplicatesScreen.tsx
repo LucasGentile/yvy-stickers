@@ -79,6 +79,14 @@ export default function DuplicatesScreen() {
     setReservedCounts(reserved)
   }, [])
 
+  useEffect(() => {
+    const id = localStorage.getItem('userId')
+    if (!id) return
+    const handlePullRefresh = () => refreshDuplicates(id)
+    window.addEventListener('pull-refresh', handlePullRefresh)
+    return () => window.removeEventListener('pull-refresh', handlePullRefresh)
+  }, [refreshDuplicates])
+
   const showToast = useCallback((message: string, onUndo: () => Promise<void>) => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
     setToast({ message, onUndo })

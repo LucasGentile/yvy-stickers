@@ -109,8 +109,13 @@ export default function MatchesScreen() {
     const handleVisibility = () => {
       if (!document.hidden) refreshMatches(uid)
     }
+    const handlePullRefresh = () => refreshMatches(uid)
     document.addEventListener('visibilitychange', handleVisibility)
-    return () => document.removeEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('pull-refresh', handlePullRefresh)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('pull-refresh', handlePullRefresh)
+    }
   }, [refreshMatches])
 
   if (loading) {
