@@ -1,5 +1,27 @@
 # Changelog
 
+## [v2.3.0] — 2026-05-21
+
+### Novidades
+
+- **Gesto de atualizar (pull-to-refresh)** — arraste a tela de cima para baixo no celular para atualizar os dados sem precisar tocar no botão de refresh
+- **Bloquear recebimento de trocas** — botão no Ranking de Trocas para pausar o recebimento de novos pedidos enquanto você organiza suas figurinhas
+- **Alerta de trocas canceladas e recusadas** — trocas canceladas ou recusadas nos últimos 5 dias aparecem em seção dedicada no ranking, para não ficarem perdidas no histórico
+
+### Melhorias
+
+- **Banner de notificação integrado ao cabeçalho** — o banner de sucesso/erro agora desliza para fora do cabeçalho fixo, sem cobrir o conteúdo principal da tela
+- **Aviso de figurinha já possuída** — ao propor ou aceitar uma troca, o app avisa se alguma figurinha já existe no álbum do outro participante (bidirecional)
+- **Figurinhas recebidas marcáveis no álbum** — ao marcar uma figurinha recebida em troca concluída como colada, ela é adicionada diretamente ao álbum
+- **Ranking de Trocas reorganizado** — seções colapsáveis para "Têm para mim" e "Precisa das minhas" tornam a tela mais limpa quando há muitos participantes
+
+### Correções
+
+- Largura dos cards de histórico corrigida para 100% do container em todas as telas
+- Mock de rollback de trocas avançadas corrigido nos testes de auditoria
+
+---
+
 ## [v2.2.0] — 2026-05-21
 
 ### Novidades
