@@ -114,7 +114,7 @@ export default function ProfileScreen() {
       return
     }
 
-    setData({ ...data, name: nameInput.trim().toLowerCase() })
+    setData({ ...data, name: nameInput.trim() })
     setEditing(false)
     setSaving(false)
     showSuccess('Nome atualizado com sucesso!')

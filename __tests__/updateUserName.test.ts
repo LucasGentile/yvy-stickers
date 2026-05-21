@@ -24,25 +24,36 @@ describe('updateUserName', () => {
     if (!result.success) expect(result.error).toMatch(/vazio/)
   })
 
-  it('returns error when name has only one word', async () => {
-    const result = await updateUserName('user-1', 'Lucas')
-    expect(result.success).toBe(false)
-    if (!result.success) expect(result.error).toMatch(/sobrenome/)
-  })
-
-  it('returns error when name is already taken by another user', async () => {
+  it('accepts a single-word name', async () => {
     let callCount = 0
     mockFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) {
         return {
           select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
+          ilike: vi.fn().mockReturnThis(),
           neq: vi.fn().mockReturnThis(),
-          maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'other-user' } }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: null }),
         }
       }
-      return {}
+      return {
+        update: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      }
+    })
+
+    const result = await updateUserName('user-1', 'Lucas')
+    expect(result.success).toBe(true)
+  })
+
+  it('returns error when name is already taken by another user (case-insensitive)', async () => {
+    mockFrom.mockImplementation(() => {
+      return {
+        select: vi.fn().mockReturnThis(),
+        ilike: vi.fn().mockReturnThis(),
+        neq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'other-user' } }),
+      }
     })
 
     const result = await updateUserName('user-1', 'Lucas Gentile')
@@ -57,7 +68,7 @@ describe('updateUserName', () => {
       if (callCount === 1) {
         return {
           select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
+          ilike: vi.fn().mockReturnThis(),
           neq: vi.fn().mockReturnThis(),
           maybeSingle: vi.fn().mockResolvedValue({ data: null }),
         }
@@ -80,7 +91,7 @@ describe('updateUserName', () => {
       if (callCount === 1) {
         return {
           select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
+          ilike: vi.fn().mockReturnThis(),
           neq: vi.fn().mockReturnThis(),
           maybeSingle: vi.fn().mockResolvedValue({ data: null }),
         }
@@ -95,7 +106,7 @@ describe('updateUserName', () => {
     expect(result.success).toBe(true)
   })
 
-  it('normalizes the name before saving', async () => {
+  it('preserves original casing when saving', async () => {
     const updateMock = vi.fn().mockReturnThis()
     let callCount = 0
     mockFrom.mockImplementation(() => {
@@ -103,7 +114,7 @@ describe('updateUserName', () => {
       if (callCount === 1) {
         return {
           select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
+          ilike: vi.fn().mockReturnThis(),
           neq: vi.fn().mockReturnThis(),
           maybeSingle: vi.fn().mockResolvedValue({ data: null }),
         }
@@ -115,6 +126,21 @@ describe('updateUserName', () => {
     })
 
     await updateUserName('user-1', '  Lucas Gentile  ')
-    expect(updateMock).toHaveBeenCalledWith({ name: 'lucas gentile' })
+    expect(updateMock).toHaveBeenCalledWith({ name: 'Lucas Gentile' })
+  })
+
+  it('uses case-insensitive comparison for duplicate check', async () => {
+    const ilikeMock = vi.fn().mockReturnThis()
+    mockFrom.mockImplementation(() => {
+      return {
+        select: vi.fn().mockReturnThis(),
+        ilike: ilikeMock,
+        neq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'other-user' } }),
+      }
+    })
+
+    await updateUserName('user-1', 'Lucas Gentile')
+    expect(ilikeMock).toHaveBeenCalledWith('name', 'Lucas Gentile')
   })
 })
