@@ -13,7 +13,7 @@ export default function NotificationBanner() {
     <div
       role="alert"
       aria-live="assertive"
-      className={`fixed top-14 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg flex items-center gap-3 px-4 py-3 shadow-lg rounded-b-xl animate-slideDown ${
+      className={`w-full max-w-lg mx-auto flex items-center gap-3 px-4 py-3 shadow-lg rounded-b-xl animate-slideDown ${
         isSuccess
           ? 'bg-emerald-600 text-white'
           : 'bg-red-600 text-white'

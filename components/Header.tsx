@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useMuralTab, MURAL_TABS } from '@/contexts/MuralTabContext'
+import NotificationBanner from '@/components/NotificationBanner'
 import { getPendingTrades } from '@/actions/getPendingTrades'
 import { getPendingApprovalCount } from '@/actions/getPendingApprovalCount'
 import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
@@ -165,6 +166,8 @@ export default function Header() {
             </div>
           </div>
         )}
+
+        <NotificationBanner />
       </header>
 
       {/* Drawer */}
