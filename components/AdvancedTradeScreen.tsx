@@ -448,6 +448,7 @@ function CompletedTradesSection({
 }
 
 export default function AdvancedTradeScreen() {
+  const { showSuccess, showError } = useNotification()
   const [userId, setUserId] = useState<string | null>(null)
   const [trades, setTrades] = useState<AdvancedTradeView[]>([])
   const [loading, setLoading] = useState(true)
@@ -542,6 +543,7 @@ export default function AdvancedTradeScreen() {
         cGivesIds: selected.cGivesIds,
       })
       if (result.found) {
+        showSuccess('Proposta de troca triangular enviada! Aguardando aprovação dos participantes.')
         await loadTrades(userId)
         const fresh = await previewAdvancedTrade(userId)
         if (fresh.found) {
@@ -551,9 +553,11 @@ export default function AdvancedTradeScreen() {
           setCanSearch(false)
         }
       } else {
+        showError(result.error ?? 'Erro ao criar proposta. Tente novamente.')
         setSearchMsg(result.error ?? 'Erro ao criar proposta. Tente novamente.')
       }
     } catch {
+      showError('Erro inesperado. Tente novamente.')
       setSearchMsg('Erro inesperado. Tente novamente.')
     } finally {
       setConfirmingIdx(null)
