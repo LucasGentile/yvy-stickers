@@ -10,7 +10,7 @@ import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previ
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
 import { rollbackAdvancedTrade } from '@/actions/rollbackAdvancedTrade'
 import { verifyTrade } from '@/actions/verifyTrade'
-import { checkAlreadyOwnedIncoming } from '@/actions/checkAlreadyOwnedIncoming'
+import { checkAlreadyOwnedIncoming, type AlreadyOwnedResult } from '@/actions/checkAlreadyOwnedIncoming'
 import { useNotification } from '@/contexts/NotificationContext'
 import { StickerList } from '@/components/trades/StickerList'
 import { AlreadyOwnedWarningModal } from '@/components/trades/AlreadyOwnedWarningModal'
@@ -58,16 +58,16 @@ function TradeCard({
   const [confirming, setConfirming] = useState<'approve' | 'reject' | 'cancel' | null>(null)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [verified, setVerified] = useState(trade.verified)
-  const [alreadyOwnedIds, setAlreadyOwnedIds] = useState<string[]>([])
+  const [alreadyOwned, setAlreadyOwned] = useState<AlreadyOwnedResult>({ myAlreadyOwned: [], theirAlreadyOwned: [] })
   const [showAlreadyOwnedModal, setShowAlreadyOwnedModal] = useState(false)
   const [modalLoading, setModalLoading] = useState<'confirm' | 'reject' | null>(null)
 
   useEffect(() => {
-    if (trade.myReceivingIds.length === 0) return
-    checkAlreadyOwnedIncoming(userId, trade.myReceivingIds)
-      .then(setAlreadyOwnedIds)
-      .catch(() => setAlreadyOwnedIds([]))
-  }, [userId, trade.myReceivingIds])
+    if (trade.myReceivingIds.length === 0 && trade.myGivingIds.length === 0) return
+    checkAlreadyOwnedIncoming(userId, trade.giveTo.id, trade.myReceivingIds, trade.myGivingIds)
+      .then(setAlreadyOwned)
+      .catch(() => setAlreadyOwned({ myAlreadyOwned: [], theirAlreadyOwned: [] }))
+  }, [userId, trade.giveTo.id, trade.myReceivingIds, trade.myGivingIds])
 
   const advancedActionLabels = {
     approve: 'Troca triangular aprovada!',
@@ -164,7 +164,7 @@ function TradeCard({
             Você dá {trade.myGivingIds.length} para{' '}
             <span className="capitalize">{trade.giveTo.name}</span> →
           </p>
-          <StickerList ids={trade.myGivingIds} label="" variant="giving" />
+          <StickerList ids={trade.myGivingIds} label="" variant="giving" alreadyOwnedIds={alreadyOwned.theirAlreadyOwned.length > 0 ? new Set(alreadyOwned.theirAlreadyOwned) : undefined} />
         </div>
 
         <div className="bg-green-50/50 rounded-lg p-3 space-y-2 border border-green-100">
@@ -172,7 +172,7 @@ function TradeCard({
             ← Você recebe {trade.myReceivingIds.length} de{' '}
             <span className="capitalize">{trade.receiveFrom.name}</span>
           </p>
-          <StickerList ids={trade.myReceivingIds} label="" variant="receiving" alreadyOwnedIds={alreadyOwnedIds.length > 0 ? new Set(alreadyOwnedIds) : undefined} />
+          <StickerList ids={trade.myReceivingIds} label="" variant="receiving" alreadyOwnedIds={alreadyOwned.myAlreadyOwned.length > 0 ? new Set(alreadyOwned.myAlreadyOwned) : undefined} />
         </div>
 
         <div className="bg-sky-50/50 rounded-lg p-3 space-y-2 border border-sky-100">
@@ -292,7 +292,7 @@ function TradeCard({
               </button>
               <button
                 onClick={() => {
-                  if (alreadyOwnedIds.length > 0) {
+                  if (alreadyOwned.myAlreadyOwned.length > 0 || alreadyOwned.theirAlreadyOwned.length > 0) {
                     setShowAlreadyOwnedModal(true)
                     return
                   }
@@ -345,7 +345,9 @@ function TradeCard({
 
       <AlreadyOwnedWarningModal
         open={showAlreadyOwnedModal}
-        alreadyOwnedIds={alreadyOwnedIds}
+        myAlreadyOwnedIds={alreadyOwned.myAlreadyOwned}
+        theirAlreadyOwnedIds={alreadyOwned.theirAlreadyOwned}
+        otherUserName={trade.giveTo.name}
         loading={modalLoading}
         onConfirm={async () => {
           setModalLoading('confirm')

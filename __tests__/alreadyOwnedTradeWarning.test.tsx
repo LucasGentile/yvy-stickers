@@ -74,23 +74,23 @@ describe('Already-owned trade warning', () => {
     mockRespondToTrade.mockResolvedValue({ success: true })
   })
 
-  it('does not show striped variant when user does not own incoming stickers', async () => {
-    mockCheckAlreadyOwned.mockResolvedValue([])
+  it('does not show striped variant when no one owns redundant stickers', async () => {
+    mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: [], theirAlreadyOwned: [] })
 
     const { container } = render(
       <TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />
     )
 
     await waitFor(() => {
-      expect(mockCheckAlreadyOwned).toHaveBeenCalledWith('user-a', ['CAN3'])
+      expect(mockCheckAlreadyOwned).toHaveBeenCalledWith('user-a', 'user-b', ['CAN3'], ['BRA1'])
     })
 
     const chips = container.querySelectorAll('[class*="border-red-400"]')
     expect(chips).toHaveLength(0)
   })
 
-  it('shows striped variant on already-owned incoming stickers', async () => {
-    mockCheckAlreadyOwned.mockResolvedValue(['CAN3'])
+  it('shows striped variant on stickers I already own (receiving)', async () => {
+    mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: ['CAN3'], theirAlreadyOwned: [] })
 
     const { container } = render(
       <TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />
@@ -102,8 +102,21 @@ describe('Already-owned trade warning', () => {
     })
   })
 
-  it('shows modal when user tries to approve with already-owned stickers', async () => {
-    mockCheckAlreadyOwned.mockResolvedValue(['CAN3'])
+  it('shows striped variant on stickers the other user already owns (giving)', async () => {
+    mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: [], theirAlreadyOwned: ['BRA1'] })
+
+    const { container } = render(
+      <TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />
+    )
+
+    await waitFor(() => {
+      const chips = container.querySelectorAll('[class*="border-red-400"]')
+      expect(chips.length).toBeGreaterThan(0)
+    })
+  })
+
+  it('shows modal when user tries to approve with stickers they already own', async () => {
+    mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: ['CAN3'], theirAlreadyOwned: [] })
 
     render(<TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />)
 
@@ -121,12 +134,37 @@ describe('Already-owned trade warning', () => {
     fireEvent.click(screen.getByText(/Confirmar troca/))
 
     await waitFor(() => {
-      expect(screen.getByText('Você já tem essa figurinha')).toBeInTheDocument()
+      expect(screen.getByText('Troca com figurinhas redundantes')).toBeInTheDocument()
+      expect(screen.getByText(/Você já tem/)).toBeInTheDocument()
+    })
+  })
+
+  it('shows modal when giving stickers the other user already owns', async () => {
+    mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: [], theirAlreadyOwned: ['BRA1'] })
+
+    render(<TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(mockCheckAlreadyOwned).toHaveBeenCalled()
+    })
+
+    fireEvent.click(screen.getByText('Aceitar troca'))
+    fireEvent.click(screen.getByText('Revisei, continuar'))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Confirmar troca/)).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText(/Confirmar troca/))
+
+    await waitFor(() => {
+      expect(screen.getByText('Troca com figurinhas redundantes')).toBeInTheDocument()
+      expect(screen.getByText(/Bob já tem/)).toBeInTheDocument()
     })
   })
 
   it('modal "Recusar troca" calls reject action', async () => {
-    mockCheckAlreadyOwned.mockResolvedValue(['CAN3'])
+    mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: ['CAN3'], theirAlreadyOwned: [] })
     const onDone = vi.fn()
 
     render(<TradeCard trade={makeTrade()} userId="user-a" onDone={onDone} />)
@@ -156,7 +194,7 @@ describe('Already-owned trade warning', () => {
   })
 
   it('modal "Confirmar mesmo assim" proceeds with accept', async () => {
-    mockCheckAlreadyOwned.mockResolvedValue(['CAN3'])
+    mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: ['CAN3'], theirAlreadyOwned: [] })
     const onDone = vi.fn()
 
     render(<TradeCard trade={makeTrade()} userId="user-a" onDone={onDone} />)
@@ -192,7 +230,7 @@ describe('Already-owned trade warning', () => {
   })
 
   it('modal dismiss returns to previous state without action', async () => {
-    mockCheckAlreadyOwned.mockResolvedValue(['CAN3'])
+    mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: ['CAN3'], theirAlreadyOwned: [] })
 
     render(<TradeCard trade={makeTrade()} userId="user-a" onDone={vi.fn()} />)
 
@@ -210,20 +248,20 @@ describe('Already-owned trade warning', () => {
     fireEvent.click(screen.getByText(/Confirmar troca/))
 
     await waitFor(() => {
-      expect(screen.getByText('Você já tem essa figurinha')).toBeInTheDocument()
+      expect(screen.getByText('Troca com figurinhas redundantes')).toBeInTheDocument()
     })
 
     fireEvent.click(screen.getByLabelText('Fechar'))
 
     await waitFor(() => {
-      expect(screen.queryByText('Você já tem essa figurinha')).not.toBeInTheDocument()
+      expect(screen.queryByText('Troca com figurinhas redundantes')).not.toBeInTheDocument()
     })
 
     expect(mockRespondToTrade).not.toHaveBeenCalled()
   })
 
-  it('no modal when user does not own any incoming stickers', async () => {
-    mockCheckAlreadyOwned.mockResolvedValue([])
+  it('no modal when neither user owns redundant stickers', async () => {
+    mockCheckAlreadyOwned.mockResolvedValue({ myAlreadyOwned: [], theirAlreadyOwned: [] })
     const onDone = vi.fn()
 
     render(<TradeCard trade={makeTrade()} userId="user-a" onDone={onDone} />)
@@ -251,6 +289,6 @@ describe('Already-owned trade warning', () => {
       )
     })
 
-    expect(screen.queryByText('Você já tem essa figurinha')).not.toBeInTheDocument()
+    expect(screen.queryByText('Troca com figurinhas redundantes')).not.toBeInTheDocument()
   })
 })

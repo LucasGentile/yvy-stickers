@@ -8,7 +8,7 @@ import {
   type BetterMatchResult,
 } from '@/actions/getBetterMatchExcludingTrade'
 import { getTradeAvailability, type TradeAvailability } from '@/actions/getTradeAvailability'
-import { checkAlreadyOwnedIncoming } from '@/actions/checkAlreadyOwnedIncoming'
+import { checkAlreadyOwnedIncoming, type AlreadyOwnedResult } from '@/actions/checkAlreadyOwnedIncoming'
 import { useNotification } from '@/contexts/NotificationContext'
 import { StickerList, StickerToggle } from './StickerList'
 import { AlreadyOwnedWarningModal } from './AlreadyOwnedWarningModal'
@@ -35,7 +35,7 @@ export function TradeCard({
     id: string
     side: 'giving' | 'receiving'
   } | null>(null)
-  const [alreadyOwnedIds, setAlreadyOwnedIds] = useState<string[]>([])
+  const [alreadyOwned, setAlreadyOwned] = useState<AlreadyOwnedResult>({ myAlreadyOwned: [], theirAlreadyOwned: [] })
   const [showAlreadyOwnedModal, setShowAlreadyOwnedModal] = useState(false)
   const [modalLoading, setModalLoading] = useState<'confirm' | 'reject' | null>(null)
 
@@ -51,11 +51,11 @@ export function TradeCard({
   }, [trade.id])
 
   useEffect(() => {
-    if (trade.myReceivingIds.length === 0) return
-    checkAlreadyOwnedIncoming(userId, trade.myReceivingIds)
-      .then(setAlreadyOwnedIds)
-      .catch(() => setAlreadyOwnedIds([]))
-  }, [userId, trade.myReceivingIds])
+    if (trade.myReceivingIds.length === 0 && trade.myGivingIds.length === 0) return
+    checkAlreadyOwnedIncoming(userId, trade.otherUserId, trade.myReceivingIds, trade.myGivingIds)
+      .then(setAlreadyOwned)
+      .catch(() => setAlreadyOwned({ myAlreadyOwned: [], theirAlreadyOwned: [] }))
+  }, [userId, trade.otherUserId, trade.myReceivingIds, trade.myGivingIds])
 
   const actionLabels = {
     accept: 'Troca aceita com sucesso!',
@@ -126,8 +126,8 @@ export function TradeCard({
             : `${totalGiving} figurinha${totalGiving !== 1 ? 's' : ''} você dá`}
       </p>
 
-      <StickerList ids={trade.myReceivingIds} label="Você vai receber" variant="receiving" alreadyOwnedIds={alreadyOwnedIds.length > 0 ? new Set(alreadyOwnedIds) : undefined} />
-      <StickerList ids={trade.myGivingIds} label="Você vai dar" variant="giving" />
+      <StickerList ids={trade.myReceivingIds} label="Você vai receber" variant="receiving" alreadyOwnedIds={alreadyOwned.myAlreadyOwned.length > 0 ? new Set(alreadyOwned.myAlreadyOwned) : undefined} />
+      <StickerList ids={trade.myGivingIds} label="Você vai dar" variant="giving" alreadyOwnedIds={alreadyOwned.theirAlreadyOwned.length > 0 ? new Set(alreadyOwned.theirAlreadyOwned) : undefined} />
 
       {!trade.isSender && betterMatch && (
         <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
@@ -386,7 +386,7 @@ export function TradeCard({
                     </button>
                     <button
                       onClick={() => {
-                        if (alreadyOwnedIds.length > 0) {
+                        if (alreadyOwned.myAlreadyOwned.length > 0 || alreadyOwned.theirAlreadyOwned.length > 0) {
                           setShowAlreadyOwnedModal(true)
                           return
                         }
@@ -432,7 +432,9 @@ export function TradeCard({
 
       <AlreadyOwnedWarningModal
         open={showAlreadyOwnedModal}
-        alreadyOwnedIds={alreadyOwnedIds}
+        myAlreadyOwnedIds={alreadyOwned.myAlreadyOwned}
+        theirAlreadyOwnedIds={alreadyOwned.theirAlreadyOwned}
+        otherUserName={trade.otherUserName}
         loading={modalLoading}
         onConfirm={async () => {
           setModalLoading('confirm')
