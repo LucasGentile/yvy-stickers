@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { getPersonalInsights, PersonalInsights } from '@/actions/getPersonalInsights'
+import { updateUserName } from '@/actions/updateUserName'
 
 function initials(name: string): string {
   return name
@@ -66,6 +67,11 @@ function ProgressBar({ pct, color = 'green' }: { pct: number; color?: string }) 
 export default function ProfileScreen() {
   const [data, setData] = useState<PersonalInsights | null>(null)
   const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     const id = localStorage.getItem('userId')
@@ -77,6 +83,39 @@ export default function ProfileScreen() {
     setData(result)
     setLoading(false)
   }, [])
+
+  const handleEdit = () => {
+    if (!data) return
+    setNameInput(data.name)
+    setError(null)
+    setEditing(true)
+    setTimeout(() => inputRef.current?.focus(), 0)
+  }
+
+  const handleCancel = () => {
+    setEditing(false)
+    setError(null)
+  }
+
+  const handleSave = async () => {
+    const id = localStorage.getItem('userId')
+    if (!id || !data) return
+
+    setSaving(true)
+    setError(null)
+
+    const result = await updateUserName(id, nameInput)
+
+    if (!result.success) {
+      setError(result.error)
+      setSaving(false)
+      return
+    }
+
+    setData({ ...data, name: nameInput.trim().toLowerCase() })
+    setEditing(false)
+    setSaving(false)
+  }
 
   useEffect(() => {
     load()
@@ -106,11 +145,56 @@ export default function ProfileScreen() {
       {/* ── Profile card ────────────────────────────────────────────── */}
       <div className="bg-yvy-surface rounded-2xl shadow-sm border border-yvy-gold/20 p-4 flex items-center gap-4">
         <div className="w-14 h-14 rounded-full bg-yvy-accent flex items-center justify-center shrink-0">
-          <span className="text-white font-bold text-lg">{initials(data.name)}</span>
+          <span className="text-white font-bold text-lg">{initials(editing ? nameInput : data.name)}</span>
         </div>
-        <div className="min-w-0">
-          <p className="font-bold text-yvy-dark text-base truncate">{data.name}</p>
-          <p className="text-xs text-yvy-muted">
+        <div className="min-w-0 flex-1">
+          {editing ? (
+            <div className="space-y-1.5">
+              <input
+                ref={inputRef}
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSave()
+                  if (e.key === 'Escape') handleCancel()
+                }}
+                disabled={saving}
+                className="w-full border border-yvy-gold/40 rounded-lg px-2 py-1 text-sm text-yvy-dark bg-white focus:outline-none focus:ring-2 focus:ring-yvy-accent/40"
+              />
+              {error && <p className="text-[11px] text-red-500">{error}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="text-[11px] font-semibold text-white bg-yvy-accent rounded-md px-3 py-1 disabled:opacity-50"
+                >
+                  {saving ? 'Salvando…' : 'Salvar'}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={saving}
+                  className="text-[11px] font-semibold text-yvy-muted hover:text-yvy-dark px-2 py-1"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <p className="font-bold text-yvy-dark text-base truncate">{data.name}</p>
+              <button
+                onClick={handleEdit}
+                aria-label="Editar nome"
+                className="text-yvy-muted hover:text-yvy-accent transition-colors shrink-0"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+                </svg>
+              </button>
+            </div>
+          )}
+          <p className="text-xs text-yvy-muted mt-0.5">
             Torre {data.tower} · Apt {data.apartment}
           </p>
           <p className="text-xs text-yvy-muted">
