@@ -44,6 +44,7 @@ export default function DuplicatesScreen() {
     invalid: string[]
   } | null>(null)
   const [checking, setChecking] = useState(false)
+  const [tradesBlocked, setTradesBlocked] = useState(false)
   const [toast, setToast] = useState<{ message: string; onUndo: () => Promise<void> } | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -63,6 +64,7 @@ export default function DuplicatesScreen() {
               ? marked
               : new Set(ALL_STICKER_IDS.filter((sid) => !marked.has(sid)))
           setOwnedSet(owned)
+          setTradesBlocked(userData.tradesBlocked)
         }
         setDuplicates(dupes)
         setReservedCounts(reserved)
@@ -249,6 +251,16 @@ export default function DuplicatesScreen() {
           ← Figurinhas
         </a>
       </div>
+
+      {tradesBlocked && (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium">
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
+          </svg>
+          Você está oculto nas buscas de troca. Vá em <a href="/stickers" className="underline font-semibold">Minhas Figurinhas</a> para reaparecer.
+        </div>
+      )}
 
       {/* Add form */}
       <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 shadow-md p-4 space-y-3">

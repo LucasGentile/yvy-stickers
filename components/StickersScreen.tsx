@@ -363,8 +363,8 @@ export default function StickersScreen() {
             onClick={handleToggleTradesBlocked}
             title={
               tradesBlocked
-                ? 'Trocas bloqueadas — clique para desbloquear'
-                : 'Clique para bloquear novas trocas'
+                ? 'Você está oculto nas buscas — clique para aparecer'
+                : 'Clique para se ocultar nas buscas de troca'
             }
             className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
               tradesBlocked
@@ -382,7 +382,7 @@ export default function StickersScreen() {
               <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
             </svg>
-            {tradesBlocked ? 'Bloqueado' : 'Bloquear'}
+            {tradesBlocked ? 'Oculto' : 'Ocultar'}
           </button>
           <span className="text-sm font-semibold text-yvy-accent">
             {selected.size}
@@ -407,6 +407,16 @@ export default function StickersScreen() {
             />
           </svg>
           Álbum protegido — remoções estão bloqueadas
+        </div>
+      )}
+
+      {tradesBlocked && (
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium">
+          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
+          </svg>
+          Você está oculto nas buscas de troca — outros usuários não conseguem te encontrar.
         </div>
       )}
 

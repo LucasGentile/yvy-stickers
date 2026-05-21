@@ -146,7 +146,8 @@ async function loadAllTradeData(): Promise<{
     supabaseAdmin
       .from('users')
       .select('id, input_mode, user_stickers(sticker_id), user_duplicates(sticker_id, count)')
-      .eq('approved', true),
+      .eq('approved', true)
+      .eq('trades_blocked', false),
     supabaseAdmin
       .from('pending_trades')
       .select('initiator_id, receiver_id, giving_ids, receiving_ids')

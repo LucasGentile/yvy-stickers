@@ -64,7 +64,8 @@ export async function getMatches(
         'id, display_key, name, apartment, tower, phone, input_mode, user_stickers(sticker_id), user_duplicates(sticker_id, count)'
       )
       .neq('id', currentUserId)
-      .eq('approved', true),
+      .eq('approved', true)
+      .eq('trades_blocked', false),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabaseAdmin as any)
       .from('advanced_trades')
