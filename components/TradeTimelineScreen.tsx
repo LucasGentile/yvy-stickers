@@ -10,6 +10,7 @@ export default function TradeTimelineScreen({ entryId }: { entryId: string }) {
   const [timeline, setTimeline] = useState<TradeTimeline | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const uid = localStorage.getItem('userId') ?? ''
@@ -18,6 +19,7 @@ export default function TradeTimelineScreen({ entryId }: { entryId: string }) {
       setLoading(false)
       return
     }
+    setUserId(uid)
     getTradeTimeline(entryId, uid)
       .then((data) => {
         if (!data || data.entries.length === 0) {
@@ -64,6 +66,7 @@ export default function TradeTimelineScreen({ entryId }: { entryId: string }) {
             key={entry.id}
             entry={entry}
             isFocused={entry.id === timeline.focusedEntryId}
+            userId={userId ?? undefined}
           />
         ))}
       </div>

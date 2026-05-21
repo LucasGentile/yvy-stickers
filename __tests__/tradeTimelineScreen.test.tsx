@@ -6,6 +6,18 @@ vi.mock('@/actions/getTradeTimeline', () => ({
   getTradeTimeline: vi.fn(),
 }))
 
+vi.mock('@/actions/rollbackTrade', () => ({
+  rollbackTrade: vi.fn(),
+}))
+
+vi.mock('@/actions/rollbackAdvancedTrade', () => ({
+  rollbackAdvancedTrade: vi.fn(),
+}))
+
+vi.mock('@/actions/getTradeRollbackInfo', () => ({
+  getTradeRollbackInfo: vi.fn(),
+}))
+
 vi.mock('@/contexts/PreferencesContext', () => ({
   usePrefs: () => ({ stickerOrder: 'album' }),
 }))
