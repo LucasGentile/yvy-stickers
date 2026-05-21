@@ -66,7 +66,7 @@ function stickerColor(
 ): string {
   // Incoming pending sticker not yet owned — shows as white+blue
   if (incomingStickers?.has(id) && !on)
-    return 'bg-white text-yvy-muted hover:bg-blue-50 ring-2 ring-inset ring-blue-400'
+    return 'bg-white text-yvy-muted hover:bg-yvy-border ring-2 ring-inset ring-blue-400'
   if (!on) return 'bg-yvy-bg text-yvy-muted hover:bg-yvy-border ring-2 ring-inset ring-yvy-border'
   if (staged?.has(id)) return 'bg-green-400 text-white ring-2 ring-inset ring-green-500'
   if (tradeReceived?.has(id)) return 'bg-blue-500 text-white ring-2 ring-inset ring-blue-400'
