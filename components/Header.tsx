@@ -113,7 +113,7 @@ export default function Header() {
         className="fixed top-0 left-0 right-0 z-[70] bg-yvy-dark text-yvy-gold shadow-md"
         style={{ willChange: 'transform' }}
       >
-        <div className="max-w-lg mx-auto px-4 py-3 relative flex items-center justify-center">
+        <div className="max-w-lg mx-auto px-4 h-14 relative flex items-center justify-center">
           {/* Left: hamburger */}
           <div className="absolute left-4">
             <button

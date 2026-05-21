@@ -121,7 +121,7 @@ export default function MuralScreen() {
   return (
     <div className="flex flex-col flex-1">
       {/* Tab bar */}
-      <div className="sticky top-14 z-10 bg-yvy-dark border-b border-yvy-gold/20">
+      <div className="sticky top-14 z-10 bg-yvy-dark border-t border-b border-yvy-gold/20">
         <div className="max-w-lg mx-auto px-3 py-2 flex gap-1">
           {TABS.map((t) => (
             <button
