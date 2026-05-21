@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { RecentTrade } from '@/actions/getPendingTrades'
 import { rollbackTrade } from '@/actions/rollbackTrade'
 import { verifyTrade } from '@/actions/verifyTrade'
+import { useNotification } from '@/contexts/NotificationContext'
 import { StickerList, StickerToggle } from './StickerList'
 import { TradeAssistant } from '../audit/TradeAssistant'
 import { relativeTime, absoluteTime } from '../audit/eventConfig'
@@ -22,6 +23,7 @@ export function RecentTradeCard({
   onDone: () => void
   hideRollback?: boolean
 }) {
+  const { showSuccess, showError } = useNotification()
   const [loading, setLoading] = useState<'request' | 'confirm' | 'deny' | 'force' | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [confirmingForce, setConfirmingForce] = useState(false)
@@ -55,6 +57,13 @@ export function RecentTradeCard({
     })
   }
 
+  const rollbackLabels = {
+    request: 'Solicitação de desfazimento enviada com sucesso!',
+    confirm: 'Troca desfeita com sucesso!',
+    deny: 'Desfazimento recusado.',
+    force: 'Troca desfeita com sucesso!',
+  } as const
+
   async function handle(
     action: 'request' | 'confirm' | 'deny' | 'force',
     pGiving?: string[],
@@ -65,13 +74,14 @@ export function RecentTradeCard({
     try {
       const result = await rollbackTrade(trade.id, userId, action, pGiving, pReceiving)
       if (result.success) {
+        showSuccess(rollbackLabels[action])
         setRevertStep('idle')
         onDone()
       } else {
-        setMsg(result.error)
+        showError(`${result.error} Tente novamente ou procure ajuda.`)
       }
     } catch {
-      setMsg('Erro inesperado. Tente novamente.')
+      showError('Erro inesperado. Tente novamente ou procure ajuda.')
     } finally {
       setLoading(null)
     }

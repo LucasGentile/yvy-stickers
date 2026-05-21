@@ -17,9 +17,11 @@ import { getReservedStickerIds } from '@/actions/getReservedStickerIds'
 import { upsertDuplicate } from '@/actions/upsertDuplicate'
 import { decrementDuplicate } from '@/actions/decrementDuplicate'
 import { removeDuplicate } from '@/actions/removeDuplicate'
+import { useNotification } from '@/contexts/NotificationContext'
 import DuplicatePicker from './DuplicatePicker'
 
 export default function DuplicatesScreen() {
+  const { showSuccess, showError } = useNotification()
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [ownedSet, setOwnedSet] = useState<Set<string>>(new Set())
@@ -29,7 +31,6 @@ export default function DuplicatesScreen() {
   const [reservedCounts, setReservedCounts] = useState<Record<string, number>>({})
   const [saving, setSaving] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
-  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
   const [listOrder, setListOrder] = useState<'album' | 'alpha'>('album')
   const [exportOpen, setExportOpen] = useState(false)
   const [includeReserved, setIncludeReserved] = useState(false)
@@ -94,21 +95,17 @@ export default function DuplicatesScreen() {
   const handleAdd = useCallback(async () => {
     if (!userId || !selectedSticker || saving) return
     setSaving(true)
-    setMsg(null)
     const result = await upsertDuplicate(userId, selectedSticker, addCount)
     setSaving(false)
     if (result.success) {
-      setMsg({
-        text: `✓ ${selectedSticker} salva com ${addCount} repetida${addCount !== 1 ? 's' : ''}.`,
-        ok: true,
-      })
-      setSelectedSticker('') // deselect sticker but keep team panel open in picker
+      showSuccess(`${selectedSticker} salva com ${addCount} repetida${addCount !== 1 ? 's' : ''}.`)
+      setSelectedSticker('')
       setAddCount(1)
       await refreshDuplicates(userId)
     } else {
-      setMsg({ text: `Erro: ${result.error}`, ok: false })
+      showError(`Erro ao registrar repetida: ${result.error} Tente novamente ou procure ajuda.`)
     }
-  }, [userId, selectedSticker, addCount, saving, refreshDuplicates])
+  }, [userId, selectedSticker, addCount, saving, refreshDuplicates, showSuccess, showError])
 
   // Inline +1 on existing item
   const handleIncrement = useCallback(
@@ -264,7 +261,6 @@ export default function DuplicatesScreen() {
           onSelect={(id, currentCount) => {
             setSelectedSticker(id)
             setAddCount(currentCount ?? 1)
-            setMsg(null)
           }}
         />
 
@@ -303,9 +299,6 @@ export default function DuplicatesScreen() {
           </div>
         )}
 
-        {msg && (
-          <p className={`text-sm ${msg.ok ? 'text-yvy-accent' : 'text-red-600'}`}>{msg.text}</p>
-        )}
       </div>
 
       {/* Check external list */}

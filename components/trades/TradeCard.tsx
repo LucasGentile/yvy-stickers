@@ -8,6 +8,7 @@ import {
   type BetterMatchResult,
 } from '@/actions/getBetterMatchExcludingTrade'
 import { getTradeAvailability, type TradeAvailability } from '@/actions/getTradeAvailability'
+import { useNotification } from '@/contexts/NotificationContext'
 import { StickerList, StickerToggle } from './StickerList'
 import { relativeTime, absoluteTime } from '../audit/eventConfig'
 
@@ -20,8 +21,8 @@ export function TradeCard({
   userId: string
   onDone: () => void
 }) {
+  const { showSuccess, showError } = useNotification()
   const [loading, setLoading] = useState<'accept' | 'reject' | 'cancel' | null>(null)
-  const [msg, setMsg] = useState<string | null>(null)
   const [betterMatch, setBetterMatch] = useState<BetterMatchResult | null | undefined>(undefined)
   const [confirming, setConfirming] = useState<'accept' | 'reject' | 'cancel' | null>(null)
   const [preAcceptHint, setPreAcceptHint] = useState(false)
@@ -44,17 +45,24 @@ export function TradeCard({
       .catch(() => setBetterMatch(null))
   }, [trade.id])
 
+  const actionLabels = {
+    accept: 'Troca aceita com sucesso!',
+    reject: 'Troca recusada.',
+    cancel: 'Pedido de troca cancelado.',
+  } as const
+
   async function handle(action: 'accept' | 'reject' | 'cancel') {
     setLoading(action)
     try {
       const result = await respondToTrade(trade.id, userId, action)
       if (result.success) {
+        showSuccess(actionLabels[action])
         onDone()
       } else {
-        setMsg(result.error)
+        showError(`${result.error} Tente novamente ou procure ajuda.`)
       }
     } catch {
-      setMsg('Erro inesperado. Tente novamente.')
+      showError('Erro inesperado. Tente novamente ou procure ajuda.')
     } finally {
       setLoading(null)
     }
@@ -97,7 +105,6 @@ export function TradeCard({
         </div>
       )}
 
-      {msg && <p className="text-xs text-red-600">{msg}</p>}
 
       {trade.isSender ? (
         confirming === 'cancel' ? (
@@ -354,12 +361,13 @@ export function TradeCard({
                             [...selectedMyReceiving]
                           )
                           if (result.success) {
+                            showSuccess('Troca aceita com sucesso!')
                             onDone()
                           } else {
-                            setMsg(result.error)
+                            showError(`${result.error} Tente novamente ou procure ajuda.`)
                           }
                         } catch {
-                          setMsg('Erro inesperado.')
+                          showError('Erro inesperado. Tente novamente ou procure ajuda.')
                         } finally {
                           setLoading(null)
                         }

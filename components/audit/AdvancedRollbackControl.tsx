@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { rollbackAdvancedTrade } from '@/actions/rollbackAdvancedTrade'
 import { getAdvancedTradeRollbackInfo } from '@/actions/getAdvancedTradeRollbackInfo'
+import { useNotification } from '@/contexts/NotificationContext'
 
 const FORCE_DELAY_MS = 7 * 24 * 60 * 60 * 1000
 
 export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; userId: string }) {
+  const { showSuccess, showError } = useNotification()
   const [step, setStep] = useState<
     'closed' | 'loading-info' | 'confirming' | 'requested' | 'other-requested'
   >('closed')
@@ -60,13 +62,14 @@ export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; 
     setMsg(null)
     const result = await rollbackAdvancedTrade(tradeId, userId, 'request')
     if (result.success) {
+      showSuccess('Solicitação de desfazimento enviada com sucesso!')
       setStep('requested')
       setRequestedAt(new Date().toISOString())
     } else {
       if (result.error === 'Desfazimento já solicitado.') {
         setStep('other-requested')
       }
-      setMsg(result.error)
+      showError(`${result.error} Tente novamente ou procure ajuda.`)
     }
     setLoading(false)
   }
@@ -76,10 +79,10 @@ export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; 
     setMsg(null)
     const result = await rollbackAdvancedTrade(tradeId, userId, 'confirm')
     if (result.success) {
+      showSuccess('Troca triangular desfeita com sucesso!')
       setStep('closed')
-      setMsg('Desfazimento confirmado.')
     } else {
-      setMsg(result.error)
+      showError(`${result.error} Tente novamente ou procure ajuda.`)
     }
     setLoading(false)
   }
@@ -89,10 +92,10 @@ export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; 
     setMsg(null)
     const result = await rollbackAdvancedTrade(tradeId, userId, 'deny')
     if (result.success) {
+      showSuccess('Desfazimento recusado.')
       setStep('closed')
-      setMsg(null)
     } else {
-      setMsg(result.error)
+      showError(`${result.error} Tente novamente ou procure ajuda.`)
     }
     setLoading(false)
   }
@@ -102,10 +105,10 @@ export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; 
     setMsg(null)
     const result = await rollbackAdvancedTrade(tradeId, userId, 'force')
     if (result.success) {
+      showSuccess('Troca triangular desfeita com sucesso!')
       setStep('closed')
-      setMsg('Desfazimento forçado com sucesso.')
     } else {
-      setMsg(result.error)
+      showError(`${result.error} Tente novamente ou procure ajuda.`)
     }
     setLoading(false)
     setConfirmingForce(false)
