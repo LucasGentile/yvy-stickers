@@ -1,7 +1,6 @@
 'use server'
 
 import { supabase } from '@/lib/supabase'
-import { normalizeText } from '@/lib/normalize'
 
 export type UpdateUserNameResult = { success: true } | { success: false; error: string }
 
@@ -12,16 +11,10 @@ export async function updateUserName(userId: string, newName: string): Promise<U
     return { success: false, error: 'O nome não pode ficar vazio.' }
   }
 
-  if (trimmed.split(/\s+/).length < 2) {
-    return { success: false, error: 'Informe nome e sobrenome.' }
-  }
-
-  const normalized = normalizeText(trimmed)
-
   const { data: existing } = await supabase
     .from('users')
     .select('id')
-    .eq('name', normalized)
+    .ilike('name', trimmed)
     .neq('id', userId)
     .maybeSingle()
 
@@ -31,7 +24,7 @@ export async function updateUserName(userId: string, newName: string): Promise<U
 
   const { error } = await supabase
     .from('users')
-    .update({ name: normalized })
+    .update({ name: trimmed })
     .eq('id', userId)
 
   if (error) {
