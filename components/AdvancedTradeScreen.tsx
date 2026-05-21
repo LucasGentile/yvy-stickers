@@ -40,27 +40,6 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function RollbackStatusBadge({ status }: { status: 'none' | 'approved' | 'denied' }) {
-  if (status === 'approved') {
-    return (
-      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-        ✓ Confirmou
-      </span>
-    )
-  }
-  if (status === 'denied') {
-    return (
-      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-        ✗ Recusou
-      </span>
-    )
-  }
-  return (
-    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-      ⏳ Pendente
-    </span>
-  )
-}
 
 function TradeCard({
   trade,
@@ -73,13 +52,8 @@ function TradeCard({
 }) {
   const { showSuccess, showError } = useNotification()
   const [loading, setLoading] = useState<'approve' | 'reject' | 'cancel' | null>(null)
-  const [rollbackLoading, setRollbackLoading] = useState<
-    'request' | 'confirm' | 'deny' | 'force' | null
-  >(null)
+  const [rollbackLoading, setRollbackLoading] = useState<'confirm' | 'deny' | null>(null)
   const [confirming, setConfirming] = useState<'approve' | 'reject' | 'cancel' | null>(null)
-  const [rollbackStep, setRollbackStep] = useState<
-    'idle' | 'confirming-request' | 'confirming-force'
-  >('idle')
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [verified, setVerified] = useState(trade.verified)
 
@@ -107,20 +81,12 @@ function TradeCard({
     }
   }
 
-  const rollbackLabels = {
-    request: 'Solicitação de desfazimento enviada com sucesso!',
-    confirm: 'Troca triangular desfeita com sucesso!',
-    deny: 'Desfazimento recusado.',
-    force: 'Troca triangular desfeita com sucesso!',
-  } as const
-
-  async function handleRollback(action: 'request' | 'confirm' | 'deny' | 'force') {
+  async function handleRollbackResponse(action: 'confirm' | 'deny') {
     setRollbackLoading(action)
     try {
       const result = await rollbackAdvancedTrade(trade.id, userId, action)
       if (result.success) {
-        showSuccess(rollbackLabels[action])
-        setRollbackStep('idle')
+        showSuccess(action === 'confirm' ? 'Troca triangular desfeita com sucesso!' : 'Desfazimento recusado.')
         onDone()
       } else {
         showError(`${result.error} Tente novamente ou procure ajuda.`)
@@ -134,11 +100,6 @@ function TradeCard({
 
   const isPending = trade.myApprovalStatus === 'pending'
   const isAccepted = trade.status === 'accepted'
-  const iRequested = trade.rollbackRequestedBy === userId
-  const otherRequested = trade.rollbackRequestedBy !== null && trade.rollbackRequestedBy !== userId
-  const canForce = trade.rollbackRequestedAt
-    ? Date.now() - new Date(trade.rollbackRequestedAt).getTime() >= 7 * 24 * 60 * 60 * 1000
-    : false
 
   return (
     <div
@@ -255,90 +216,23 @@ function TradeCard({
         </>
       )}
 
-      {/* Rollback UI for completed trades */}
-      {isAccepted && iRequested && (
-        <div className="space-y-2 pt-0.5">
-          <p className="text-xs text-amber-700 font-medium">
-            Você solicitou o desfazimento desta troca. Aguardando os outros participantes.
-          </p>
-          <div className="flex flex-wrap gap-2 items-center">
-            <p className="text-[10px] text-yvy-muted font-medium">Confirmações:</p>
-            {trade.rollbackOtherStatuses.map((s) => (
-              <div key={s.name} className="flex items-center gap-1">
-                <span className="text-[10px] text-yvy-muted capitalize">
-                  {s.name.split(' ')[0]}:
-                </span>
-                <RollbackStatusBadge status={s.status} />
-              </div>
-            ))}
-          </div>
-          {canForce &&
-            (rollbackStep === 'confirming-force' ? (
-              <div className="space-y-2">
-                <p className="text-xs text-red-700 font-medium">
-                  Tem certeza? Os álbuns de todos serão revertidos imediatamente.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setRollbackStep('idle')}
-                    disabled={rollbackLoading !== null}
-                    className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={() => handleRollback('force')}
-                    disabled={rollbackLoading !== null}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-                  >
-                    {rollbackLoading === 'force' ? 'Desfazendo...' : 'Confirmar desfazimento'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-1.5 pt-1">
-                <p className="text-[11px] text-amber-700 leading-snug">
-                  Já se passaram 7 dias sem resposta. Você pode forçar o desfazimento.
-                </p>
-                <button
-                  onClick={() => setRollbackStep('confirming-force')}
-                  disabled={rollbackLoading !== null}
-                  className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-                >
-                  Forçar desfazimento
-                </button>
-              </div>
-            ))}
-        </div>
-      )}
-
-      {isAccepted && otherRequested && (
+      {/* Rollback response UI — only shown when someone else requested an undo */}
+      {isAccepted && trade.rollbackRequestedBy !== null && trade.rollbackRequestedBy !== userId && (
         <div className="space-y-2">
           <p className="text-xs text-amber-700 font-medium">
             {trade.rollbackRequesterName} quer desfazer esta troca.
           </p>
-          <div className="flex flex-wrap gap-2 items-center">
-            <p className="text-[10px] text-yvy-muted font-medium">Status:</p>
-            {trade.rollbackOtherStatuses.map((s) => (
-              <div key={s.name} className="flex items-center gap-1">
-                <span className="text-[10px] text-yvy-muted capitalize">
-                  {s.name.split(' ')[0]}:
-                </span>
-                <RollbackStatusBadge status={s.status} />
-              </div>
-            ))}
-          </div>
           {trade.myRollbackStatus === 'none' && (
             <div className="flex gap-2">
               <button
-                onClick={() => handleRollback('deny')}
+                onClick={() => handleRollbackResponse('deny')}
                 disabled={rollbackLoading !== null}
                 className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
               >
                 {rollbackLoading === 'deny' ? '...' : 'Manter troca'}
               </button>
               <button
-                onClick={() => handleRollback('confirm')}
+                onClick={() => handleRollbackResponse('confirm')}
                 disabled={rollbackLoading !== null}
                 className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
               >
@@ -348,47 +242,11 @@ function TradeCard({
           )}
           {trade.myRollbackStatus === 'approved' && (
             <p className="text-xs text-emerald-600 font-medium">
-              ✓ Você confirmou. Aguardando os outros participantes.
+              Você confirmou. Aguardando os outros participantes.
             </p>
           )}
         </div>
       )}
-
-      {isAccepted &&
-        !trade.rollbackRequestedBy &&
-        (rollbackStep === 'confirming-request' ? (
-          <div className="space-y-2 pt-0.5">
-            <p className="text-xs text-yvy-muted">
-              Solicitar desfazimento desta troca triangular? Todos os participantes precisam
-              confirmar.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setRollbackStep('idle')}
-                disabled={rollbackLoading !== null}
-                className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleRollback('request')}
-                disabled={rollbackLoading !== null}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-              >
-                {rollbackLoading === 'request' ? 'Solicitando...' : 'Sim, desfazer'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setRollbackStep('confirming-request')}
-            disabled={rollbackLoading !== null}
-            className="text-xs text-amber-600 underline disabled:opacity-50"
-          >
-            Desfazer troca
-          </button>
-        ))}
-
 
       {/* Actions */}
       {isPending && trade.status === 'pending' && (

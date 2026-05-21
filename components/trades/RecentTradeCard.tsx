@@ -174,36 +174,38 @@ export function RecentTradeCard({
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 
-      {iRequested &&
-        (() => {
-          const canForce = trade.rollbackRequestedAt
-            ? Date.now() - new Date(trade.rollbackRequestedAt).getTime() >= 3 * 24 * 60 * 60 * 1000
-            : Date.now() - new Date(trade.acceptedAt).getTime() >= 7 * 24 * 60 * 60 * 1000
-
-          return (
-            <div className="space-y-1.5 pt-0.5">
-              <p className="text-xs text-yvy-muted">
-                {isPartialRequest
-                  ? `Aguardando confirmação de ${trade.otherUserName} para desfazer parcialmente:`
-                  : `Aguardando confirmação de ${trade.otherUserName} para desfazer toda a troca.`}
-              </p>
-              {isPartialRequest && (
-                <div className="space-y-1.5">
-                  {trade.rollbackMyGivingIds && trade.rollbackMyGivingIds.length > 0 && (
-                    <StickerList
-                      ids={trade.rollbackMyGivingIds}
-                      label="Das figurinhas que você deu"
-                    />
-                  )}
-                  {trade.rollbackMyReceivingIds && trade.rollbackMyReceivingIds.length > 0 && (
-                    <StickerList
-                      ids={trade.rollbackMyReceivingIds}
-                      label="Das figurinhas que você recebeu"
-                    />
-                  )}
-                </div>
+      {iRequested && (
+        <div className="space-y-1.5 pt-0.5">
+          <p className="text-xs text-yvy-muted">
+            {isPartialRequest
+              ? `Aguardando confirmação de ${trade.otherUserName} para desfazer parcialmente:`
+              : `Aguardando confirmação de ${trade.otherUserName} para desfazer toda a troca.`}
+          </p>
+          {isPartialRequest && (
+            <div className="space-y-1.5">
+              {trade.rollbackMyGivingIds && trade.rollbackMyGivingIds.length > 0 && (
+                <StickerList
+                  ids={trade.rollbackMyGivingIds}
+                  label="Das figurinhas que você deu"
+                />
               )}
-              {canForce && (
+              {trade.rollbackMyReceivingIds && trade.rollbackMyReceivingIds.length > 0 && (
+                <StickerList
+                  ids={trade.rollbackMyReceivingIds}
+                  label="Das figurinhas que você recebeu"
+                />
+              )}
+            </div>
+          )}
+          {!hideRollback &&
+            (() => {
+              const canForce = trade.rollbackRequestedAt
+                ? Date.now() - new Date(trade.rollbackRequestedAt).getTime() >= 3 * 24 * 60 * 60 * 1000
+                : Date.now() - new Date(trade.acceptedAt).getTime() >= 7 * 24 * 60 * 60 * 1000
+
+              if (!canForce) return null
+
+              return (
                 <div className="space-y-1.5 pt-1">
                   <p className="text-[11px] text-amber-700 leading-snug">
                     Já se passaram 3 dias sem resposta. Você pode forçar o desfazimento.
@@ -240,10 +242,10 @@ export function RecentTradeCard({
                     </button>
                   )}
                 </div>
-              )}
-            </div>
-          )
-        })()}
+              )
+            })()}
+        </div>
+      )}
 
       {otherRequested && (
         <div className="space-y-2">
