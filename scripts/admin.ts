@@ -251,6 +251,52 @@ async function findTrades(nameFragment: string) {
   }
 }
 
+async function invertAlbum(nameFragment: string) {
+  const { ALL_STICKER_IDS } = await import('../lib/stickers')
+
+  const { data: users, error } = await supabase
+    .from('users')
+    .select('id, name, input_mode')
+    .ilike('name', `%${nameFragment}%`)
+
+  if (error) { console.error(error.message); process.exit(1) }
+  if (!users?.length) { console.log(`No users matching "${nameFragment}"`); return }
+  if (users.length > 1) {
+    console.log('Multiple users matched — be more specific:')
+    for (const u of users) console.log(`  ${u.name} (${u.id})`)
+    process.exit(1)
+  }
+
+  const user = users[0]
+  const { data: rows, error: fetchErr } = await supabase
+    .from('user_stickers')
+    .select('sticker_id')
+    .eq('user_id', user.id)
+
+  if (fetchErr) { console.error(fetchErr.message); process.exit(1) }
+
+  const current = new Set((rows ?? []).map((r: { sticker_id: string }) => r.sticker_id))
+  const complement = ALL_STICKER_IDS.filter((id) => !current.has(id))
+
+  console.log(`\n${user.name} (input_mode: ${user.input_mode})`)
+  console.log(`  current:    ${current.size} stickers`)
+  console.log(`  complement: ${complement.length} stickers`)
+
+  const { error: delErr } = await supabase
+    .from('user_stickers')
+    .delete()
+    .eq('user_id', user.id)
+
+  if (delErr) { console.error('Delete failed:', delErr.message); process.exit(1) }
+
+  const inserts = complement.map((sticker_id) => ({ user_id: user.id, sticker_id }))
+  const { error: insErr } = await supabase.from('user_stickers').insert(inserts)
+
+  if (insErr) { console.error('Insert failed:', insErr.message); process.exit(1) }
+
+  console.log(`✓ Album inverted: ${current.size} → ${complement.length} stickers`)
+}
+
 async function adminRollbackTrade(tradeId: string) {
   const { data: trade, error } = await supabase
     .from('pending_trades')
@@ -354,6 +400,7 @@ async function main() {
   else if (cmd === 'find-trades' && arg) await findTrades(arg)
   else if (cmd === 'backfill-trade' && arg) await backfillTrade(arg)
   else if (cmd === 'admin-rollback-trade' && arg) await adminRollbackTrade(arg)
+  else if (cmd === 'invert-album' && arg) await invertAlbum(arg)
   else {
     console.log(
       'Usage:\n' +

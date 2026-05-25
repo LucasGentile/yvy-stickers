@@ -19,6 +19,7 @@ import { decrementDuplicate } from '@/actions/decrementDuplicate'
 import { removeDuplicate } from '@/actions/removeDuplicate'
 import { useNotification } from '@/contexts/NotificationContext'
 import DuplicatePicker from './DuplicatePicker'
+import { getStickerTeamCode, TEAM_COLORS, TEAM_NAME } from '@/lib/teamColors'
 
 export default function DuplicatesScreen() {
   const { showSuccess, showError } = useNotification()
@@ -574,15 +575,30 @@ export default function DuplicatesScreen() {
               return (
                 <div key={stickerId} className="flex items-center justify-between py-2.5 gap-3">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-semibold min-w-0 truncate text-yvy-dark">
-                      {isChromeSticker(stickerId) ? (
-                        <span className="font-bold text-amber-500">{stickerId}</span>
-                      ) : isCocaColaSticker(stickerId) ? (
-                        <span className="font-bold text-red-500">{stickerId}</span>
-                      ) : (
-                        stickerId
-                      )}
-                    </span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-semibold truncate text-yvy-dark">
+                        {isChromeSticker(stickerId) ? (
+                          <span className="font-bold text-amber-500">{stickerId}</span>
+                        ) : isCocaColaSticker(stickerId) ? (
+                          <span className="font-bold text-red-500">{stickerId}</span>
+                        ) : (
+                          stickerId
+                        )}
+                      </span>
+                      {(() => {
+                        const code = getStickerTeamCode(stickerId)
+                        const name = code ? TEAM_NAME[code] : null
+                        const color = code ? TEAM_COLORS[code] : null
+                        return name && color ? (
+                          <span
+                            className="text-[11px] font-medium leading-tight truncate"
+                            style={{ color }}
+                          >
+                            {name}
+                          </span>
+                        ) : null
+                      })()}
+                    </div>
                     {reserved > 0 && (
                       <span className="shrink-0 text-[10px] font-semibold text-red-500 border border-red-200 bg-red-50 rounded px-1.5 py-0.5 leading-none">
                         {reserved} em troca
