@@ -1,5 +1,16 @@
 # Changelog
 
+## [v2.4.0] — 2026-05-25
+
+### Funcionalidades
+- Figurinhas de trocas parcialmente desfeitas agora permanecem visíveis na lista de trocas concluídas, identificadas como "Troca parcial"
+- Lista de repetidas agora exibe o emoji da bandeira do país ao lado de cada figurinha
+
+### Correções
+- Corrigido bug onde figurinhas devolvidas em desfazimentos iam parar nas repetidas em vez de na coleção correta
+- Trocas parcialmente desfeitas não aparecem mais na seção "Desfazimentos pendentes"
+- Removida interface de confirmação/recusa de desfazimento em trocas já resolvidas parcialmente
+
 ## [v2.3.0] — 2026-05-21
 
 ### Novidades
