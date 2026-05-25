@@ -20,7 +20,9 @@ export default function PendingTradesSection({
   onRefresh,
 }: Props) {
   const total = received.length + sent.length
-  const rollbackTrades = recentlyAccepted.filter((t) => t.rollbackRequestedBy !== null)
+  const rollbackTrades = recentlyAccepted.filter(
+    (t) => t.rollbackRequestedBy !== null && !t.isPartiallyRolledBack
+  )
 
   if (total === 0 && rollbackTrades.length === 0) return null
 
