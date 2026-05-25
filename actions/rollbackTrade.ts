@@ -30,7 +30,37 @@ async function restoreDupe(userId: string, ids: string[]) {
 
 async function removeFromCollection(userId: string, ids: string[]) {
   if (ids.length === 0) return
-  await supabaseAdmin.from('user_stickers').delete().eq('user_id', userId).in('sticker_id', ids)
+  for (const sid of ids) {
+    const { data: dupe } = await supabaseAdmin
+      .from('user_duplicates')
+      .select('count')
+      .eq('user_id', userId)
+      .eq('sticker_id', sid)
+      .maybeSingle()
+    if (dupe) {
+      // Was received as a duplicate (already owned) — undo the increment
+      if (dupe.count > 1) {
+        await supabaseAdmin
+          .from('user_duplicates')
+          .update({ count: dupe.count - 1 })
+          .eq('user_id', userId)
+          .eq('sticker_id', sid)
+      } else {
+        await supabaseAdmin
+          .from('user_duplicates')
+          .delete()
+          .eq('user_id', userId)
+          .eq('sticker_id', sid)
+      }
+    } else {
+      // Was received as a new collection item — remove it
+      await supabaseAdmin
+        .from('user_stickers')
+        .delete()
+        .eq('user_id', userId)
+        .eq('sticker_id', sid)
+    }
+  }
 }
 
 // partialGivingIds / partialReceivingIds are from the trade's initiator perspective.
