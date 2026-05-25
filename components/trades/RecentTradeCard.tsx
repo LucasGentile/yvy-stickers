@@ -174,7 +174,7 @@ export function RecentTradeCard({
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 
-      {iRequested && (
+      {!trade.isPartiallyRolledBack && iRequested && (
         <div className="space-y-1.5 pt-0.5">
           <p className="text-xs text-yvy-muted">
             {isPartialRequest
@@ -245,7 +245,7 @@ export function RecentTradeCard({
         </div>
       )}
 
-      {otherRequested && (
+      {!trade.isPartiallyRolledBack && otherRequested && (
         <div className="space-y-2">
           <p className="text-xs text-amber-700 font-medium">
             {isPartialRequest
