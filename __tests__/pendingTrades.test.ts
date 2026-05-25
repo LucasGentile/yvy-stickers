@@ -345,12 +345,11 @@ describe('getPendingTrades', () => {
         }
       }
       if (callCount === 2) {
-        // pending_trades (status=accepted, recently accepted)
+        // pending_trades (status=accepted/rolled_back)
         return {
           select: vi.fn().mockReturnThis(),
           or: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          gte: vi.fn().mockReturnThis(),
+          in: vi.fn().mockReturnThis(),
           order: vi.fn().mockResolvedValue({ data: [], error: null }),
         }
       }
@@ -413,12 +412,11 @@ describe('getPendingTrades', () => {
         }
       }
       if (callCount === 2) {
-        // pending_trades (status=accepted, recently accepted)
+        // pending_trades (status=accepted/rolled_back)
         return {
           select: vi.fn().mockReturnThis(),
           or: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          gte: vi.fn().mockReturnThis(),
+          in: vi.fn().mockReturnThis(),
           order: vi.fn().mockResolvedValue({
             data: [
               {
@@ -429,6 +427,7 @@ describe('getPendingTrades', () => {
                 receiving_ids: ['BRA1'],
                 accepted_at: recentAt,
                 rollback_requested_by: null,
+                status: 'accepted',
               },
             ],
             error: null,

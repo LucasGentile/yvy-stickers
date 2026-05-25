@@ -273,6 +273,7 @@ describe('rollbackTrade', () => {
           eq: vi.fn().mockReturnThis(),
           maybeSingle: vi.fn().mockResolvedValue({ data: { count: 1 } }),
           update: vi.fn().mockReturnThis(),
+          delete: vi.fn().mockReturnThis(),
           then: (resolve: (v: unknown) => unknown) =>
             Promise.resolve({ error: null }).then(resolve),
         }

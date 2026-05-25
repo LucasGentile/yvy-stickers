@@ -259,8 +259,14 @@ async function invertAlbum(nameFragment: string) {
     .select('id, name, input_mode')
     .ilike('name', `%${nameFragment}%`)
 
-  if (error) { console.error(error.message); process.exit(1) }
-  if (!users?.length) { console.log(`No users matching "${nameFragment}"`); return }
+  if (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
+  if (!users?.length) {
+    console.log(`No users matching "${nameFragment}"`)
+    return
+  }
   if (users.length > 1) {
     console.log('Multiple users matched — be more specific:')
     for (const u of users) console.log(`  ${u.name} (${u.id})`)
@@ -273,7 +279,10 @@ async function invertAlbum(nameFragment: string) {
     .select('sticker_id')
     .eq('user_id', user.id)
 
-  if (fetchErr) { console.error(fetchErr.message); process.exit(1) }
+  if (fetchErr) {
+    console.error(fetchErr.message)
+    process.exit(1)
+  }
 
   const current = new Set((rows ?? []).map((r: { sticker_id: string }) => r.sticker_id))
   const complement = ALL_STICKER_IDS.filter((id) => !current.has(id))
@@ -282,17 +291,20 @@ async function invertAlbum(nameFragment: string) {
   console.log(`  current:    ${current.size} stickers`)
   console.log(`  complement: ${complement.length} stickers`)
 
-  const { error: delErr } = await supabase
-    .from('user_stickers')
-    .delete()
-    .eq('user_id', user.id)
+  const { error: delErr } = await supabase.from('user_stickers').delete().eq('user_id', user.id)
 
-  if (delErr) { console.error('Delete failed:', delErr.message); process.exit(1) }
+  if (delErr) {
+    console.error('Delete failed:', delErr.message)
+    process.exit(1)
+  }
 
   const inserts = complement.map((sticker_id) => ({ user_id: user.id, sticker_id }))
   const { error: insErr } = await supabase.from('user_stickers').insert(inserts)
 
-  if (insErr) { console.error('Insert failed:', insErr.message); process.exit(1) }
+  if (insErr) {
+    console.error('Insert failed:', insErr.message)
+    process.exit(1)
+  }
 
   console.log(`✓ Album inverted: ${current.size} → ${complement.length} stickers`)
 }

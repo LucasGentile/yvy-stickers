@@ -281,78 +281,87 @@ export function RecentTradeCard({
         </div>
       )}
 
-      {!hideRollback && !trade.isPartiallyRolledBack && !trade.rollbackRequestedBy && revertStep === 'idle' && (
-        <button
-          onClick={() => setRevertStep('choose-mode')}
-          disabled={loading !== null}
-          className="text-xs text-amber-600 underline disabled:opacity-50"
-        >
-          Desfazer troca
-        </button>
-      )}
-
-      {!hideRollback && !trade.isPartiallyRolledBack && !trade.rollbackRequestedBy && revertStep === 'choose-mode' && (
-        <div className="space-y-2 pt-0.5">
-          <p className="text-xs font-medium text-yvy-dark">Como deseja desfazer?</p>
-          <div className="flex gap-2">
-            <button
-              onClick={handleRequestFull}
-              disabled={loading !== null}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-            >
-              {loading === 'request' ? 'Solicitando...' : 'Desfazer tudo'}
-            </button>
-            <button
-              onClick={() => setRevertStep('select-stickers')}
-              disabled={loading !== null}
-              className="flex-1 border border-amber-400 text-amber-700 font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-amber-50 disabled:opacity-50"
-            >
-              Desfazer parcialmente
-            </button>
-          </div>
+      {!hideRollback &&
+        !trade.isPartiallyRolledBack &&
+        !trade.rollbackRequestedBy &&
+        revertStep === 'idle' && (
           <button
-            onClick={() => setRevertStep('idle')}
+            onClick={() => setRevertStep('choose-mode')}
             disabled={loading !== null}
-            className="text-xs text-yvy-muted underline"
+            className="text-xs text-amber-600 underline disabled:opacity-50"
           >
-            Cancelar
+            Desfazer troca
           </button>
-        </div>
-      )}
+        )}
 
-      {!hideRollback && !trade.isPartiallyRolledBack && !trade.rollbackRequestedBy && revertStep === 'select-stickers' && (
-        <div className="space-y-3 pt-0.5">
-          <p className="text-xs text-yvy-muted">Selecione as figurinhas que deseja desfazer:</p>
-          <StickerToggle
-            ids={trade.myGivingIds}
-            label="Você deu"
-            selected={selectedGiving}
-            onToggle={toggleGiving}
-          />
-          <StickerToggle
-            ids={trade.myReceivingIds}
-            label="Você recebeu"
-            selected={selectedReceiving}
-            onToggle={toggleReceiving}
-          />
-          <div className="flex gap-2">
+      {!hideRollback &&
+        !trade.isPartiallyRolledBack &&
+        !trade.rollbackRequestedBy &&
+        revertStep === 'choose-mode' && (
+          <div className="space-y-2 pt-0.5">
+            <p className="text-xs font-medium text-yvy-dark">Como deseja desfazer?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRequestFull}
+                disabled={loading !== null}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                {loading === 'request' ? 'Solicitando...' : 'Desfazer tudo'}
+              </button>
+              <button
+                onClick={() => setRevertStep('select-stickers')}
+                disabled={loading !== null}
+                className="flex-1 border border-amber-400 text-amber-700 font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-amber-50 disabled:opacity-50"
+              >
+                Desfazer parcialmente
+              </button>
+            </div>
             <button
-              onClick={() => setRevertStep('choose-mode')}
+              onClick={() => setRevertStep('idle')}
               disabled={loading !== null}
-              className="border border-yvy-border text-yvy-text font-semibold px-4 py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+              className="text-xs text-yvy-muted underline"
             >
-              ← Voltar
-            </button>
-            <button
-              onClick={handleRequestPartial}
-              disabled={loading !== null || !hasPartialSelection}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
-            >
-              {loading === 'request' ? 'Solicitando...' : 'Solicitar desfazimento'}
+              Cancelar
             </button>
           </div>
-        </div>
-      )}
+        )}
+
+      {!hideRollback &&
+        !trade.isPartiallyRolledBack &&
+        !trade.rollbackRequestedBy &&
+        revertStep === 'select-stickers' && (
+          <div className="space-y-3 pt-0.5">
+            <p className="text-xs text-yvy-muted">Selecione as figurinhas que deseja desfazer:</p>
+            <StickerToggle
+              ids={trade.myGivingIds}
+              label="Você deu"
+              selected={selectedGiving}
+              onToggle={toggleGiving}
+            />
+            <StickerToggle
+              ids={trade.myReceivingIds}
+              label="Você recebeu"
+              selected={selectedReceiving}
+              onToggle={toggleReceiving}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setRevertStep('choose-mode')}
+                disabled={loading !== null}
+                className="border border-yvy-border text-yvy-text font-semibold px-4 py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+              >
+                ← Voltar
+              </button>
+              <button
+                onClick={handleRequestPartial}
+                disabled={loading !== null || !hasPartialSelection}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+              >
+                {loading === 'request' ? 'Solicitando...' : 'Solicitar desfazimento'}
+              </button>
+            </div>
+          </div>
+        )}
     </div>
   )
 }

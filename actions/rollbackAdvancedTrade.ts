@@ -54,11 +54,7 @@ async function removeFromCollection(userId: string, ids: string[]) {
           .eq('sticker_id', sid)
       }
     } else {
-      await supabaseAdmin
-        .from('user_stickers')
-        .delete()
-        .eq('user_id', userId)
-        .eq('sticker_id', sid)
+      await supabaseAdmin.from('user_stickers').delete().eq('user_id', userId).eq('sticker_id', sid)
     }
   }
 }

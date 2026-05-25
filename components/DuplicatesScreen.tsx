@@ -582,10 +582,25 @@ export default function DuplicatesScreen() {
                           <span className="text-[9px] align-super ml-px">{flag}</span>
                         ) : null
                         if (isChromeSticker(stickerId))
-                          return <span className="font-bold text-amber-500">{stickerId}{sup}</span>
+                          return (
+                            <span className="font-bold text-amber-500">
+                              {stickerId}
+                              {sup}
+                            </span>
+                          )
                         if (isCocaColaSticker(stickerId))
-                          return <span className="font-bold text-red-500">{stickerId}{sup}</span>
-                        return <>{stickerId}{sup}</>
+                          return (
+                            <span className="font-bold text-red-500">
+                              {stickerId}
+                              {sup}
+                            </span>
+                          )
+                        return (
+                          <>
+                            {stickerId}
+                            {sup}
+                          </>
+                        )
                       })()}
                     </span>
                     {reserved > 0 && (
