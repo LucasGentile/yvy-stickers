@@ -40,6 +40,7 @@ function makeTrade(overrides: Partial<RecentTrade> = {}): RecentTrade {
     rollbackMyGivingIds: null,
     rollbackMyReceivingIds: null,
     auditEntryId: null,
+    isPartiallyRolledBack: false,
     ...overrides,
   }
 }

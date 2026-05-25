@@ -127,7 +127,7 @@ export function RecentTradeCard({
             ))}
           <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
             {verified && <span className="text-emerald-500 text-sm">✓</span>}
-            Troca concluída
+            {trade.isPartiallyRolledBack ? 'Troca parcial' : 'Troca concluída'}
           </span>
         </div>
       </div>
@@ -281,7 +281,7 @@ export function RecentTradeCard({
         </div>
       )}
 
-      {!hideRollback && !trade.rollbackRequestedBy && revertStep === 'idle' && (
+      {!hideRollback && !trade.isPartiallyRolledBack && !trade.rollbackRequestedBy && revertStep === 'idle' && (
         <button
           onClick={() => setRevertStep('choose-mode')}
           disabled={loading !== null}
@@ -291,7 +291,7 @@ export function RecentTradeCard({
         </button>
       )}
 
-      {!hideRollback && !trade.rollbackRequestedBy && revertStep === 'choose-mode' && (
+      {!hideRollback && !trade.isPartiallyRolledBack && !trade.rollbackRequestedBy && revertStep === 'choose-mode' && (
         <div className="space-y-2 pt-0.5">
           <p className="text-xs font-medium text-yvy-dark">Como deseja desfazer?</p>
           <div className="flex gap-2">
@@ -320,7 +320,7 @@ export function RecentTradeCard({
         </div>
       )}
 
-      {!hideRollback && !trade.rollbackRequestedBy && revertStep === 'select-stickers' && (
+      {!hideRollback && !trade.isPartiallyRolledBack && !trade.rollbackRequestedBy && revertStep === 'select-stickers' && (
         <div className="space-y-3 pt-0.5">
           <p className="text-xs text-yvy-muted">Selecione as figurinhas que deseja desfazer:</p>
           <StickerToggle

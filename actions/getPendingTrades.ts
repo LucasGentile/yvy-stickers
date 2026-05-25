@@ -38,6 +38,7 @@ export type RecentTrade = {
   rollbackMyReceivingIds: string[] | null
   rollbackRequestedAt: string | null
   auditEntryId: string | null
+  isPartiallyRolledBack: boolean
 }
 
 export async function getPendingTrades(userId: string): Promise<{
@@ -68,10 +69,10 @@ export async function getPendingTrades(userId: string): Promise<{
       (supabaseAdmin as any)
         .from('pending_trades')
         .select(
-          'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by, rollback_requested_at, rollback_giving_ids, rollback_receiving_ids, verified_at'
+          'id, initiator_id, receiver_id, giving_ids, receiving_ids, accepted_at, rollback_requested_by, rollback_requested_at, rollback_giving_ids, rollback_receiving_ids, verified_at, status'
         )
         .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
-        .eq('status', 'accepted')
+        .in('status', ['accepted', 'rolled_back'])
         .order('accepted_at', { ascending: false }),
       supabaseAdmin
         .from('audit_log')
@@ -141,6 +142,15 @@ export async function getPendingTrades(userId: string): Promise<{
 
     const recentlyAccepted: RecentTrade[] = []
     for (const trade of acceptedTrades ?? []) {
+      const isPartiallyRolledBack = trade.status === 'rolled_back'
+
+      // Full rollbacks are hidden; only partial rollbacks remain visible
+      if (isPartiallyRolledBack) {
+        const hasPartialData =
+          trade.rollback_giving_ids !== null || trade.rollback_receiving_ids !== null
+        if (!hasPartialData) continue
+      }
+
       const isInitiator = trade.initiator_id === userId
       const otherId = isInitiator ? trade.receiver_id : trade.initiator_id
       const other = userMap[otherId]
@@ -154,12 +164,24 @@ export async function getPendingTrades(userId: string): Promise<{
         ? (trade.rollback_receiving_ids ?? null)
         : (trade.rollback_giving_ids ?? null)
 
+      // For partial rollbacks, show only the stickers that were kept
+      const rawGiving: string[] = isInitiator ? trade.giving_ids : trade.receiving_ids
+      const rawReceiving: string[] = isInitiator ? trade.receiving_ids : trade.giving_ids
+      const rolledBackGivingSet = new Set(rollbackMyGivingIds ?? [])
+      const rolledBackReceivingSet = new Set(rollbackMyReceivingIds ?? [])
+      const myGivingIds = isPartiallyRolledBack
+        ? rawGiving.filter((id) => !rolledBackGivingSet.has(id))
+        : rawGiving
+      const myReceivingIds = isPartiallyRolledBack
+        ? rawReceiving.filter((id) => !rolledBackReceivingSet.has(id))
+        : rawReceiving
+
       recentlyAccepted.push({
         id: trade.id,
         otherUserId: otherId,
         otherUserName: formatName(other.name),
-        myGivingIds: isInitiator ? trade.giving_ids : trade.receiving_ids,
-        myReceivingIds: isInitiator ? trade.receiving_ids : trade.giving_ids,
+        myGivingIds,
+        myReceivingIds,
         acceptedAt: trade.accepted_at,
         rollbackRequestedBy: trade.rollback_requested_by ?? null,
         rollbackRequestedAt:
@@ -169,6 +191,7 @@ export async function getPendingTrades(userId: string): Promise<{
         rollbackMyGivingIds,
         rollbackMyReceivingIds,
         auditEntryId: auditByTradeId.get(trade.id) ?? null,
+        isPartiallyRolledBack,
       })
     }
 
