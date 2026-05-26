@@ -173,6 +173,8 @@ export default function DuplicatesScreen() {
         : sortAlphabetically(duplicates.map((d) => d.stickerId))
       : []
   const dupeMap = Object.fromEntries(duplicates.map((d) => [d.stickerId, d.count]))
+  const totalCount = duplicates.reduce((sum, d) => sum + d.count, 0)
+  const totalReserved = Object.values(reservedCounts).reduce((sum, n) => sum + n, 0)
 
   function buildExportText(): string {
     const lines: string[] = ['Minhas repetidas:']
@@ -477,23 +479,15 @@ export default function DuplicatesScreen() {
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium text-yvy-text">
-                    {duplicates.reduce((sum, d) => sum + d.count, 0)} cópia
-                    {duplicates.reduce((sum, d) => sum + d.count, 0) !== 1 ? 's' : ''} repetida
-                    {duplicates.reduce((sum, d) => sum + d.count, 0) !== 1 ? 's' : ''} ·{' '}
-                    {duplicates.length} figurinha{duplicates.length !== 1 ? 's' : ''} diferente
+                    {totalCount} cópia{totalCount !== 1 ? 's' : ''} repetida
+                    {totalCount !== 1 ? 's' : ''} · {duplicates.length} figurinha
+                    {duplicates.length !== 1 ? 's' : ''} diferente
                     {duplicates.length !== 1 ? 's' : ''}
                   </p>
-                  {Object.values(reservedCounts).reduce((sum, n) => sum + n, 0) > 0 && (
+                  {totalReserved > 0 && (
                     <p className="text-[11px] text-red-500 font-medium">
-                      {Object.values(reservedCounts).reduce((sum, n) => sum + n, 0)} cópia
-                      {Object.values(reservedCounts).reduce((sum, n) => sum + n, 0) !== 1
-                        ? 's'
-                        : ''}{' '}
-                      reservada
-                      {Object.values(reservedCounts).reduce((sum, n) => sum + n, 0) !== 1
-                        ? 's'
-                        : ''}{' '}
-                      em trocas pendentes
+                      {totalReserved} cópia{totalReserved !== 1 ? 's' : ''} reservada
+                      {totalReserved !== 1 ? 's' : ''} em trocas pendentes
                     </p>
                   )}
                 </div>
@@ -574,8 +568,8 @@ export default function DuplicatesScreen() {
               const available = count - reserved
               return (
                 <div key={stickerId} className="flex items-center justify-between py-2.5 gap-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-semibold truncate text-yvy-dark">
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="text-sm font-semibold text-yvy-dark whitespace-nowrap">
                       {(() => {
                         const flag = TEAM_FLAG[getStickerTeamCode(stickerId) ?? '']
                         const sup = flag ? (
@@ -604,7 +598,7 @@ export default function DuplicatesScreen() {
                       })()}
                     </span>
                     {reserved > 0 && (
-                      <span className="shrink-0 text-[10px] font-semibold text-red-500 border border-red-200 bg-red-50 rounded px-1.5 py-0.5 leading-none">
+                      <span className="text-[10px] font-semibold text-red-500 border border-red-200 bg-red-50 rounded px-1.5 py-0.5 leading-none w-fit">
                         {reserved} em troca
                       </span>
                     )}

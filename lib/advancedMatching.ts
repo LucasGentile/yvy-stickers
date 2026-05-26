@@ -1,7 +1,7 @@
 'use server'
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { ALL_STICKER_IDS, isChromeSticker } from '@/lib/stickers'
+import { isChromeSticker, computeNeeded } from '@/lib/stickers'
 
 export type AdvancedTradeProposal = {
   userAId: string
@@ -17,10 +17,6 @@ type UserTradeData = {
   inputMode: string
   stickers: Set<string>
   duplicates: Map<string, number>
-}
-
-function computeNeeded(mode: string, marked: Set<string>): Set<string> {
-  return mode === 'have' ? new Set(ALL_STICKER_IDS.filter((id) => !marked.has(id))) : marked
 }
 
 function getReservedCounts(
@@ -240,13 +236,6 @@ export async function checkAdvancedTradeEligibility(userId: string): Promise<boo
   // Check if closing the cycle is possible:
   // I give to receiver B, giver C gives to me. Does B have dupes that C needs?
   for (const receiver of potentialReceivers) {
-    const receiverReserved = getReservedCounts(
-      receiver.user.id,
-      pendingNormalTrades,
-      pendingAdvancedTrades
-    )
-    const receiverAvailable = getAvailableDuplicates(receiver.user, receiverReserved)
-
     for (const giver of potentialGivers) {
       if (giver.user.id === receiver.user.id) continue
       const giverIncoming = getIncomingStickers(
@@ -259,7 +248,7 @@ export async function checkAdvancedTradeEligibility(userId: string): Promise<boo
           (id) => !giverIncoming.has(id)
         )
       )
-      const canClose = [...receiverAvailable].some((id) => giverNeeded.has(id))
+      const canClose = [...receiver.available].some((id) => giverNeeded.has(id))
       if (canClose) return true
     }
   }
@@ -291,14 +280,23 @@ export async function findAllAdvancedTrades(userId: string): Promise<ScoredPropo
   const proposals: ScoredProposal[] = []
   const seen = new Set<string>()
 
+  // Pre-compute per-user data once — avoids recomputing inside the O(n²) pair loop
+  type UserCache = { available: Set<string>; needed: Set<string> }
+  const othersData = new Map<string, UserCache>()
+  for (const user of others) {
+    const reserved = getReservedCounts(user.id, pendingNormalTrades, pendingAdvancedTrades)
+    const incoming = getIncomingStickers(user.id, pendingNormalTrades, pendingAdvancedTrades)
+    othersData.set(user.id, {
+      available: getAvailableDuplicates(user, reserved),
+      needed: new Set(
+        [...computeNeeded(user.inputMode, user.stickers)].filter((id) => !incoming.has(id))
+      ),
+    })
+  }
+
   // Try all pairs (B, C) where A→B, B→C, C→A
   for (const userB of others) {
-    const bReserved = getReservedCounts(userB.id, pendingNormalTrades, pendingAdvancedTrades)
-    const bIncoming = getIncomingStickers(userB.id, pendingNormalTrades, pendingAdvancedTrades)
-    const bAvailableDupes = getAvailableDuplicates(userB, bReserved)
-    const bNeeded = new Set(
-      [...computeNeeded(userB.inputMode, userB.stickers)].filter((id) => !bIncoming.has(id))
-    )
+    const { available: bAvailableDupes, needed: bNeeded } = othersData.get(userB.id)!
 
     // A→B: my dupes that B needs
     const aToB = [...myAvailableDupes].filter((id) => bNeeded.has(id))
@@ -311,12 +309,7 @@ export async function findAllAdvancedTrades(userId: string): Promise<ScoredPropo
       const key = [userB.id, userC.id].sort().join(':')
       if (seen.has(key)) continue
 
-      const cReserved = getReservedCounts(userC.id, pendingNormalTrades, pendingAdvancedTrades)
-      const cIncoming = getIncomingStickers(userC.id, pendingNormalTrades, pendingAdvancedTrades)
-      const cAvailableDupes = getAvailableDuplicates(userC, cReserved)
-      const cNeeded = new Set(
-        [...computeNeeded(userC.inputMode, userC.stickers)].filter((id) => !cIncoming.has(id))
-      )
+      const { available: cAvailableDupes, needed: cNeeded } = othersData.get(userC.id)!
 
       // B→C: B's dupes that C needs
       const bToC = [...bAvailableDupes].filter((id) => cNeeded.has(id))

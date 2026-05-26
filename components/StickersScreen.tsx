@@ -727,9 +727,12 @@ export default function StickersScreen() {
                 onClick={async () => {
                   if (!userId) return
                   setClearingDupes(true)
-                  for (const id of dupeWarning) await removeDuplicate(userId, id)
-                  setClearingDupes(false)
-                  setDupeWarning(null)
+                  try {
+                    for (const id of dupeWarning) await removeDuplicate(userId, id)
+                    setDupeWarning(null)
+                  } finally {
+                    setClearingDupes(false)
+                  }
                 }}
                 disabled={clearingDupes}
                 className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold py-2 rounded-lg disabled:opacity-50"

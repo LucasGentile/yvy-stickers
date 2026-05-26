@@ -2,6 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
+vi.mock('@/lib/supabaseAdmin', () => ({
+  supabaseAdmin: { from: vi.fn(), rpc: vi.fn() },
+}))
+vi.mock('@/lib/supabase', () => ({
+  supabase: { from: vi.fn() },
+}))
+
 vi.mock('@/lib/matching', () => ({
   getMatches: vi.fn(),
 }))
@@ -82,6 +89,7 @@ describe('MatchesScreen sections', () => {
       received: [],
       sent: [],
       recentlyAccepted: [],
+      recentlyCancelled: [],
     })
   })
 

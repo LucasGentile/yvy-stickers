@@ -37,9 +37,10 @@ function makeSelectChain(result: { data: unknown; error: unknown }) {
     eq: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
     gte: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn().mockResolvedValue(result),
-    order: vi.fn().mockResolvedValue(result),
-    // Thenable: allows `await chain.select().eq()` without a terminal method
+    // Thenable: allows `await chain.select().eq()` and `await chain.order().limit()` without explicit terminal
     then: vi
       .fn()
       .mockImplementation(
@@ -319,7 +320,8 @@ describe('getPendingTrades', () => {
           select: vi.fn().mockReturnThis(),
           or: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          order: vi.fn().mockResolvedValue({
+          order: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockResolvedValue({
             data: [
               {
                 id: 'trade-1',
@@ -350,7 +352,8 @@ describe('getPendingTrades', () => {
           select: vi.fn().mockReturnThis(),
           or: vi.fn().mockReturnThis(),
           in: vi.fn().mockReturnThis(),
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          order: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
         }
       }
       if (callCount === 3) {
@@ -408,7 +411,8 @@ describe('getPendingTrades', () => {
           select: vi.fn().mockReturnThis(),
           or: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
-          order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          order: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockResolvedValue({ data: [], error: null }),
         }
       }
       if (callCount === 2) {
@@ -417,7 +421,8 @@ describe('getPendingTrades', () => {
           select: vi.fn().mockReturnThis(),
           or: vi.fn().mockReturnThis(),
           in: vi.fn().mockReturnThis(),
-          order: vi.fn().mockResolvedValue({
+          order: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockResolvedValue({
             data: [
               {
                 id: 'trade-10',

@@ -150,7 +150,11 @@ describe('rollbackAdvancedTrade', () => {
   it('returns error when trade not found', async () => {
     mockFrom.mockReturnValue(makeSelectChain({ data: null }))
     const result = await rollbackAdvancedTrade('trade-1', 'user-a', 'request')
-    expect(result).toEqual({ success: false, error: 'Troca não encontrada ou já processada.' })
+    expect(result).toEqual({
+      success: false,
+      error: 'Troca não encontrada ou já processada.',
+      nonRecoverable: true,
+    })
   })
 
   it('returns error when user is not a participant', async () => {

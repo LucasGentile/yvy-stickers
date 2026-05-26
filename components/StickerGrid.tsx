@@ -3,6 +3,7 @@
 import { memo, useRef } from 'react'
 import { ALL_STICKER_SECTIONS, isChromeSticker, isCocaColaSticker } from '@/lib/stickers'
 import { CountryFlag } from '@/components/CountryFlag'
+import { usePrefs } from '@/contexts/PreferencesContext'
 
 interface Props {
   selected: Set<string>
@@ -88,6 +89,7 @@ function StickerGrid({
   incomingStickers,
   tradeLocked,
 }: Props) {
+  const { stickerOrder, fontIndex } = usePrefs()
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const suppressNextClick = useRef(false)
 
@@ -176,7 +178,10 @@ function StickerGrid({
 
             {section.type === 'group' ? (
               <div className="space-y-4">
-                {section.teams.map((team) => {
+                {(stickerOrder === 'alpha'
+                  ? [...section.teams].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+                  : section.teams
+                ).map((team) => {
                   const ownedCount = team.stickers.filter((id) => selected.has(id)).length
                   const total = team.stickers.length
                   const pct = Math.round((ownedCount / total) * 100)
@@ -202,7 +207,9 @@ function StickerGrid({
                         </button>
                       </div>
                       {/* Sticker chips — show number only (1–20) */}
-                      <div className="grid grid-cols-10 gap-1">
+                      <div
+                        className={`grid gap-1 ${fontIndex >= 2 ? 'grid-cols-7' : 'grid-cols-10'}`}
+                      >
                         {team.stickers.map((id, idx) => {
                           const on = selected.has(id)
                           const isNew = on && newestFromTrade?.has(id)

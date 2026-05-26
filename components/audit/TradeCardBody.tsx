@@ -27,7 +27,7 @@ export function TradeCardBody({
   const normalizedMetadata = entry.metadata.partnerName
     ? {
         ...entry.metadata,
-        partnerName: formatName(formatName(entry.metadata.partnerName as string)),
+        partnerName: formatName(entry.metadata.partnerName as string),
       }
     : entry.metadata
 
@@ -103,6 +103,12 @@ export function TradeCardBody({
                 </div>
               </div>
             )}
+            {entry.action === 'trade_rolled_back' && !!entry.metadata.partial && (
+              <p className="text-[10px] text-yvy-muted italic mt-1">
+                As figurinhas não listadas foram mantidas na troca.
+              </p>
+            )}
+
             {isAccepted && !!entry.metadata.isPartial && (
               <>
                 {((entry.metadata.excludedGivingIds as string[] | undefined) ?? []).length > 0 && (

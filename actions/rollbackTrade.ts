@@ -3,61 +3,9 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { logAction } from './logAction'
 import { formatName } from '@/lib/format'
+import { restoreDupe, removeFromCollection } from './tradeOps'
 
 export type RollbackResult = { success: true } | { success: false; error: string }
-
-async function restoreDupe(userId: string, ids: string[]) {
-  for (const sid of ids) {
-    const { data } = await supabaseAdmin
-      .from('user_duplicates')
-      .select('count')
-      .eq('user_id', userId)
-      .eq('sticker_id', sid)
-      .maybeSingle()
-    if (data) {
-      await supabaseAdmin
-        .from('user_duplicates')
-        .update({ count: data.count + 1 })
-        .eq('user_id', userId)
-        .eq('sticker_id', sid)
-    } else {
-      await supabaseAdmin
-        .from('user_duplicates')
-        .insert({ user_id: userId, sticker_id: sid, count: 1 })
-    }
-  }
-}
-
-async function removeFromCollection(userId: string, ids: string[]) {
-  if (ids.length === 0) return
-  for (const sid of ids) {
-    const { data: dupe } = await supabaseAdmin
-      .from('user_duplicates')
-      .select('count')
-      .eq('user_id', userId)
-      .eq('sticker_id', sid)
-      .maybeSingle()
-    if (dupe) {
-      // Was received as a duplicate (already owned) — undo the increment
-      if (dupe.count > 1) {
-        await supabaseAdmin
-          .from('user_duplicates')
-          .update({ count: dupe.count - 1 })
-          .eq('user_id', userId)
-          .eq('sticker_id', sid)
-      } else {
-        await supabaseAdmin
-          .from('user_duplicates')
-          .delete()
-          .eq('user_id', userId)
-          .eq('sticker_id', sid)
-      }
-    } else {
-      // Was received as a new collection item — remove it
-      await supabaseAdmin.from('user_stickers').delete().eq('user_id', userId).eq('sticker_id', sid)
-    }
-  }
-}
 
 // partialGivingIds / partialReceivingIds are from the trade's initiator perspective.
 // Pass them (even as []) to request a partial rollback; omit both for a full rollback.
@@ -79,15 +27,86 @@ export async function rollbackTrade(
       'id, initiator_id, receiver_id, giving_ids, receiving_ids, status, accepted_at, rollback_requested_by, rollback_requested_at, rollback_giving_ids, rollback_receiving_ids'
     )
     .eq('id', tradeId)
-    .eq('status', 'accepted')
+    .in('status', ['accepted', 'rolled_back'])
     .maybeSingle()
 
   if (!trade) return { success: false, error: 'Troca não encontrada ou já processada.' }
+
+  // A fully rolled-back trade (no partial data) cannot be rolled back again
+  if (
+    trade.status === 'rolled_back' &&
+    trade.rollback_giving_ids === null &&
+    trade.rollback_receiving_ids === null
+  ) {
+    return { success: false, error: 'Esta troca já foi completamente desfeita.' }
+  }
 
   const isParty = trade.initiator_id === userId || trade.receiver_id === userId
   if (!isParty) return { success: false, error: 'Você não faz parte desta troca.' }
 
   if (action === 'request') {
+    // For a partially-rolled-back trade, check that there are remaining stickers to roll back
+    if (trade.status === 'rolled_back') {
+      const rolledBackGiving = new Set<string>(trade.rollback_giving_ids ?? [])
+      const rolledBackReceiving = new Set<string>(trade.rollback_receiving_ids ?? [])
+      const remainingGiving = (trade.giving_ids as string[]).filter(
+        (id) => !rolledBackGiving.has(id)
+      )
+      const remainingReceiving = (trade.receiving_ids as string[]).filter(
+        (id) => !rolledBackReceiving.has(id)
+      )
+      if (remainingGiving.length === 0 && remainingReceiving.length === 0) {
+        return { success: false, error: 'Esta troca já foi completamente desfeita.' }
+      }
+      if (trade.rollback_requested_by) {
+        return { success: false, error: 'Desfazimento já solicitado.' }
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabaseAdmin as any)
+        .from('pending_trades')
+        .update({
+          rollback_requested_by: userId,
+          rollback_requested_at: new Date().toISOString(),
+        })
+        .eq('id', tradeId)
+        .eq('status', 'rolled_back')
+      if (error) return { success: false, error: 'Erro ao solicitar desfazimento.' }
+      ;(async () => {
+        const { data: users } = await supabaseAdmin
+          .from('users')
+          .select('id, name')
+          .in('id', [trade.initiator_id, trade.receiver_id])
+        const initiatorName = formatName(
+          users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário'
+        )
+        const receiverName = formatName(
+          users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
+        )
+        const otherPartyId = userId === trade.initiator_id ? trade.receiver_id : trade.initiator_id
+        const otherName = userId === trade.initiator_id ? receiverName : initiatorName
+        const requesterName = userId === trade.initiator_id ? initiatorName : receiverName
+        const givingToLog = userId === trade.initiator_id ? remainingGiving : remainingReceiving
+        const receivingToLog = userId === trade.initiator_id ? remainingReceiving : remainingGiving
+        await logAction(userId, 'trade_rollback_requested', {
+          tradeId: trade.id,
+          partnerName: otherName,
+          requestedBy: requesterName,
+          partial: false,
+          givingIds: givingToLog,
+          receivingIds: receivingToLog,
+        })
+        await logAction(otherPartyId, 'trade_rollback_requested', {
+          tradeId: trade.id,
+          partnerName: requesterName,
+          requestedBy: requesterName,
+          partial: false,
+          givingIds: otherPartyId === trade.initiator_id ? remainingGiving : remainingReceiving,
+          receivingIds: otherPartyId === trade.initiator_id ? remainingReceiving : remainingGiving,
+        })
+      })()
+      return { success: true }
+    }
+
     if (trade.rollback_requested_by) {
       return { success: false, error: 'Desfazimento já solicitado.' }
     }
@@ -164,15 +183,19 @@ export async function rollbackTrade(
     if (trade.rollback_requested_by === userId) {
       return { success: false, error: 'Você não pode negar sua própria solicitação.' }
     }
+    // For partial trades, only clear the pending request — keep rollback_giving_ids (history of first partial)
+    const denyPayload: Record<string, unknown> = {
+      rollback_requested_by: null,
+      rollback_requested_at: null,
+    }
+    if (trade.status !== 'rolled_back') {
+      denyPayload.rollback_giving_ids = null
+      denyPayload.rollback_receiving_ids = null
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabaseAdmin as any)
       .from('pending_trades')
-      .update({
-        rollback_requested_by: null,
-        rollback_requested_at: null,
-        rollback_giving_ids: null,
-        rollback_receiving_ids: null,
-      })
+      .update(denyPayload)
       .eq('id', tradeId)
     if (error)
       return { success: false, error: 'Erro ao recusar desfazimento.' }
@@ -234,11 +257,72 @@ export async function rollbackTrade(
     return { success: false, error: 'Aguardando confirmação do outro participante.' }
   }
 
-  // Atomic transition to rolled_back
+  // For a partially-rolled-back trade, roll back the remaining stickers
+  if (trade.status === 'rolled_back') {
+    const rolledBackGiving = new Set<string>(trade.rollback_giving_ids ?? [])
+    const rolledBackReceiving = new Set<string>(trade.rollback_receiving_ids ?? [])
+    const remainingGiving = (trade.giving_ids as string[]).filter((id) => !rolledBackGiving.has(id))
+    const remainingReceiving = (trade.receiving_ids as string[]).filter(
+      (id) => !rolledBackReceiving.has(id)
+    )
+
+    // Clear the pending request and partial data (trade is now fully rolled back)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabaseAdmin as any)
+      .from('pending_trades')
+      .update({
+        rollback_requested_by: null,
+        rollback_requested_at: null,
+        rollback_giving_ids: null,
+        rollback_receiving_ids: null,
+      })
+      .eq('id', tradeId)
+      .eq('status', 'rolled_back')
+
+    await Promise.all([
+      restoreDupe(trade.initiator_id, remainingGiving),
+      removeFromCollection(trade.initiator_id, remainingReceiving),
+      restoreDupe(trade.receiver_id, remainingReceiving),
+      removeFromCollection(trade.receiver_id, remainingGiving),
+    ])
+    ;(async () => {
+      const { data: users } = await supabaseAdmin
+        .from('users')
+        .select('id, name')
+        .in('id', [trade.initiator_id, trade.receiver_id])
+      const initiatorName = formatName(
+        users?.find((u) => u.id === trade.initiator_id)?.name ?? 'Usuário'
+      )
+      const receiverName = formatName(
+        users?.find((u) => u.id === trade.receiver_id)?.name ?? 'Usuário'
+      )
+      await logAction(trade.initiator_id, 'trade_rolled_back', {
+        tradeId: trade.id,
+        partnerName: receiverName,
+        partial: false,
+        givingIds: remainingGiving,
+        receivingIds: remainingReceiving,
+      })
+      await logAction(trade.receiver_id, 'trade_rolled_back', {
+        tradeId: trade.id,
+        partnerName: initiatorName,
+        partial: false,
+        givingIds: remainingReceiving,
+        receivingIds: remainingGiving,
+      })
+    })()
+    return { success: true }
+  }
+
+  // Atomic transition to rolled_back (for 'accepted' trades)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: updated } = await (supabaseAdmin as any)
     .from('pending_trades')
-    .update({ status: 'rolled_back' })
+    .update({
+      status: 'rolled_back',
+      rollback_requested_by: null,
+      rollback_requested_at: null,
+    })
     .eq('id', tradeId)
     .eq('status', 'accepted')
     .select('id')

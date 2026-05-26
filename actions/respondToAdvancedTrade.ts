@@ -5,6 +5,36 @@ import { effectuateAdvancedTrade } from './effectuateAdvancedTrade'
 import { logAction } from './logAction'
 import { formatName } from '@/lib/format'
 
+type AdvancedTradeRecord = {
+  id: string
+  user_a_id: string
+  user_b_id: string
+  user_c_id: string
+  a_gives_ids: string[]
+  b_gives_ids: string[]
+  c_gives_ids: string[]
+}
+
+async function buildLogContext(trade: AdvancedTradeRecord) {
+  const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
+  const { data: users } = await supabaseAdmin
+    .from('users')
+    .select('id, name')
+    .in('id', participants)
+  const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
+  const givesMap: Record<string, string[]> = {
+    [trade.user_a_id]: trade.a_gives_ids,
+    [trade.user_b_id]: trade.b_gives_ids,
+    [trade.user_c_id]: trade.c_gives_ids,
+  }
+  const receivesMap: Record<string, string[]> = {
+    [trade.user_a_id]: trade.c_gives_ids,
+    [trade.user_b_id]: trade.a_gives_ids,
+    [trade.user_c_id]: trade.b_gives_ids,
+  }
+  return { participants, nameMap, givesMap, receivesMap }
+}
+
 export type RespondAdvancedResult = { success: true } | { success: false; error: string }
 
 export async function respondToAdvancedTrade(
@@ -49,22 +79,7 @@ export async function respondToAdvancedTrade(
       .eq('status', 'pending')
     ;(async () => {
       try {
-        const { data: users } = await supabaseAdmin
-          .from('users')
-          .select('id, name')
-          .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
-        const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
-        const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
-        const givesMap: Record<string, string[]> = {
-          [trade.user_a_id]: trade.a_gives_ids,
-          [trade.user_b_id]: trade.b_gives_ids,
-          [trade.user_c_id]: trade.c_gives_ids,
-        }
-        const receivesMap: Record<string, string[]> = {
-          [trade.user_a_id]: trade.c_gives_ids,
-          [trade.user_b_id]: trade.a_gives_ids,
-          [trade.user_c_id]: trade.b_gives_ids,
-        }
+        const { participants, nameMap, givesMap, receivesMap } = await buildLogContext(trade)
         for (const pid of participants) {
           const others = participants
             .filter((id) => id !== pid)
@@ -92,31 +107,21 @@ export async function respondToAdvancedTrade(
 
   if (action === 'reject') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabaseAdmin as any)
+    const { data: rejected } = await (supabaseAdmin as any)
       .from('advanced_trades')
       .update({ [statusColumn]: 'rejected', status: 'rejected' })
       .eq('id', tradeId)
       .eq('status', 'pending')
+      .select('id')
+      .maybeSingle()
 
-    // Fire-and-forget logging
+    if (!rejected) {
+      return { success: false, error: 'Troca já foi processada em outro dispositivo.' }
+    }
+
     ;(async () => {
       try {
-        const { data: users } = await supabaseAdmin
-          .from('users')
-          .select('id, name')
-          .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
-        const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
-        const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
-        const givesMap: Record<string, string[]> = {
-          [trade.user_a_id]: trade.a_gives_ids,
-          [trade.user_b_id]: trade.b_gives_ids,
-          [trade.user_c_id]: trade.c_gives_ids,
-        }
-        const receivesMap: Record<string, string[]> = {
-          [trade.user_a_id]: trade.c_gives_ids,
-          [trade.user_b_id]: trade.a_gives_ids,
-          [trade.user_c_id]: trade.b_gives_ids,
-        }
+        const { participants, nameMap, givesMap, receivesMap } = await buildLogContext(trade)
         for (const pid of participants) {
           const others = participants
             .filter((id) => id !== pid)
@@ -159,13 +164,8 @@ export async function respondToAdvancedTrade(
   // Always log the approval for all participants
   ;(async () => {
     try {
-      const { data: users } = await supabaseAdmin
-        .from('users')
-        .select('id, name')
-        .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
-      const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
+      const { participants, nameMap } = await buildLogContext(trade)
       const approverName = nameMap[userId] ?? 'Usuário'
-      const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
       for (const pid of participants) {
         const others = participants.filter((id) => id !== pid).map((id) => nameMap[id] ?? 'Usuário')
         logAction(pid, 'advanced_trade_approved', {
@@ -210,11 +210,7 @@ export async function respondToAdvancedTrade(
     // Fire-and-forget logging with sticker details per participant
     ;(async () => {
       try {
-        const { data: users } = await supabaseAdmin
-          .from('users')
-          .select('id, name')
-          .in('id', [trade.user_a_id, trade.user_b_id, trade.user_c_id])
-        const nameMap = Object.fromEntries((users ?? []).map((u) => [u.id, formatName(u.name)]))
+        const { nameMap } = await buildLogContext(trade)
         // Cycle: A→B→C→A. Each gives to the next, receives from the previous.
         const legs: Array<{
           userId: string

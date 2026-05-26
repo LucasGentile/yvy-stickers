@@ -174,6 +174,20 @@ export function RecentTradeCard({
 
       {msg && <p className="text-xs text-red-600">{msg}</p>}
 
+      {trade.isPartiallyRolledBack && iRequested && (
+        <div className="space-y-1.5 pt-0.5">
+          <p className="text-xs text-yvy-muted">
+            Aguardando confirmação de {trade.otherUserName} para desfazer os itens restantes.
+          </p>
+          {trade.myGivingIds.length > 0 && (
+            <StickerList ids={trade.myGivingIds} label="Figurinhas que você dará de volta" />
+          )}
+          {trade.myReceivingIds.length > 0 && (
+            <StickerList ids={trade.myReceivingIds} label="Figurinhas que você recuperará" />
+          )}
+        </div>
+      )}
+
       {!trade.isPartiallyRolledBack && iRequested && (
         <div className="space-y-1.5 pt-0.5">
           <p className="text-xs text-yvy-muted">
@@ -245,6 +259,36 @@ export function RecentTradeCard({
         </div>
       )}
 
+      {trade.isPartiallyRolledBack && otherRequested && (
+        <div className="space-y-2">
+          <p className="text-xs text-amber-700 font-medium">
+            {trade.otherUserName} quer desfazer os itens restantes desta troca.
+          </p>
+          {trade.myReceivingIds.length > 0 && (
+            <StickerList ids={trade.myReceivingIds} label="Você recuperará" />
+          )}
+          {trade.myGivingIds.length > 0 && (
+            <StickerList ids={trade.myGivingIds} label="Você devolverá" />
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={() => handle('deny')}
+              disabled={loading !== null}
+              className="flex-1 border border-yvy-border text-yvy-text font-semibold py-2 rounded-xl text-sm transition-colors hover:bg-yvy-bg disabled:opacity-50"
+            >
+              {loading === 'deny' ? '...' : 'Manter troca'}
+            </button>
+            <button
+              onClick={() => handle('confirm')}
+              disabled={loading !== null}
+              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-xl text-sm transition-colors disabled:opacity-50"
+            >
+              {loading === 'confirm' ? 'Desfazendo...' : 'Confirmar desfazimento'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {!trade.isPartiallyRolledBack && otherRequested && (
         <div className="space-y-2">
           <p className="text-xs text-amber-700 font-medium">
@@ -279,6 +323,16 @@ export function RecentTradeCard({
             </button>
           </div>
         </div>
+      )}
+
+      {!hideRollback && trade.isPartiallyRolledBack && !trade.rollbackRequestedBy && (
+        <button
+          onClick={handleRequestFull}
+          disabled={loading !== null}
+          className="text-xs text-amber-600 underline disabled:opacity-50"
+        >
+          {loading === 'request' ? 'Solicitando...' : 'Desfazer itens restantes'}
+        </button>
       )}
 
       {!hideRollback &&

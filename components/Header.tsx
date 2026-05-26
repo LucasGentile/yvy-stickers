@@ -43,7 +43,7 @@ export default function Header() {
   const [advancedTradeEligible, setAdvancedTradeEligible] = useState(false)
   const [advancedTradePending, setAdvancedTradePending] = useState(0)
   const pathname = usePathname()
-  const { stickerOrder, setStickerOrder } = usePrefs()
+  const { stickerOrder, setStickerOrder, setFontIndex } = usePrefs()
   const { tab: muralTab, setTab: setMuralTab } = useMuralTab()
 
   function refreshBadges(uid: string) {
@@ -80,6 +80,7 @@ export default function Header() {
     const saved = localStorage.getItem('fontSize')
     const idx = saved ? parseInt(saved, 10) : 0
     setFontSize(idx)
+    setFontIndex(idx)
     document.documentElement.style.fontSize = `${FONT_SIZES[idx].px}px`
   }, [])
 
@@ -106,6 +107,7 @@ export default function Header() {
 
   function pickFontSize(idx: number) {
     setFontSize(idx)
+    setFontIndex(idx)
     localStorage.setItem('fontSize', String(idx))
     document.documentElement.style.fontSize = `${FONT_SIZES[idx].px}px`
   }

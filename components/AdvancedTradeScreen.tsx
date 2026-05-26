@@ -23,24 +23,17 @@ import { relativeTime, absoluteTime } from '@/components/audit/eventConfig'
 import { PartnerChip, VerifiedFilterChip, FilterChipDivider } from '@/components/FilterChips'
 import { Pagination } from '@/components/Pagination'
 
+const STATUS_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
+  approved: { label: '✓ Aprovado', className: 'text-emerald-600 bg-emerald-50' },
+  rejected: { label: '✗ Recusado', className: 'text-red-600 bg-red-50' },
+  pending: { label: '⏳ Pendente', className: 'text-amber-600 bg-amber-50' },
+}
+
 function StatusBadge({ status }: { status: string }) {
-  if (status === 'approved') {
-    return (
-      <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-        ✓ Aprovado
-      </span>
-    )
-  }
-  if (status === 'rejected') {
-    return (
-      <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-        ✗ Recusado
-      </span>
-    )
-  }
+  const cfg = STATUS_BADGE_CONFIG[status] ?? STATUS_BADGE_CONFIG.pending
   return (
-    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-      ⏳ Pendente
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.className}`}>
+      {cfg.label}
     </span>
   )
 }
@@ -66,13 +59,15 @@ function TradeCard({
   })
   const [showAlreadyOwnedModal, setShowAlreadyOwnedModal] = useState(false)
   const [modalLoading, setModalLoading] = useState<'confirm' | 'reject' | null>(null)
+  const [rollbackNonRecoverable, setRollbackNonRecoverable] = useState(false)
 
   useEffect(() => {
+    if (trade.status === 'accepted') return
     if (trade.myReceivingIds.length === 0 && trade.myGivingIds.length === 0) return
     checkAlreadyOwnedIncoming(userId, trade.giveTo.id, trade.myReceivingIds, trade.myGivingIds)
       .then(setAlreadyOwned)
       .catch(() => setAlreadyOwned({ myAlreadyOwned: [], theirAlreadyOwned: [] }))
-  }, [userId, trade.giveTo.id, trade.myReceivingIds, trade.myGivingIds])
+  }, [userId, trade.giveTo.id, trade.myReceivingIds, trade.myGivingIds, trade.status])
 
   const advancedActionLabels = {
     approve: 'Troca triangular aprovada!',
@@ -108,7 +103,8 @@ function TradeCard({
         )
         onDone()
       } else {
-        showError(`${result.error} Tente novamente ou procure ajuda.`)
+        if (result.nonRecoverable) setRollbackNonRecoverable(true)
+        showError(result.error)
       }
     } catch {
       showError('Erro inesperado. Tente novamente ou procure ajuda.')
@@ -259,7 +255,9 @@ function TradeCard({
           <p className="text-xs text-amber-700 font-medium">
             {trade.rollbackRequesterName} quer desfazer esta troca.
           </p>
-          {trade.myRollbackStatus === 'none' && (
+          {rollbackNonRecoverable ? (
+            <p className="text-xs text-yvy-muted">Esta troca não pode mais ser alterada.</p>
+          ) : trade.myRollbackStatus === 'none' ? (
             <div className="flex gap-2">
               <button
                 onClick={() => handleRollbackResponse('deny')}
@@ -276,8 +274,7 @@ function TradeCard({
                 {rollbackLoading === 'confirm' ? 'Desfazendo...' : 'Confirmar desfazimento'}
               </button>
             </div>
-          )}
-          {trade.myRollbackStatus === 'approved' && (
+          ) : (
             <p className="text-xs text-emerald-600 font-medium">
               Você confirmou. Aguardando os outros participantes.
             </p>
@@ -380,14 +377,14 @@ function TradeCard({
         onConfirm={async () => {
           setModalLoading('confirm')
           setShowAlreadyOwnedModal(false)
-          setModalLoading(null)
           await handle('approve')
+          setModalLoading(null)
         }}
         onReject={async () => {
           setModalLoading('reject')
           setShowAlreadyOwnedModal(false)
-          setModalLoading(null)
           await handle('reject')
+          setModalLoading(null)
         }}
         onDismiss={() => setShowAlreadyOwnedModal(false)}
       />

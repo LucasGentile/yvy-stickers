@@ -211,3 +211,7 @@ export function isChromeSticker(id: string): boolean {
 export function isCocaColaSticker(id: string): boolean {
   return id.startsWith('CC')
 }
+
+export function computeNeeded(mode: string, marked: Set<string>): Set<string> {
+  return mode === 'have' ? new Set(ALL_STICKER_IDS.filter((id) => !marked.has(id))) : marked
+}

@@ -211,15 +211,17 @@ export function RollbackControl({
         <div className="flex gap-2">
           <button
             onClick={() => respond('deny')}
-            className="flex-1 border border-yvy-border text-yvy-text font-semibold py-1.5 rounded-lg text-xs transition-colors hover:bg-yvy-bg"
+            disabled={submitting}
+            className="flex-1 border border-yvy-border text-yvy-text font-semibold py-1.5 rounded-lg text-xs transition-colors hover:bg-yvy-bg disabled:opacity-50"
           >
             Manter troca
           </button>
           <button
             onClick={() => respond('confirm')}
-            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors"
+            disabled={submitting}
+            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50"
           >
-            Confirmar desfazimento
+            {submitting ? 'Confirmando...' : 'Confirmar desfazimento'}
           </button>
         </div>
       </div>
@@ -234,9 +236,10 @@ export function RollbackControl({
         <div className="flex gap-2">
           <button
             onClick={requestFull}
-            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors"
+            disabled={submitting}
+            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50"
           >
-            Desfazer tudo
+            {submitting ? 'Solicitando...' : 'Desfazer tudo'}
           </button>
           <button
             onClick={() => setStep('select-stickers')}

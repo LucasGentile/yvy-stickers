@@ -3,61 +3,13 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { logAction } from './logAction'
 import { formatName } from '@/lib/format'
+import { restoreDupe, removeFromCollection } from './tradeOps'
 
-export type RollbackAdvancedResult = { success: true } | { success: false; error: string }
+export type RollbackAdvancedResult =
+  | { success: true }
+  | { success: false; error: string; nonRecoverable?: boolean }
 
 const FORCE_UNDO_DELAY_MS = 7 * 24 * 60 * 60 * 1000
-
-async function restoreDupe(userId: string, ids: string[]) {
-  for (const sid of ids) {
-    const { data } = await supabaseAdmin
-      .from('user_duplicates')
-      .select('count')
-      .eq('user_id', userId)
-      .eq('sticker_id', sid)
-      .maybeSingle()
-    if (data) {
-      await supabaseAdmin
-        .from('user_duplicates')
-        .update({ count: data.count + 1 })
-        .eq('user_id', userId)
-        .eq('sticker_id', sid)
-    } else {
-      await supabaseAdmin
-        .from('user_duplicates')
-        .insert({ user_id: userId, sticker_id: sid, count: 1 })
-    }
-  }
-}
-
-async function removeFromCollection(userId: string, ids: string[]) {
-  if (ids.length === 0) return
-  for (const sid of ids) {
-    const { data: dupe } = await supabaseAdmin
-      .from('user_duplicates')
-      .select('count')
-      .eq('user_id', userId)
-      .eq('sticker_id', sid)
-      .maybeSingle()
-    if (dupe) {
-      if (dupe.count > 1) {
-        await supabaseAdmin
-          .from('user_duplicates')
-          .update({ count: dupe.count - 1 })
-          .eq('user_id', userId)
-          .eq('sticker_id', sid)
-      } else {
-        await supabaseAdmin
-          .from('user_duplicates')
-          .delete()
-          .eq('user_id', userId)
-          .eq('sticker_id', sid)
-      }
-    } else {
-      await supabaseAdmin.from('user_stickers').delete().eq('user_id', userId).eq('sticker_id', sid)
-    }
-  }
-}
 
 function getUserSlot(
   trade: { user_a_id: string; user_b_id: string; user_c_id: string },
@@ -86,7 +38,12 @@ export async function rollbackAdvancedTrade(
     .eq('status', 'accepted')
     .maybeSingle()
 
-  if (!trade) return { success: false, error: 'Troca não encontrada ou já processada.' }
+  if (!trade)
+    return {
+      success: false,
+      error: 'Troca não encontrada ou já processada.',
+      nonRecoverable: true,
+    }
 
   const participants = [trade.user_a_id, trade.user_b_id, trade.user_c_id]
   const slot = getUserSlot(trade, userId)
@@ -222,7 +179,12 @@ export async function rollbackAdvancedTrade(
       .select('id, rollback_a_status, rollback_b_status, rollback_c_status')
       .maybeSingle()
 
-    if (!updated) return { success: false, error: 'Troca já foi processada em outro dispositivo.' }
+    if (!updated)
+      return {
+        success: false,
+        error: 'Desfazimento já finalizado — a troca foi desfeita por outro participante.',
+        nonRecoverable: true,
+      }
 
     const allApproved = [
       updated.rollback_a_status,

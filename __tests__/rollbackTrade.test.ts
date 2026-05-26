@@ -16,12 +16,13 @@ const mockFrom = supabaseAdmin.from as ReturnType<typeof vi.fn>
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function makeSelectChain(result: unknown) {
-  const chain = {
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    in: vi.fn().mockResolvedValue(result),
-    maybeSingle: vi.fn().mockResolvedValue(result),
-  }
+  const chain: Record<string, unknown> = {}
+  chain.select = vi.fn().mockReturnValue(chain)
+  chain.eq = vi.fn().mockReturnValue(chain)
+  chain.in = vi.fn().mockReturnValue(chain)
+  chain.maybeSingle = vi.fn().mockResolvedValue(result)
+  chain.then = (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
+    Promise.resolve(result).then(resolve, reject)
   return chain
 }
 
@@ -370,5 +371,165 @@ describe('rollbackTrade', () => {
 
     const result = await rollbackTrade('trade-1', 'user-b', 'confirm')
     expect(result.success).toBe(true)
+  })
+
+  // ─── partially-rolled-back trade (status=rolled_back) ─────────────────────
+
+  describe('partially-rolled-back trade', () => {
+    function makePartiallyRolledBack(overrides: Record<string, unknown> = {}) {
+      return makeTrade({
+        status: 'rolled_back',
+        rollback_giving_ids: ['MEX1'],
+        rollback_receiving_ids: ['BRA1'],
+        ...overrides,
+      })
+    }
+
+    it('request: returns error when trade is fully rolled back (null rollback fields)', async () => {
+      const trade = makeTrade({
+        status: 'rolled_back',
+        rollback_giving_ids: null,
+        rollback_receiving_ids: null,
+      })
+      mockFrom.mockReturnValue(makeSelectChain({ data: trade, error: null }))
+
+      const result = await rollbackTrade('trade-1', 'user-a', 'request')
+      expect(result.success).toBe(false)
+      if (!result.success) expect(result.error).toMatch(/completamente desfeita/i)
+    })
+
+    it('request: returns error when all remaining stickers are already rolled back', async () => {
+      const trade = makePartiallyRolledBack({
+        rollback_giving_ids: ['MEX1', 'MEX2'],
+        rollback_receiving_ids: ['BRA1', 'BRA2'],
+      })
+      mockFrom.mockReturnValue(makeSelectChain({ data: trade, error: null }))
+
+      const result = await rollbackTrade('trade-1', 'user-a', 'request')
+      expect(result.success).toBe(false)
+      if (!result.success) expect(result.error).toMatch(/completamente desfeita/i)
+    })
+
+    it('request: returns error when a second rollback is already requested', async () => {
+      const trade = makePartiallyRolledBack({ rollback_requested_by: 'user-a' })
+      mockFrom.mockReturnValue(makeSelectChain({ data: trade, error: null }))
+
+      const result = await rollbackTrade('trade-1', 'user-a', 'request')
+      expect(result.success).toBe(false)
+      if (!result.success) expect(result.error).toMatch(/já solicitado/i)
+    })
+
+    it('request: succeeds and does NOT overwrite rollback_giving_ids', async () => {
+      const trade = makePartiallyRolledBack()
+      let updatePayload: Record<string, unknown> | null = null
+      let callCount = 0
+
+      mockFrom.mockImplementation(() => {
+        callCount++
+        if (callCount === 1) return makeSelectChain({ data: trade, error: null })
+        if (callCount === 2) {
+          const chain: Record<string, ReturnType<typeof vi.fn>> = {}
+          chain.update = vi.fn().mockImplementation((payload) => {
+            updatePayload = payload
+            return chain
+          })
+          chain.eq = vi.fn().mockReturnValue(chain)
+          chain.then = vi
+            .fn()
+            .mockImplementation((resolve: (v: unknown) => unknown) =>
+              Promise.resolve({ error: null }).then(resolve)
+            )
+          return chain
+        }
+        // users lookup (fire-and-forget)
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({ data: [] }),
+        }
+      })
+
+      const result = await rollbackTrade('trade-1', 'user-a', 'request')
+      expect(result.success).toBe(true)
+      expect(updatePayload).toMatchObject({ rollback_requested_by: 'user-a' })
+      expect(updatePayload).not.toHaveProperty('rollback_giving_ids')
+      expect(updatePayload).not.toHaveProperty('rollback_receiving_ids')
+      await new Promise((r) => setTimeout(r, 10))
+    })
+
+    it('deny: clears request fields but preserves rollback_giving_ids', async () => {
+      const trade = makePartiallyRolledBack({ rollback_requested_by: 'user-a' })
+      let updatePayload: Record<string, unknown> | null = null
+      let callCount = 0
+
+      mockFrom.mockImplementation(() => {
+        callCount++
+        if (callCount === 1) return makeSelectChain({ data: trade, error: null })
+        if (callCount === 2) {
+          const chain: Record<string, ReturnType<typeof vi.fn>> = {}
+          chain.update = vi.fn().mockImplementation((payload) => {
+            updatePayload = payload
+            return chain
+          })
+          chain.eq = vi.fn().mockReturnValue(chain)
+          chain.then = vi
+            .fn()
+            .mockImplementation((resolve: (v: unknown) => unknown) =>
+              Promise.resolve({ error: null }).then(resolve)
+            )
+          return chain
+        }
+        // users lookup (fire-and-forget)
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({ data: [] }),
+        }
+      })
+
+      const result = await rollbackTrade('trade-1', 'user-b', 'deny')
+      expect(result.success).toBe(true)
+      expect(updatePayload).toMatchObject({
+        rollback_requested_by: null,
+        rollback_requested_at: null,
+      })
+      expect(updatePayload).not.toHaveProperty('rollback_giving_ids')
+      expect(updatePayload).not.toHaveProperty('rollback_receiving_ids')
+      await new Promise((r) => setTimeout(r, 10))
+    })
+
+    it('confirm: rolls back only remaining stickers and succeeds', async () => {
+      // giving_ids=['MEX1','MEX2'], rollback_giving_ids=['MEX1'] → remaining=['MEX2']
+      // receiving_ids=['BRA1','BRA2'], rollback_receiving_ids=['BRA1'] → remaining=['BRA2']
+      const trade = makePartiallyRolledBack({ rollback_requested_by: 'user-a' })
+      let ptCallCount = 0
+
+      mockFrom.mockImplementation((tableName: string) => {
+        if (tableName === 'pending_trades') {
+          ptCallCount++
+          if (ptCallCount === 1) return makeSelectChain({ data: trade, error: null })
+          return makeUpdateChain({ error: null })
+        }
+        if (tableName === 'user_duplicates') {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            maybeSingle: vi.fn().mockResolvedValue({ data: { count: 1 } }),
+            update: vi.fn().mockReturnThis(),
+            delete: vi.fn().mockReturnThis(),
+            then: (resolve: (v: unknown) => unknown) =>
+              Promise.resolve({ error: null }).then(resolve),
+          }
+        }
+        if (tableName === 'user_stickers') {
+          return makeDeleteChain({ error: null })
+        }
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({ data: [] }),
+        }
+      })
+
+      const result = await rollbackTrade('trade-1', 'user-b', 'confirm')
+      expect(result.success).toBe(true)
+    })
   })
 })

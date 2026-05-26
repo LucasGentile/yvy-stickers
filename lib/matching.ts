@@ -2,7 +2,7 @@
 
 import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { ALL_STICKER_IDS } from '@/lib/stickers'
+import { ALL_STICKER_IDS, computeNeeded } from '@/lib/stickers'
 import { formatName } from '@/lib/format'
 
 export type CanceledTradeDetail = {
@@ -25,10 +25,6 @@ export type MatchResult = {
   completionPct: number
   missingCount: number
   canceledTrades: CanceledTradeDetail[]
-}
-
-function computeNeeded(mode: string, marked: Set<string>): Set<string> {
-  return mode === 'have' ? new Set(ALL_STICKER_IDS.filter((id) => !marked.has(id))) : marked
 }
 
 export async function getMatches(

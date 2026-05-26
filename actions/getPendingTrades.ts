@@ -64,7 +64,8 @@ export async function getPendingTrades(userId: string): Promise<{
         .select('id, initiator_id, receiver_id, giving_ids, receiving_ids, status, created_at')
         .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
         .eq('status', 'pending')
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .limit(50),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabaseAdmin as any)
         .from('pending_trades')
@@ -73,7 +74,8 @@ export async function getPendingTrades(userId: string): Promise<{
         )
         .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
         .in('status', ['accepted', 'rolled_back'])
-        .order('accepted_at', { ascending: false }),
+        .order('accepted_at', { ascending: false })
+        .limit(100),
       supabaseAdmin
         .from('audit_log')
         .select('id, metadata')
@@ -85,7 +87,8 @@ export async function getPendingTrades(userId: string): Promise<{
         .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
         .in('status', ['cancelled', 'rejected'])
         .gte('created_at', cutoff)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .limit(50),
     ])
 
     if (pendingError) return empty

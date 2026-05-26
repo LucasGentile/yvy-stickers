@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
+vi.mock('@/lib/supabaseAdmin', () => ({
+  supabaseAdmin: { from: vi.fn(), rpc: vi.fn() },
+}))
+
 vi.mock('@/contexts/PreferencesContext', () => ({
   usePrefs: () => ({ stickerOrder: 'album' }),
 }))

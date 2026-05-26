@@ -118,7 +118,11 @@ export function AdvancedRollbackControl({ tradeId, userId }: { tradeId: string; 
     return (
       <div className="mt-1.5 space-y-1">
         {msg && <p className="text-[11px] text-amber-700 font-medium">{msg}</p>}
-        <button onClick={open} className="text-[11px] text-amber-600 underline">
+        <button
+          onClick={open}
+          disabled={loading}
+          className="text-[11px] text-amber-600 underline disabled:opacity-50"
+        >
           Desfazer troca
         </button>
       </div>

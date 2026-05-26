@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS, ALL_STICKER_SECTIONS } from '@/lib/stickers'
+import { getStickerTeamCode } from '@/lib/teamColors'
 import { formatName } from '@/lib/format'
 
 const TOTAL = ALL_STICKER_IDS.length
@@ -207,9 +208,9 @@ export async function getPersonalInsights(userId: string): Promise<PersonalInsig
       leastDuplicatedStickerCount = count
       leastDuplicatedSticker = id
     }
-    const match = id.match(/^([A-Z]+)/)
-    if (match) {
-      countryDupeTotals[match[1]] = (countryDupeTotals[match[1]] ?? 0) + count
+    const teamCode = getStickerTeamCode(id)
+    if (teamCode) {
+      countryDupeTotals[teamCode] = (countryDupeTotals[teamCode] ?? 0) + count
     }
   }
   if (leastDuplicatedStickerCount === Infinity) leastDuplicatedStickerCount = 0

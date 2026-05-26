@@ -252,6 +252,7 @@ describe('rollbackTrade logs include tradeId', () => {
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
+          in: vi.fn().mockReturnThis(),
           maybeSingle: vi.fn().mockResolvedValue({ data: acceptedTrade, error: null }),
         }
       }
@@ -307,6 +308,7 @@ describe('rollbackTrade logs include tradeId', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
+            in: vi.fn().mockReturnThis(),
             maybeSingle: vi.fn().mockResolvedValue({ data: tradeWithRequest, error: null }),
           }
         }
@@ -374,6 +376,7 @@ describe('rollbackTrade logs include tradeId', () => {
         return {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
+          in: vi.fn().mockReturnThis(),
           maybeSingle: vi.fn().mockResolvedValue({ data: tradeWithRequest, error: null }),
         }
       }

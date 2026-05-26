@@ -2,6 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
+vi.mock('@/lib/supabaseAdmin', () => ({
+  supabaseAdmin: { from: vi.fn(), rpc: vi.fn() },
+}))
+vi.mock('@/lib/supabase', () => ({
+  supabase: { from: vi.fn() },
+}))
+
 // --- Mocks for StickersScreen ---
 vi.mock('@/actions/setInputMode', () => ({
   setInputMode: vi.fn(),
