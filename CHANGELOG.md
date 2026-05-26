@@ -1,5 +1,25 @@
 # Changelog
 
+## [v2.5.0] — 2026-05-26
+
+### Funcionalidades
+
+- **Desfazimento completo após desfazimento parcial** — trocas parcialmente desfeitas agora exibem opção de desfazer os itens restantes; ambos os participantes precisam confirmar, com opção de forçar após 3 dias
+
+### Melhorias
+
+- **Ordenação alfabética de países aplicada** — a preferência de ordem alfabética agora reordena os times corretamente na grade de figurinhas
+- **Grade ajustada para fonte A++** — no tamanho de fonte máximo, a grade de figurinhas usa 7 colunas em vez de 10 para evitar sobreposição
+- **Nota em desfazimentos parciais no histórico** — eventos de rollback parcial exibem aviso de que as figurinhas não listadas foram mantidas na troca
+
+### Correções
+
+- Figurinhas de trocas triangulares concluídas não exibem mais o fundo de "já possui" indevidamente
+- Nomes de figurinhas não são mais cortados na lista de repetidas em fontes grandes
+- Tela de rollback de troca avançada exibe mensagem permanente quando a troca não pode mais ser alterada (em vez de erro com "tente novamente")
+
+---
+
 ## [v2.4.0] — 2026-05-25
 
 ### Funcionalidades
