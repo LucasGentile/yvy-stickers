@@ -1,18 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: { from: vi.fn() },
-}))
-
 vi.mock('@/lib/supabaseAdmin', () => ({
   supabaseAdmin: { from: vi.fn() },
 }))
 
 import { importStickerFile } from '@/actions/importStickerFile'
-import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 const mockAdminFrom = supabaseAdmin.from as ReturnType<typeof vi.fn>
 
 function makeChain(resolveValue: unknown) {
@@ -49,7 +43,7 @@ describe('importStickerFile', () => {
     // File contains MEX1 (overlap) + BRA5 (new). MEX2 is NOT in file.
     // Expected: BRA5 added, MEX2 KEPT (not removed), MEX1 overlap → +1 duplicate.
     let callIndex = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callIndex++
       if (callIndex === 1)
         return makeChain({ data: [{ sticker_id: 'MEX1' }, { sticker_id: 'MEX2' }] }) // existing stickers
@@ -69,7 +63,7 @@ describe('importStickerFile', () => {
   it('overlap sticker (in file + already in album) generates +1 duplicate', async () => {
     // MEX1 in album + MEX1 in file (once) → MEX1 stays in album, gains 1 duplicate
     let callIndex = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callIndex++
       if (callIndex === 1) return makeChain({ data: [{ sticker_id: 'MEX1' }] }) // existing stickers
       if (callIndex === 2) return makeChain({ data: [] }) // existing dupes
@@ -91,7 +85,7 @@ describe('importStickerFile', () => {
     // File contains MEX1 once → overlap adds +1.
     // Expected: MEX1 duplicate count becomes 4.
     let callIndex = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callIndex++
       if (callIndex === 1) return makeChain({ data: [{ sticker_id: 'MEX1' }] }) // existing stickers
       if (callIndex === 2) return makeChain({ data: [{ sticker_id: 'MEX1', count: 3 }] }) // existing dupes
@@ -111,7 +105,7 @@ describe('importStickerFile', () => {
     // No existing stickers. File has MEX1×3, BRA5×2.
     // MEX1 → 1 in album + 2 duplicates; BRA5 → 1 in album + 1 duplicate.
     let callIndex = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callIndex++
       if (callIndex === 1) return makeChain({ data: [] }) // no existing stickers
       if (callIndex === 2) return makeChain({ data: [] }) // no existing dupes
@@ -131,7 +125,7 @@ describe('importStickerFile', () => {
   it('totalLines equals sum of all counts (unique + extra copies)', async () => {
     // MEX1×3 + BRA5×2 = 5 lines, 2 unique IDs
     let callIndex = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callIndex++
       if (callIndex === 1) return makeChain({ data: [] })
       if (callIndex === 2) return makeChain({ data: [] })
@@ -152,7 +146,7 @@ describe('importStickerFile', () => {
     // File has MEX1×2: overlap (+1) + count-1 (+1) = +2 new copies.
     // Expected: MEX1 duplicate count goes from 1 to 3.
     let callIndex = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callIndex++
       if (callIndex === 1) return makeChain({ data: [{ sticker_id: 'MEX1' }] })
       if (callIndex === 2) return makeChain({ data: [{ sticker_id: 'MEX1', count: 1 }] })
@@ -169,7 +163,7 @@ describe('importStickerFile', () => {
 
   it('falls back to individual inserts and reports failed stickers on bulk failure', async () => {
     let callIndex = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callIndex++
       if (callIndex === 1) return makeChain({ data: [] })
       if (callIndex === 2) return makeChain({ data: [] })

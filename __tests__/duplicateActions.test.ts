@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: { from: vi.fn() },
+vi.mock('@/lib/supabaseAdmin', () => ({
+  supabaseAdmin: { from: vi.fn() },
 }))
 
 vi.mock('@/actions/logAction', () => ({
@@ -11,7 +11,7 @@ vi.mock('@/actions/logAction', () => ({
 import { decrementDuplicate } from '@/actions/decrementDuplicate'
 import { removeDuplicate } from '@/actions/removeDuplicate'
 import { upsertDuplicate } from '@/actions/upsertDuplicate'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
 import { logAction } from '@/actions/logAction'
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>

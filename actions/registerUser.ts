@@ -1,6 +1,6 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
 import { normalizeText, buildDisplayKey } from '@/lib/normalize'
 
 export type RegisterUserResult =

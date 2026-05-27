@@ -1,6 +1,6 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
 
 export async function decrementDuplicate(userId: string, stickerId: string): Promise<void> {
   const { data } = await supabase

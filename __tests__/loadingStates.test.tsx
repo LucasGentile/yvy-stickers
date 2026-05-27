@@ -135,8 +135,8 @@ describe('StickersScreen loading states', () => {
     let resolveMode: () => void
     mockSetInputMode.mockImplementation(
       () =>
-        new Promise<void>((r) => {
-          resolveMode = r
+        new Promise<{ success: boolean }>((r) => {
+          resolveMode = () => r({ success: true })
         })
     )
 
@@ -162,8 +162,8 @@ describe('StickersScreen loading states', () => {
     let resolveMode: () => void
     mockSetInputMode.mockImplementation(
       () =>
-        new Promise<void>((r) => {
-          resolveMode = r
+        new Promise<{ success: boolean }>((r) => {
+          resolveMode = () => r({ success: true })
         })
     )
 

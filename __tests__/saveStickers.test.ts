@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: { from: vi.fn() },
-}))
-
 vi.mock('@/lib/supabaseAdmin', () => ({
   supabaseAdmin: { from: vi.fn() },
 }))
@@ -13,10 +9,8 @@ vi.mock('@/actions/logAction', () => ({
 }))
 
 import { saveStickers } from '@/actions/saveStickers'
-import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 const mockAdminFrom = supabaseAdmin.from as ReturnType<typeof vi.fn>
 
 function makeAdminChain() {
@@ -71,11 +65,12 @@ describe('saveStickers', () => {
   it('deletes existing stickers and inserts new ones', async () => {
     const insertMock = vi.fn().mockResolvedValue({ error: null })
     let callCount = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain([])
       if (callCount === 2) return makeDeleteChain()
-      return { insert: insertMock }
+      if (callCount === 3) return { insert: insertMock }
+      return makeAdminChain()
     })
 
     const result = await saveStickers('user-a', ['MEX1', 'MEX2', 'MEX3'])
@@ -85,7 +80,7 @@ describe('saveStickers', () => {
 
   it('returns success with count 0 for empty sticker list', async () => {
     let callCount = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain([])
       return makeDeleteChain()
@@ -98,7 +93,7 @@ describe('saveStickers', () => {
 
   it('returns error when delete fails', async () => {
     let callCount = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain([])
       return makeDeleteChain({ message: 'db error' })
@@ -112,13 +107,14 @@ describe('saveStickers', () => {
     const { logAction } = await import('@/actions/logAction')
     const insertMock = vi.fn().mockResolvedValue({ error: null })
     let callCount = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callCount++
       // existing: MEX1 + BRA5; new save: MEX1 + MEX2 + MEX3 → added=2, removed=1
       if (callCount === 1) return makeSelectChain(['MEX1', 'BRA5'])
       if (callCount === 2) return makeDeleteChain()
       if (callCount === 3) return { insert: insertMock }
-      return makeDupesCheckChain([]) // call 4: duplicates check — none found
+      if (callCount === 4) return makeDupesCheckChain([]) // call 4: duplicates check — none found
+      return makeAdminChain()
     })
 
     await saveStickers('user-a', ['MEX1', 'MEX2', 'MEX3'])
@@ -132,12 +128,13 @@ describe('saveStickers', () => {
   it('returns removedWithDupes when removed stickers have duplicates registered', async () => {
     const insertMock = vi.fn().mockResolvedValue({ error: null })
     let callCount = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain(['MEX1', 'BRA5'])
       if (callCount === 2) return makeDeleteChain()
       if (callCount === 3) return { insert: insertMock }
-      return makeDupesCheckChain(['BRA5']) // BRA5 was removed and has dupes
+      if (callCount === 4) return makeDupesCheckChain(['BRA5']) // BRA5 was removed and has dupes
+      return makeAdminChain()
     })
 
     const result = await saveStickers('user-a', ['MEX1', 'MEX2'])
@@ -148,12 +145,13 @@ describe('saveStickers', () => {
   it('returns empty removedWithDupes when no removed stickers have duplicates', async () => {
     const insertMock = vi.fn().mockResolvedValue({ error: null })
     let callCount = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain(['MEX1', 'BRA5'])
       if (callCount === 2) return makeDeleteChain()
       if (callCount === 3) return { insert: insertMock }
-      return makeDupesCheckChain([]) // no dupes found for removed stickers
+      if (callCount === 4) return makeDupesCheckChain([]) // no dupes found for removed stickers
+      return makeAdminChain()
     })
 
     const result = await saveStickers('user-a', ['MEX1', 'MEX2'])
@@ -164,7 +162,7 @@ describe('saveStickers', () => {
   it('logs removed count when saving empty list', async () => {
     const { logAction } = await import('@/actions/logAction')
     let callCount = 0
-    mockFrom.mockImplementation(() => {
+    mockAdminFrom.mockImplementation(() => {
       callCount++
       if (callCount === 1) return makeSelectChain(['MEX1', 'BRA5'])
       return makeDeleteChain()

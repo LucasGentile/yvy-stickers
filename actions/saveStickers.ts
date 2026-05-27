@@ -1,6 +1,5 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
 import { logAction } from './logAction'
@@ -18,7 +17,7 @@ export async function saveStickers(
   }
 
   // Fetch existing before deleting so we can compute the delta for the audit log
-  const { data: existing } = await supabase
+  const { data: existing } = await supabaseAdmin
     .from('user_stickers')
     .select('sticker_id')
     .eq('user_id', userId)
@@ -26,7 +25,10 @@ export async function saveStickers(
   const newSet = new Set(stickerIds)
 
   // Delete existing stickers for this user (idempotent replace)
-  const { error: deleteError } = await supabase.from('user_stickers').delete().eq('user_id', userId)
+  const { error: deleteError } = await supabaseAdmin
+    .from('user_stickers')
+    .delete()
+    .eq('user_id', userId)
 
   if (deleteError) {
     return { success: false, error: 'Erro ao atualizar figurinhas. Tente novamente.' }
@@ -42,7 +44,7 @@ export async function saveStickers(
 
   const rows = stickerIds.map((sticker_id) => ({ user_id: userId, sticker_id }))
 
-  const { error: insertError } = await supabase.from('user_stickers').insert(rows)
+  const { error: insertError } = await supabaseAdmin.from('user_stickers').insert(rows)
 
   if (insertError) {
     return { success: false, error: 'Erro ao salvar figurinhas. Tente novamente.' }
@@ -52,7 +54,7 @@ export async function saveStickers(
   const removedIds = [...existingSet].filter((id) => !newSet.has(id))
   let removedWithDupes: string[] = []
   if (removedIds.length > 0) {
-    const { data: dupes } = await supabase
+    const { data: dupes } = await supabaseAdmin
       .from('user_duplicates')
       .select('sticker_id')
       .eq('user_id', userId)

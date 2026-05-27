@@ -1,18 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: { from: vi.fn() },
-}))
-
 vi.mock('@/lib/supabaseAdmin', () => ({
   supabaseAdmin: { from: vi.fn() },
 }))
 
 import { getMatches } from '@/lib/matching'
-import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 const mockAdminFrom = supabaseAdmin.from as ReturnType<typeof vi.fn>
 
 function makeMyUserChain(inputMode: string) {
@@ -73,39 +67,33 @@ function setupMocks({
   canceledTrades = [] as CanceledTrade[],
 }) {
   let usersCallCount = 0
-  mockFrom.mockImplementation((table: string) => {
+  let pendingTradesCallCount = 0
+  mockAdminFrom.mockImplementation((table: string) => {
     if (table === 'users') {
       usersCallCount++
       return usersCallCount === 1 ? makeMyUserChain('have') : makeOthersChain(others)
     }
     if (table === 'user_stickers') return makeEqChain(myStickers)
     if (table === 'user_duplicates') return makeEqChain(myDupes)
-    return makeEqChain([])
-  })
-
-  let adminCallCount = 0
-  mockAdminFrom.mockImplementation(() => {
-    adminCallCount++
-    if (adminCallCount === 1) {
-      // pending_trades (status = 'pending')
+    if (table === 'pending_trades') {
+      pendingTradesCallCount++
+      if (pendingTradesCallCount === 1) {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockResolvedValue({ data: pendingTrades, error: null }),
+        }
+      }
       return {
         select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({ data: pendingTrades, error: null }),
+        or: vi.fn().mockReturnValue({
+          in: vi.fn().mockResolvedValue({ data: canceledTrades, error: null }),
+        }),
       }
     }
-    if (adminCallCount === 2) {
-      // advanced_trades (status = 'pending')
-      return {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({ data: [], error: null }),
-      }
-    }
-    // canceled pending_trades
+    // advanced_trades
     return {
       select: vi.fn().mockReturnThis(),
-      or: vi.fn().mockReturnValue({
-        in: vi.fn().mockResolvedValue({ data: canceledTrades, error: null }),
-      }),
+      eq: vi.fn().mockResolvedValue({ data: [], error: null }),
     }
   })
 }

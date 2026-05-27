@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: { from: vi.fn() },
+vi.mock('@/lib/supabaseAdmin', () => ({
+  supabaseAdmin: { from: vi.fn() },
 }))
 
 import { updateUserName } from '@/actions/updateUserName'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 

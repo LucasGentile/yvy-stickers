@@ -1,6 +1,5 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS, computeNeeded } from '@/lib/stickers'
 import { formatName } from '@/lib/format'
@@ -32,7 +31,7 @@ export async function getMatches(
   excludeTradeIds?: string[]
 ): Promise<MatchResult[]> {
   // Fetch current user's mode, stickers, duplicates, and all pending trades in parallel
-  const { data: myUser } = await supabase
+  const { data: myUser } = await supabaseAdmin
     .from('users')
     .select('input_mode')
     .eq('id', currentUserId)
@@ -48,13 +47,13 @@ export async function getMatches(
     { data: advancedTrades },
     { data: canceledTrades },
   ] = await Promise.all([
-    supabase.from('user_stickers').select('sticker_id').eq('user_id', currentUserId),
-    supabase.from('user_duplicates').select('sticker_id, count').eq('user_id', currentUserId),
+    supabaseAdmin.from('user_stickers').select('sticker_id').eq('user_id', currentUserId),
+    supabaseAdmin.from('user_duplicates').select('sticker_id, count').eq('user_id', currentUserId),
     supabaseAdmin
       .from('pending_trades')
       .select('id, initiator_id, receiver_id, giving_ids, receiving_ids')
       .eq('status', 'pending'),
-    supabase
+    supabaseAdmin
       .from('users')
       .select(
         'id, display_key, name, apartment, tower, phone, input_mode, user_stickers(sticker_id), user_duplicates(sticker_id, count)'

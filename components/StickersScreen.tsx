@@ -130,10 +130,14 @@ export default function StickersScreen() {
   async function handleModeSelect(m: Mode) {
     if (!userId || selectingMode) return
     setSelectingMode(true)
-    await setInputMode(userId, m)
+    const result = await setInputMode(userId, m)
+    setSelectingMode(false)
+    if (!result.success) {
+      showError(result.error ?? 'Erro ao salvar modo. Tente novamente.')
+      return
+    }
     setMode(m)
     setStep('input')
-    setSelectingMode(false)
   }
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {

@@ -4,20 +4,13 @@ vi.mock('@/lib/supabaseAdmin', () => ({
   supabaseAdmin: { from: vi.fn(), rpc: vi.fn() },
 }))
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: { from: vi.fn() },
-}))
-
 import { getRanking } from '@/actions/getRanking'
 import { getDuplicates } from '@/actions/getDuplicates'
 import { effectuateTrade } from '@/actions/effectuateTrade'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
-import { supabase } from '@/lib/supabase'
 import { ALL_STICKER_IDS } from '@/lib/stickers'
 
 const mockAdminFrom = supabaseAdmin.from as ReturnType<typeof vi.fn>
-const mockFrom = supabase.from as ReturnType<typeof vi.fn>
-
 // ─── getRanking ───────────────────────────────────────────────────────────────
 
 describe('getRanking', () => {
@@ -126,7 +119,7 @@ describe('getDuplicates', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('returns empty array when no duplicates exist', async () => {
-    mockFrom.mockReturnValue({
+    mockAdminFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data: null }),
@@ -137,7 +130,7 @@ describe('getDuplicates', () => {
   })
 
   it('maps sticker_id to stickerId', async () => {
-    mockFrom.mockReturnValue({
+    mockAdminFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({
@@ -157,7 +150,7 @@ describe('getDuplicates', () => {
 
   it('queries for the correct user_id', async () => {
     const eqMock = vi.fn().mockReturnThis()
-    mockFrom.mockReturnValue({
+    mockAdminFrom.mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: eqMock,
       order: vi.fn().mockResolvedValue({ data: [] }),
