@@ -52,6 +52,7 @@ Clique em _"Já sou cadastrado"_ e informe apenas seu WhatsApp. O app recupera s
 Selecione suas figurinhas na grade — organizadas por grupos e seleções com a bandeirinha de cada país. O progresso de conclusão de cada país aparece ao lado do nome da seleção.
 
 - Toque para marcar/desmarcar
+- Use o toggle _"Só pendentes"_ para ocultar países e seleções já completos — útil para focar no que ainda falta
 - Use _"Marcar todos"_ para selecionar uma seleção inteira de uma vez
 - Use a _barra de busca_ para ir direto ao país desejado
 - Ações em massa têm _desfazer_ disponível por 5 segundos
@@ -79,7 +80,8 @@ Figurinhas especiais têm destaque visual:
 Informe quais figurinhas você tem duplicadas e quantas. Essas ficam disponíveis pra troca.
 
 - Busque pelo país na barra de pesquisa e toque na figurinha desejada
-- Use _+_ e _−_ diretamente na lista para ajustar quantidades
+- Use a _barra de busca_ no topo da lista para filtrar pelo código da figurinha
+- Use _+_ e _−_ diretamente na lista para ajustar quantidades; chegando a _0_, o item é removido da lista automaticamente
 - Figurinhas reservadas em pedidos pendentes aparecem com badge _"em troca"_ e o total reservado é exibido em vermelho no topo da lista
 - Ordene a lista por ordem do álbum ou A–Z com o toggle no topo
 
@@ -120,7 +122,7 @@ O app monta um ranking de compatibilidade entre você e os outros moradores.
 Quando uma troca direta não é possível, o app busca automaticamente ciclos de 3 moradores onde todos se beneficiam.
 
 - O menu _"Troca Avançada"_ aparece quando você tem trocas pendentes _ou_ quando existe pelo menos um ciclo válido
-- Toque em _"Buscar Trocas Triangulares"_ para ver _todas_ as combinações possíveis, ranqueadas por número de figurinhas (a melhor aparece no topo)
+- Toque em _"Buscar Trocas Triangulares"_ para abrir um painel de seleção de participantes — escolha quais moradores incluir na busca e confirme; até 5 propostas são exibidas, ranqueadas por número de figurinhas (a melhor aparece no topo)
 - O matching exclui automaticamente figurinhas que você já vai receber em trocas normais pendentes — evita sugerir ciclos impossíveis
 - Escolha qual proposta enviar — as figurinhas são selecionadas automaticamente, sem escolha manual
 - Código de cores nos cards: _vermelho_ = você dá, _verde_ = você recebe, _azul_ = troca entre os outros dois participantes

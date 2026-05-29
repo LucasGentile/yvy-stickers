@@ -77,6 +77,9 @@ vi.mock('@/actions/getIncomingTradeStickers', () => ({
 vi.mock('@/actions/rollbackAdvancedTrade', () => ({
   rollbackAdvancedTrade: vi.fn(),
 }))
+vi.mock('@/actions/getAdvancedTradePartners', () => ({
+  getAdvancedTradePartners: vi.fn(),
+}))
 
 import { setInputMode } from '@/actions/setInputMode'
 import { getUserData } from '@/actions/getUserData'
@@ -89,6 +92,7 @@ import { checkExternalList } from '@/lib/checkExternalList'
 import { getAdvancedTrades } from '@/actions/getAdvancedTrades'
 import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
 import { previewAdvancedTrade } from '@/actions/previewAdvancedTrade'
+import { getAdvancedTradePartners } from '@/actions/getAdvancedTradePartners'
 
 const mockSetInputMode = setInputMode as ReturnType<typeof vi.fn>
 const mockGetUserData = getUserData as ReturnType<typeof vi.fn>
@@ -101,6 +105,7 @@ const mockCheckExternalList = checkExternalList as ReturnType<typeof vi.fn>
 const mockGetAdvancedTrades = getAdvancedTrades as ReturnType<typeof vi.fn>
 const mockGetAdvancedTradeEligibility = getAdvancedTradeEligibility as ReturnType<typeof vi.fn>
 const mockPreviewAdvancedTrade = previewAdvancedTrade as ReturnType<typeof vi.fn>
+const mockGetAdvancedTradePartners = getAdvancedTradePartners as ReturnType<typeof vi.fn>
 
 import StickersScreen from '@/components/StickersScreen'
 import DuplicatesScreen from '@/components/DuplicatesScreen'
@@ -256,6 +261,10 @@ describe('AdvancedTradeScreen loading states', () => {
     mockGetAdvancedTradeEligibility.mockResolvedValue({ canSearch: true })
   })
 
+  beforeEach(() => {
+    mockGetAdvancedTradePartners.mockResolvedValue([{ id: 'user-2', name: 'Alice' }])
+  })
+
   it('disables search button while searching', async () => {
     let resolveSearch: (v: { found: boolean; previews: [] }) => void
     mockPreviewAdvancedTrade.mockImplementation(
@@ -270,7 +279,14 @@ describe('AdvancedTradeScreen loading states', () => {
     const searchButton = await screen.findByText('Buscar Trocas Triangulares')
     expect(searchButton).not.toBeDisabled()
 
-    fireEvent.click(searchButton)
+    await act(async () => {
+      fireEvent.click(searchButton)
+    })
+
+    const confirmButton = await screen.findByText('Buscar (1 participante)')
+    await act(async () => {
+      fireEvent.click(confirmButton)
+    })
 
     expect(searchButton).toBeDisabled()
     expect(searchButton).toHaveTextContent('Buscando combinações...')
@@ -296,7 +312,14 @@ describe('AdvancedTradeScreen loading states', () => {
 
     expect(refreshButton).not.toBeDisabled()
 
-    fireEvent.click(searchButton)
+    await act(async () => {
+      fireEvent.click(searchButton)
+    })
+
+    const confirmButton = await screen.findByText('Buscar (1 participante)')
+    await act(async () => {
+      fireEvent.click(confirmButton)
+    })
 
     expect(refreshButton).toBeDisabled()
 
@@ -320,9 +343,14 @@ describe('AdvancedTradeScreen loading states', () => {
 
     const searchButton = await screen.findByText('Buscar Trocas Triangulares')
 
-    fireEvent.click(searchButton)
-    fireEvent.click(searchButton)
-    fireEvent.click(searchButton)
+    await act(async () => {
+      fireEvent.click(searchButton)
+    })
+
+    const confirmButton = await screen.findByText('Buscar (1 participante)')
+    fireEvent.click(confirmButton)
+    fireEvent.click(confirmButton)
+    fireEvent.click(confirmButton)
 
     await act(async () => {
       resolveSearch!({ found: false, previews: [] })

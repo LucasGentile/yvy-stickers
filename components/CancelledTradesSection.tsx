@@ -18,7 +18,7 @@ function CancelledTradeCard({ trade }: { trade: CancelledTrade }) {
 
   return (
     <a
-      href="/historico"
+      href={trade.auditEntryId ? `/history/${trade.auditEntryId}` : '/historico'}
       className={`block rounded-xl border p-3 space-y-2.5 transition-opacity hover:opacity-80 ${
         isRejected ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'
       }`}

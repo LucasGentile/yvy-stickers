@@ -18,7 +18,7 @@ export async function verifyTrade(
     .from(table)
     .update({ verified_at: new Date().toISOString(), verified_by: userId })
     .eq('id', tradeId)
-    .eq('status', 'accepted')
+    .in('status', ['accepted', 'rolled_back'])
     .is('verified_at', null)
     .select('id')
     .maybeSingle()

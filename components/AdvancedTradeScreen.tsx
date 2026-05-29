@@ -7,6 +7,10 @@ import { getAdvancedTrades, type AdvancedTradeView } from '@/actions/getAdvanced
 import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
 import { findAdvancedTrade } from '@/actions/findAdvancedTrade'
 import { previewAdvancedTrade, type AdvancedTradePreview } from '@/actions/previewAdvancedTrade'
+import {
+  getAdvancedTradePartners,
+  type AdvancedTradePartner,
+} from '@/actions/getAdvancedTradePartners'
 import { respondToAdvancedTrade } from '@/actions/respondToAdvancedTrade'
 import { rollbackAdvancedTrade } from '@/actions/rollbackAdvancedTrade'
 import { verifyTrade } from '@/actions/verifyTrade'
@@ -22,6 +26,7 @@ import { TradeAssistant } from '@/components/audit/TradeAssistant'
 import { relativeTime, absoluteTime } from '@/components/audit/eventConfig'
 import { PartnerChip, VerifiedFilterChip, FilterChipDivider } from '@/components/FilterChips'
 import { Pagination } from '@/components/Pagination'
+import { PartnerSelectModal } from '@/components/PartnerSelectModal'
 
 const STATUS_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
   approved: { label: '✓ Aprovado', className: 'text-emerald-600 bg-emerald-50' },
@@ -237,11 +242,8 @@ function TradeCard({
                   ? undefined
                   : async () => {
                       const result = await verifyTrade(trade.id, userId, 'advanced')
-                      if (result.success) {
-                        setVerified(true)
-                      } else {
-                        throw new Error(result.error)
-                      }
+                      if (result.success) setVerified(true)
+                      return result
                     }
               }
             />
@@ -519,12 +521,16 @@ export default function AdvancedTradeScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [searching, setSearching] = useState(false)
   const [confirmingIdx, setConfirmingIdx] = useState<number | null>(null)
+  const [loadingPartners, setLoadingPartners] = useState(false)
 
-  const isBusy = refreshing || searching || confirmingIdx !== null
+  const isBusy = refreshing || searching || confirmingIdx !== null || loadingPartners
   const [previews, setPreviews] = useState<AdvancedTradePreview[]>([])
   const [canSearch, setCanSearch] = useState(true)
   const [searchMsg, setSearchMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [partnerModalOpen, setPartnerModalOpen] = useState(false)
+  const [partnersList, setPartnersList] = useState<AdvancedTradePartner[]>([])
+  const [selectedPartnerIds, setSelectedPartnerIds] = useState<Set<string> | null>(null)
 
   const loadTrades = useCallback(async (uid: string) => {
     try {
@@ -557,7 +563,8 @@ export default function AdvancedTradeScreen() {
     setSearchMsg(null)
     try {
       await loadTrades(userId)
-      const fresh = await previewAdvancedTrade(userId)
+      const partnerIds = selectedPartnerIds !== null ? Array.from(selectedPartnerIds) : undefined
+      const fresh = await previewAdvancedTrade(userId, partnerIds)
       if (fresh.found) {
         setPreviews(fresh.previews)
       } else {
@@ -570,13 +577,33 @@ export default function AdvancedTradeScreen() {
     }
   }
 
-  async function handleSearch() {
+  async function handleOpenPartnerModal() {
     if (!userId || isBusy) return
+    setLoadingPartners(true)
+    try {
+      const partners = await getAdvancedTradePartners(userId)
+      setPartnersList(partners)
+      if (selectedPartnerIds === null) {
+        setSelectedPartnerIds(new Set(partners.map((p) => p.id)))
+      }
+    } catch {
+      // fall through to direct search if partner fetch fails
+      handleSearch(undefined)
+      return
+    } finally {
+      setLoadingPartners(false)
+    }
+    setPartnerModalOpen(true)
+  }
+
+  async function handleSearch(partnerIds: string[] | undefined) {
+    if (!userId || isBusy) return
+    setPartnerModalOpen(false)
     setSearching(true)
     setSearchMsg(null)
     setPreviews([])
     try {
-      const result = await previewAdvancedTrade(userId)
+      const result = await previewAdvancedTrade(userId, partnerIds)
       if (result.found) {
         setPreviews(result.previews)
       } else {
@@ -609,7 +636,8 @@ export default function AdvancedTradeScreen() {
       if (result.found) {
         showSuccess('Proposta de troca triangular enviada! Aguardando aprovação dos participantes.')
         await loadTrades(userId)
-        const fresh = await previewAdvancedTrade(userId)
+        const partnerIds = selectedPartnerIds !== null ? Array.from(selectedPartnerIds) : undefined
+        const fresh = await previewAdvancedTrade(userId, partnerIds)
         if (fresh.found) {
           setPreviews(fresh.previews)
         } else {
@@ -843,11 +871,13 @@ export default function AdvancedTradeScreen() {
           </div>
 
           <button
-            onClick={handleSearch}
+            onClick={handleOpenPartnerModal}
             disabled={isBusy || !canSearch}
             className="w-full bg-yvy-dark hover:bg-yvy-dark-hover text-yvy-gold font-semibold py-3.5 rounded-xl text-sm transition-colors disabled:opacity-50 shadow-md"
           >
-            {searching ? 'Buscando combinações...' : 'Buscar Trocas Triangulares'}
+            {searching || loadingPartners
+              ? 'Buscando combinações...'
+              : 'Buscar Trocas Triangulares'}
           </button>
           {!canSearch && (
             <p className="text-xs text-yvy-muted text-center leading-relaxed">
@@ -954,6 +984,15 @@ export default function AdvancedTradeScreen() {
           onRefresh={() => loadTrades(userId!)}
         />
       )}
+
+      <PartnerSelectModal
+        open={partnerModalOpen}
+        partnersList={partnersList}
+        selectedPartnerIds={selectedPartnerIds}
+        onSelectedChange={setSelectedPartnerIds}
+        onSearch={handleSearch}
+        onClose={() => setPartnerModalOpen(false)}
+      />
     </div>
   )
 }

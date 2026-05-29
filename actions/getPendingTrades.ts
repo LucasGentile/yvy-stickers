@@ -22,6 +22,7 @@ export type CancelledTrade = {
   myReceivingIds: string[]
   status: 'cancelled' | 'rejected'
   createdAt: string
+  auditEntryId: string | null
 }
 
 export type RecentTrade = {
@@ -214,6 +215,7 @@ export async function getPendingTrades(userId: string): Promise<{
         myReceivingIds: isInitiator ? trade.receiving_ids : trade.giving_ids,
         status: trade.status as 'cancelled' | 'rejected',
         createdAt: trade.created_at,
+        auditEntryId: auditByTradeId.get(trade.id) ?? null,
       })
     }
 

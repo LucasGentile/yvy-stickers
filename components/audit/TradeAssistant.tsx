@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { sortByAlbumOrder, sortAlphabetically } from '@/lib/stickers'
 import { usePrefs } from '@/contexts/PreferencesContext'
+import { useNotification } from '@/contexts/NotificationContext'
 import { StickerChip } from '../StickerChip'
 
 export function TradeAssistant({
@@ -16,13 +17,14 @@ export function TradeAssistant({
   givingIds: string[]
   receivingIds: string[]
   onClose: () => void
-  onVerify?: () => Promise<void>
+  onVerify?: () => Promise<{ success: boolean; error?: string }>
 }) {
   const [checkedGiving, setCheckedGiving] = useState<Set<string>>(new Set())
   const [checkedReceiving, setCheckedReceiving] = useState<Set<string>>(new Set())
   const [confirming, setConfirming] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const { stickerOrder } = usePrefs()
+  const { showSuccess, showError } = useNotification()
   const sort = stickerOrder === 'album' ? sortByAlbumOrder : sortAlphabetically
   const sortedGiving = sort(givingIds)
   const sortedReceiving = sort(receivingIds)
@@ -48,10 +50,12 @@ export function TradeAssistant({
   async function handleVerify() {
     if (!onVerify) return
     setVerifying(true)
-    try {
-      await onVerify()
+    const result = await onVerify()
+    if (result.success) {
+      showSuccess('Troca concluída com sucesso!')
       onClose()
-    } catch {
+    } else {
+      showError(result.error ?? 'Erro ao concluir troca. Tente novamente.')
       setVerifying(false)
       setConfirming(false)
     }

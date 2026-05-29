@@ -37,6 +37,7 @@ export default function StickersScreen() {
   const [importing, setImporting] = useState(false)
   const [loading, setLoading] = useState(true)
   const { stickerOrder } = usePrefs()
+  const [filterPending, setFilterPending] = useState(false)
   const [fileOpen, setFileOpen] = useState(false)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [importSummary, setImportSummary] = useState<{
@@ -403,7 +404,31 @@ export default function StickersScreen() {
 
       {/* Grid */}
       <div className="bg-yvy-surface rounded-xl border border-yvy-gold/20 shadow-md p-4">
-        <div className="flex justify-end mb-3">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            type="button"
+            onClick={() => setFilterPending((v) => !v)}
+            className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors ${
+              filterPending
+                ? 'bg-yvy-accent text-white border-yvy-accent'
+                : 'bg-yvy-bg text-yvy-muted border-yvy-border hover:border-yvy-dark hover:text-yvy-dark'
+            }`}
+          >
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 4h18M7 8h10M11 12h2M9 16h6"
+              />
+            </svg>
+            Só pendentes
+          </button>
           <button
             onClick={exportOwnedStickers}
             title="Baixar lista de figurinhas que tenho"
@@ -523,6 +548,7 @@ export default function StickersScreen() {
               mode === 'have' && incomingStickers.size > 0 ? incomingStickers : undefined
             }
             tradeLocked={mode === 'have' && lockedStickers.size > 0 ? lockedStickers : undefined}
+            filterPending={filterPending}
           />
         </div>
       </div>

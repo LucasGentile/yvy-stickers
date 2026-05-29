@@ -88,10 +88,11 @@ After confirmation:
 1. Write/update `CHANGELOG.md`
 2. Update `README.md` if needed
 3. Bump the version in `package.json` (`npm version <x.y.z> --no-git-tag-version`)
-4. Show the commands to commit and tag, but do NOT run them — let the user run:
+4. Stage **all** modified and untracked files (`git add -A`), then commit and tag:
    ```bash
-   git add CHANGELOG.md README.md package.json
+   git add -A
    git commit -m "chore: release vX.Y.Z"
    git tag vX.Y.Z
    git push && git push --tags
    ```
+   Run these commands in sequence. Report the final git output so the user can confirm the push succeeded.

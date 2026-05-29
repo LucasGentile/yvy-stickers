@@ -33,6 +33,7 @@ export default function DuplicatesScreen() {
   const [saving, setSaving] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
   const [listOrder, setListOrder] = useState<'album' | 'alpha'>('album')
+  const [listSearch, setListSearch] = useState('')
   const [exportOpen, setExportOpen] = useState(false)
   const [includeReserved, setIncludeReserved] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -106,6 +107,21 @@ export default function DuplicatesScreen() {
   const handleAdd = useCallback(async () => {
     if (!userId || !selectedSticker || saving) return
     setSaving(true)
+    if (addCount === 0) {
+      const inList = duplicates.some((d) => d.stickerId === selectedSticker)
+      if (!inList) {
+        setSaving(false)
+        showError(`${selectedSticker} não tem cópias registradas para remover.`)
+        return
+      }
+      await removeDuplicate(userId, selectedSticker)
+      setSaving(false)
+      showSuccess(`${selectedSticker} removida das repetidas.`)
+      setSelectedSticker('')
+      setAddCount(1)
+      await refreshDuplicates(userId)
+      return
+    }
     const result = await upsertDuplicate(userId, selectedSticker, addCount)
     setSaving(false)
     if (result.success) {
@@ -116,7 +132,16 @@ export default function DuplicatesScreen() {
     } else {
       showError(`Erro ao registrar repetida: ${result.error} Tente novamente ou procure ajuda.`)
     }
-  }, [userId, selectedSticker, addCount, saving, refreshDuplicates, showSuccess, showError])
+  }, [
+    userId,
+    selectedSticker,
+    addCount,
+    saving,
+    duplicates,
+    refreshDuplicates,
+    showSuccess,
+    showError,
+  ])
 
   // Inline +1 on existing item
   const handleIncrement = useCallback(
@@ -172,6 +197,9 @@ export default function DuplicatesScreen() {
         ? sortByAlbumOrder(duplicates.map((d) => d.stickerId))
         : sortAlphabetically(duplicates.map((d) => d.stickerId))
       : []
+  const filteredIds = listSearch.trim()
+    ? sortedIds.filter((id) => id.toLowerCase().includes(listSearch.trim().toLowerCase()))
+    : sortedIds
   const dupeMap = Object.fromEntries(duplicates.map((d) => [d.stickerId, d.count]))
   const totalCount = duplicates.reduce((sum, d) => sum + d.count, 0)
   const totalReserved = Object.values(reservedCounts).reduce((sum, n) => sum + n, 0)
@@ -306,7 +334,7 @@ export default function DuplicatesScreen() {
             {/* Count stepper */}
             <button
               type="button"
-              onClick={() => setAddCount((c) => Math.max(1, c - 1))}
+              onClick={() => setAddCount((c) => Math.max(0, c - 1))}
               disabled={saving}
               className="w-10 h-10 rounded-lg border border-yvy-border bg-yvy-bg text-yvy-dark text-xl font-bold leading-none flex items-center justify-center disabled:opacity-40"
             >
@@ -325,9 +353,11 @@ export default function DuplicatesScreen() {
             <button
               onClick={handleAdd}
               disabled={saving}
-              className="px-4 py-2 rounded-lg bg-yvy-dark text-yvy-gold text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
+              className={`px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 whitespace-nowrap ${
+                addCount === 0 ? 'bg-red-600 text-white' : 'bg-yvy-dark text-yvy-gold'
+              }`}
             >
-              {saving ? '...' : 'Salvar'}
+              {saving ? '...' : addCount === 0 ? 'Remover' : 'Salvar'}
             </button>
           </div>
         )}
@@ -520,6 +550,28 @@ export default function DuplicatesScreen() {
                 </div>
               </div>
 
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-yvy-muted text-xs pointer-events-none">
+                  🔍
+                </span>
+                <input
+                  type="text"
+                  value={listSearch}
+                  onChange={(e) => setListSearch(e.target.value)}
+                  placeholder="Filtrar por código..."
+                  className="w-full rounded-lg border border-yvy-border pl-7 pr-7 py-1.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg"
+                />
+                {listSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setListSearch('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-yvy-muted text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
               {exportOpen && (
                 <div className="bg-yvy-bg border border-yvy-border rounded-xl px-3 py-3 space-y-2.5">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -560,7 +612,12 @@ export default function DuplicatesScreen() {
 
         {duplicates.length > 0 && (
           <div className="divide-y divide-yvy-gold/20">
-            {sortedIds.map((stickerId) => {
+            {filteredIds.length === 0 && listSearch.trim() && (
+              <p className="text-sm text-yvy-muted text-center py-4">
+                Nenhuma repetida com &ldquo;{listSearch.trim()}&rdquo;.
+              </p>
+            )}
+            {filteredIds.map((stickerId) => {
               const count = dupeMap[stickerId]
               if (count === undefined) return null
               const busy = savingId === stickerId

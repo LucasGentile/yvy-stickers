@@ -1,5 +1,22 @@
 # Changelog
 
+## [v2.6.0] — 2026-05-29
+
+### Funcionalidades
+
+- **Filtro "Só pendentes" em Minhas Figurinhas** — novo botão que oculta seleções e países já completos, mostrando apenas onde ainda faltam figurinhas
+- **Filtro de participantes na Troca Avançada** — ao buscar trocas triangulares, um painel permite selecionar quais moradores incluir na busca; até 5 propostas são exibidas, ranqueadas por pontuação
+- **Busca na lista de Repetidas** — campo de pesquisa no topo da lista de repetidas para encontrar rapidamente uma figurinha específica
+- **Zerar quantidade de repetidas** — o stepper agora vai até 0; chegar a zero remove o item da lista automaticamente, sem precisar de botão separado
+
+### Correções
+
+- Trocas canceladas e recusadas agora têm link direto para a linha do tempo correta (antes levavam sempre ao histórico geral)
+- Trocas com desfazimento parcial agora podem ser verificadas pelo Assistente de troca (o botão "Completar" funcionava apenas para trocas sem rollback)
+- RLS habilitado no banco — todas as ações do servidor usam cliente admin para acesso correto aos dados
+
+---
+
 ## [v2.5.0] — 2026-05-26
 
 ### Funcionalidades

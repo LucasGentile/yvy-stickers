@@ -162,11 +162,8 @@ export function RecentTradeCard({
               ? undefined
               : async () => {
                   const result = await verifyTrade(trade.id, userId, 'normal')
-                  if (result.success) {
-                    setVerified(true)
-                  } else {
-                    throw new Error(result.error)
-                  }
+                  if (result.success) setVerified(true)
+                  return result
                 }
           }
         />

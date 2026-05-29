@@ -17,6 +17,7 @@ interface Props {
   onProtectedRemove?: () => void
   incomingStickers?: Set<string>
   tradeLocked?: Set<string>
+  filterPending?: boolean
 }
 
 function TrophySVG() {
@@ -88,6 +89,7 @@ function StickerGrid({
   onProtectedRemove,
   incomingStickers,
   tradeLocked,
+  filterPending,
 }: Props) {
   const { stickerOrder, fontIndex } = usePrefs()
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -146,9 +148,21 @@ function StickerGrid({
     else onChange(next)
   }
 
+  const visibleSections = ALL_STICKER_SECTIONS.filter((section) => {
+    if (!filterPending) return true
+    const stickers =
+      section.type === 'group' ? section.teams.flatMap((t) => t.stickers) : section.stickers
+    return stickers.some((id) => !selected.has(id))
+  })
+
   return (
     <div className="space-y-8">
-      {ALL_STICKER_SECTIONS.map((section) => {
+      {filterPending && visibleSections.length === 0 && (
+        <p className="text-sm text-green-600 font-semibold text-center py-6">
+          Álbum completo! Todas as figurinhas foram marcadas.
+        </p>
+      )}
+      {visibleSections.map((section) => {
         const sectionStickers =
           section.type === 'group' ? section.teams.flatMap((t) => t.stickers) : section.stickers
         const sectionOwned = sectionStickers.filter((id) => selected.has(id)).length
@@ -186,6 +200,7 @@ function StickerGrid({
                   const total = team.stickers.length
                   const pct = Math.round((ownedCount / total) * 100)
                   const complete = ownedCount === total
+                  if (filterPending && complete) return null
                   return (
                     <div key={team.code} id={`country-${team.code}`}>
                       {/* Country row header */}

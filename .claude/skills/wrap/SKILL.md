@@ -92,3 +92,11 @@ Produce a concise summary with four sections:
 - Things intentionally left for later, with a one-line reason
 
 End with: "Session validated — lint ✓, tests ✓, prettier ✓"
+
+### 7. Offer to follow-up
+
+After presenting the report, ask the user:
+
+> "Would you like to address any of the test coverage gaps or refactor suggestions before we close?"
+
+If they say yes, work through them in order of highest impact (failing coverage over aesthetics). If no, the session is complete.

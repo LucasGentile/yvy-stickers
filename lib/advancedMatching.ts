@@ -258,7 +258,12 @@ export async function checkAdvancedTradeEligibility(userId: string): Promise<boo
 
 export type ScoredProposal = AdvancedTradeProposal & { score: number }
 
-export async function findAllAdvancedTrades(userId: string): Promise<ScoredProposal[]> {
+const MAX_ADVANCED_RESULTS = 5
+
+export async function findAllAdvancedTrades(
+  userId: string,
+  partnerIds?: string[]
+): Promise<ScoredProposal[]> {
   if (!userId) return []
 
   const { users, pendingNormalTrades, pendingAdvancedTrades } = await loadAllTradeData()
@@ -275,7 +280,8 @@ export async function findAllAdvancedTrades(userId: string): Promise<ScoredPropo
 
   if (myAvailableDupes.size === 0 || myNeeded.size === 0) return []
 
-  const others = users.filter((u) => u.id !== userId)
+  const partnerSet = partnerIds ? new Set(partnerIds) : null
+  const others = users.filter((u) => u.id !== userId && (!partnerSet || partnerSet.has(u.id)))
 
   const proposals: ScoredProposal[] = []
   const seen = new Set<string>()
@@ -336,7 +342,7 @@ export async function findAllAdvancedTrades(userId: string): Promise<ScoredPropo
 
   proposals.sort((a, b) => b.score - a.score)
 
-  return proposals
+  return proposals.slice(0, MAX_ADVANCED_RESULTS)
 }
 
 export async function findBestAdvancedTrade(userId: string): Promise<AdvancedTradeProposal | null> {

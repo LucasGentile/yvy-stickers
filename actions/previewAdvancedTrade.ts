@@ -19,10 +19,13 @@ export type PreviewAdvancedTradeResult =
   | { found: true; previews: AdvancedTradePreview[] }
   | { found: false; error?: string }
 
-export async function previewAdvancedTrade(userId: string): Promise<PreviewAdvancedTradeResult> {
+export async function previewAdvancedTrade(
+  userId: string,
+  partnerIds?: string[]
+): Promise<PreviewAdvancedTradeResult> {
   if (!userId) return { found: false, error: 'Usuário inválido.' }
 
-  const proposals = await findAllAdvancedTrades(userId)
+  const proposals = await findAllAdvancedTrades(userId, partnerIds)
   if (proposals.length === 0) return { found: false }
 
   // Collect all unique user IDs to resolve names in one query
