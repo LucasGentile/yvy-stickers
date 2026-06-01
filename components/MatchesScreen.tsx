@@ -206,6 +206,15 @@ export default function MatchesScreen() {
 
       <ColorLegend />
 
+      {/* Action items: cancelled trades awaiting acknowledgment */}
+      {pending.recentlyCancelled.length > 0 && userId && (
+        <CancelledTradesSection
+          trades={pending.recentlyCancelled}
+          userId={userId}
+          onAck={() => refreshMatches(userId)}
+        />
+      )}
+
       {/* Action items: pending responses */}
       {userId &&
         (() => {
@@ -361,13 +370,6 @@ export default function MatchesScreen() {
         </>
       )}
 
-      {pending.recentlyCancelled.length > 0 && userId && (
-        <CancelledTradesSection
-          trades={pending.recentlyCancelled}
-          userId={userId}
-          onAck={() => refreshMatches(userId)}
-        />
-      )}
     </div>
   )
 }
