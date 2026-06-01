@@ -11,6 +11,7 @@ import {
   isChromeSticker,
   isCocaColaSticker,
 } from '@/lib/stickers'
+import { normalizeSearch } from '@/lib/format'
 
 export default function MissingScreen() {
   const [missingSet, setMissingSet] = useState<Set<string>>(new Set())
@@ -76,11 +77,10 @@ export default function MissingScreen() {
     ]
   })
 
-  const filteredOptions = query.trim()
+  const q = normalizeSearch(query.trim())
+  const filteredOptions = q
     ? allOptions.filter(
-        (o) =>
-          o.label.toLowerCase().includes(query.toLowerCase()) ||
-          o.sub.toLowerCase().includes(query.toLowerCase())
+        (o) => normalizeSearch(o.label).includes(q) || normalizeSearch(o.sub).includes(q)
       )
     : allOptions
 

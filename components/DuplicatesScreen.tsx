@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { getUserData } from '@/actions/getUserData'
 import {
   ALL_STICKER_IDS,
+  ALL_TEAMS,
   isChromeSticker,
   isCocaColaSticker,
   sortByAlbumOrder,
@@ -20,6 +21,18 @@ import { removeDuplicate } from '@/actions/removeDuplicate'
 import { useNotification } from '@/contexts/NotificationContext'
 import DuplicatePicker from './DuplicatePicker'
 import { getStickerTeamCode, TEAM_FLAG } from '@/lib/teamColors'
+import { normalizeSearch } from '@/lib/format'
+
+const TEAM_NAME_BY_CODE = Object.fromEntries(
+  ALL_TEAMS.map((t) => [t.code.toLowerCase(), normalizeSearch(t.name)])
+)
+
+function matchesSearch(id: string, q: string): boolean {
+  if (id.toLowerCase().includes(q)) return true
+  const code = id.replace(/\d+$/, '').toLowerCase()
+  const teamName = TEAM_NAME_BY_CODE[code]
+  return !!teamName && teamName.includes(q)
+}
 
 export default function DuplicatesScreen() {
   const { showSuccess, showError } = useNotification()
@@ -198,7 +211,7 @@ export default function DuplicatesScreen() {
         : sortAlphabetically(duplicates.map((d) => d.stickerId))
       : []
   const filteredIds = listSearch.trim()
-    ? sortedIds.filter((id) => id.toLowerCase().includes(listSearch.trim().toLowerCase()))
+    ? sortedIds.filter((id) => matchesSearch(id, normalizeSearch(listSearch.trim())))
     : sortedIds
   const dupeMap = Object.fromEntries(duplicates.map((d) => [d.stickerId, d.count]))
   const totalCount = duplicates.reduce((sum, d) => sum + d.count, 0)

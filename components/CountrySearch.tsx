@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { ALL_TEAMS, ALL_STICKER_SECTIONS, type StickerSpecial } from '@/lib/stickers'
 import { CountryFlag } from '@/components/CountryFlag'
+import { normalizeSearch } from '@/lib/format'
 
 const SPECIAL_SECTIONS = ALL_STICKER_SECTIONS.filter(
   (s): s is StickerSpecial => s.type === 'special'
@@ -13,16 +14,19 @@ export default function CountrySearch() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  const q = query.trim().toLowerCase()
+  const q = normalizeSearch(query.trim())
 
   const filteredTeams = q
-    ? ALL_TEAMS.filter((t) => t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q))
+    ? ALL_TEAMS.filter(
+        (t) => normalizeSearch(t.name).includes(q) || t.code.toLowerCase().includes(q)
+      )
     : ALL_TEAMS
 
   const filteredSections = q
     ? SPECIAL_SECTIONS.filter(
         (s) =>
-          s.label.toLowerCase().includes(q) || s.stickers.some((id) => id.toLowerCase().includes(q))
+          normalizeSearch(s.label).includes(q) ||
+          s.stickers.some((id) => id.toLowerCase().includes(q))
       )
     : SPECIAL_SECTIONS
 
