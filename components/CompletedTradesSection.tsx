@@ -56,15 +56,19 @@ export function CompletedTradesSection({
         className="flex items-center gap-2 w-full text-left"
       >
         <span
-          className="text-[10px] text-yvy-muted transition-transform"
+          className="text-[10px] text-emerald-600 transition-transform"
           style={{ transform: expanded ? 'rotate(90deg)' : undefined }}
         >
           ▶
         </span>
-        <h3 className="text-sm font-bold text-yvy-muted">
-          Trocas concluídas ({trades.length})
+        <h3 className="text-sm font-bold text-emerald-700 flex items-center gap-1.5">
+          <span>✓</span>
+          Trocas concluídas
+          <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+            {trades.length}
+          </span>
           {selectedPartner && (
-            <span className="font-normal text-xs ml-1">
+            <span className="font-normal text-xs text-yvy-muted">
               · {filtered.length} com {selectedPartner}
             </span>
           )}

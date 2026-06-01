@@ -96,3 +96,27 @@ After confirmation:
    git push && git push --tags
    ```
    Run these commands in sequence. Report the final git output so the user can confirm the push succeeded.
+
+### 7. Output the WhatsApp announcement
+
+After the push, print a ready-to-paste WhatsApp message in Portuguese (pt-BR) summarising the release. Use WhatsApp markdown (*bold*, _italic_). Keep it friendly and resident-facing — no technical jargon, no internal details like test coverage or refactors.
+
+Format:
+
+```
+📱✨ *YVY Lindóia – Atualização vX.Y.Z*
+
+Oi, pessoal! O app acabou de ser atualizado com novidades:
+
+✅ *Novidades*
+• <feature 1 in plain language>
+• <feature 2 in plain language>
+
+🔧 *Correções*
+• <fix 1 in plain language>
+
+Acesse: https://yvy-stickers.vercel.app
+```
+
+Omit a section entirely if there's nothing to put in it. Keep each bullet to one line.
+Print the message in a code block so it's easy to copy.
