@@ -99,7 +99,7 @@ After confirmation:
 
 ### 7. Output the WhatsApp announcement
 
-After the push, print a ready-to-paste WhatsApp message in Portuguese (pt-BR) summarising the release. Use WhatsApp markdown (*bold*, _italic_). Keep it friendly and resident-facing — no technical jargon, no internal details like test coverage or refactors.
+After the push, print a ready-to-paste WhatsApp message in Portuguese (pt-BR) summarising the release. Use WhatsApp markdown (_bold_, _italic_). Keep it friendly and resident-facing — no technical jargon, no internal details like test coverage or refactors.
 
 Format:
 

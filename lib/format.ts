@@ -1,7 +1,10 @@
 const LOWER_WORDS = new Set(['de', 'da', 'do', 'dos', 'das', 'e', 'em', 'na', 'no', 'nas', 'nos'])
 
 export function normalizeSearch(s: string): string {
-  return s.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase()
+  return s
+    .normalize('NFD')
+    .replace(/\p{Mn}/gu, '')
+    .toLowerCase()
 }
 
 export function formatName(name: string): string {
