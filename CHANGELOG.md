@@ -1,5 +1,19 @@
 # Changelog
 
+## [v2.7.0] — 2026-06-01
+
+### Funcionalidades
+
+- **Alerta de troca cancelada** — quando alguém cancela um pedido de troca, a contraparte recebe um aviso persistente no topo do app pedindo para devolver a figurinha ao baralho, com confirmação na tela Ranking de Trocas
+
+### Correções
+
+- Busca por figurinhas agora ignora acentos ("Bosnia" encontra "Bósnia") e aceita nome do país além do código (ex: "Bosnia" mostra todas as figurinhas BIH)
+- Seção "Trocas canceladas" aparece no topo do Ranking de Trocas em vez de enterrada no final da lista
+- Aviso de cancelamento não é retroativo — apenas trocas canceladas após a atualização geram alerta
+- Botão "Bloquear recebimento" renomeado para "Bloquear trocas" com espaçamento corrigido
+- Cabeçalho "Trocas concluídas" com destaque visual melhorado
+
 ## [v2.6.0] — 2026-05-29
 
 ### Funcionalidades
