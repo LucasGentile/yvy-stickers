@@ -150,7 +150,7 @@ export default function MatchesScreen() {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={async () => {
               if (!userId) return
@@ -179,7 +179,7 @@ export default function MatchesScreen() {
               <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" strokeLinecap="round" />
             </svg>
-            {tradesBlocked ? 'Bloqueado' : 'Bloquear recebimento'}
+            {tradesBlocked ? 'Bloqueado' : 'Bloquear trocas'}
           </button>
           <button
             onClick={() => userId && refreshMatches(userId)}
