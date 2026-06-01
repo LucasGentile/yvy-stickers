@@ -1,13 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
 vi.mock('@/components/trades/StickerList', () => ({
   StickerList: () => null,
 }))
 
+vi.mock('@/actions/ackTradeCancellation', () => ({
+  ackTradeCancellation: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('@/contexts/NotificationContext', () => ({
+  useNotification: () => ({ showSuccess: vi.fn(), showError: vi.fn() }),
+}))
+
 import CancelledTradesSection from '@/components/CancelledTradesSection'
 import type { CancelledTrade } from '@/actions/getPendingTrades'
+
+const noop = () => {}
 
 function makeTrade(overrides: Partial<CancelledTrade> = {}): CancelledTrade {
   return {
@@ -22,50 +32,56 @@ function makeTrade(overrides: Partial<CancelledTrade> = {}): CancelledTrade {
   }
 }
 
-function expandSection() {
-  fireEvent.click(screen.getByText('Trocas canceladas'))
-}
-
-describe('CancelledTradesSection — routing', () => {
+describe('CancelledTradesSection', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('links to /history/<id> when auditEntryId is present', () => {
-    render(<CancelledTradesSection trades={[makeTrade({ auditEntryId: 'audit-abc-123' })]} />)
-    expandSection()
-    const link = screen.getByRole('link')
-    expect(link).toHaveAttribute('href', '/history/audit-abc-123')
-  })
-
-  it('falls back to /historico when auditEntryId is null', () => {
-    render(<CancelledTradesSection trades={[makeTrade({ auditEntryId: null })]} />)
-    expandSection()
-    const link = screen.getByRole('link')
-    expect(link).toHaveAttribute('href', '/historico')
-  })
-
-  it('renders correct href for each trade independently', () => {
-    const trades = [
-      makeTrade({ id: 'trade-1', auditEntryId: 'audit-1' }),
-      makeTrade({ id: 'trade-2', auditEntryId: null }),
-      makeTrade({ id: 'trade-3', auditEntryId: 'audit-3' }),
-    ]
-    render(<CancelledTradesSection trades={trades} />)
-    expandSection()
-    const links = screen.getAllByRole('link')
-    expect(links[0]).toHaveAttribute('href', '/history/audit-1')
-    expect(links[1]).toHaveAttribute('href', '/historico')
-    expect(links[2]).toHaveAttribute('href', '/history/audit-3')
-  })
-
   it('renders nothing when trades array is empty', () => {
-    const { container } = render(<CancelledTradesSection trades={[]} />)
+    const { container } = render(
+      <CancelledTradesSection trades={[]} userId="user-1" onAck={noop} />
+    )
     expect(container.firstChild).toBeNull()
   })
 
-  it('does not render trade cards until section is expanded', () => {
-    render(<CancelledTradesSection trades={[makeTrade({ auditEntryId: 'audit-xyz' })]} />)
-    expect(screen.queryByRole('link')).toBeNull()
-    expandSection()
+  it('shows trade cards immediately (always expanded)', () => {
+    render(
+      <CancelledTradesSection
+        trades={[makeTrade({ auditEntryId: 'audit-abc' })]}
+        userId="user-1"
+        onAck={noop}
+      />
+    )
     expect(screen.getByRole('link')).toBeInTheDocument()
+  })
+
+  it('links to /history/<id> when auditEntryId is present', () => {
+    render(
+      <CancelledTradesSection
+        trades={[makeTrade({ auditEntryId: 'audit-abc-123' })]}
+        userId="user-1"
+        onAck={noop}
+      />
+    )
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/history/audit-abc-123')
+  })
+
+  it('shows no details link when auditEntryId is null', () => {
+    render(
+      <CancelledTradesSection
+        trades={[makeTrade({ auditEntryId: null })]}
+        userId="user-1"
+        onAck={noop}
+      />
+    )
+    expect(screen.queryByRole('link')).toBeNull()
+  })
+
+  it('renders one ack button per trade', () => {
+    const trades = [
+      makeTrade({ id: 'trade-1', auditEntryId: 'audit-1' }),
+      makeTrade({ id: 'trade-2', auditEntryId: null }),
+    ]
+    render(<CancelledTradesSection trades={trades} userId="user-1" onAck={noop} />)
+    const buttons = screen.getAllByRole('button', { name: /entendi/i })
+    expect(buttons).toHaveLength(2)
   })
 })

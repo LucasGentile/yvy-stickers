@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useTransition } from 'react'
 import type { CancelledTrade } from '@/actions/getPendingTrades'
+import { ackTradeCancellation } from '@/actions/ackTradeCancellation'
 import { StickerList } from './trades/StickerList'
+import { useNotification } from '@/contexts/NotificationContext'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('pt-BR', {
@@ -13,13 +15,34 @@ function formatDate(iso: string) {
   })
 }
 
-function CancelledTradeCard({ trade }: { trade: CancelledTrade }) {
+function CancelledTradeCard({
+  trade,
+  userId,
+  onAck,
+}: {
+  trade: CancelledTrade
+  userId: string
+  onAck: () => void
+}) {
   const isRejected = trade.status === 'rejected'
+  const [pending, startTransition] = useTransition()
+  const { showSuccess, showError } = useNotification()
+
+  function handleAck() {
+    startTransition(async () => {
+      try {
+        await ackTradeCancellation(trade.id, userId)
+        showSuccess('Confirmado! Figurinha devolvida ao baralho.')
+        onAck()
+      } catch {
+        showError('Erro ao confirmar. Tente novamente.')
+      }
+    })
+  }
 
   return (
-    <a
-      href={trade.auditEntryId ? `/history/${trade.auditEntryId}` : '/historico'}
-      className={`block rounded-xl border p-3 space-y-2.5 transition-opacity hover:opacity-80 ${
+    <div
+      className={`rounded-xl border p-3 space-y-2.5 ${
         isRejected ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'
       }`}
     >
@@ -35,15 +58,18 @@ function CancelledTradeCard({ trade }: { trade: CancelledTrade }) {
             </p>
           </div>
         </div>
-        <span
-          className={`shrink-0 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full border ${
-            isRejected
-              ? 'bg-rose-100 border-rose-300 text-rose-700'
-              : 'bg-amber-100 border-amber-300 text-amber-800'
-          }`}
-        >
-          Devolver ao baralho
-        </span>
+        {trade.auditEntryId && (
+          <a
+            href={`/history/${trade.auditEntryId}`}
+            className={`shrink-0 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full border ${
+              isRejected
+                ? 'bg-rose-100 border-rose-300 text-rose-700'
+                : 'bg-amber-100 border-amber-300 text-amber-800'
+            }`}
+          >
+            Ver detalhes
+          </a>
+        )}
       </div>
 
       <div
@@ -62,45 +88,50 @@ function CancelledTradeCard({ trade }: { trade: CancelledTrade }) {
           />
         )}
       </div>
-    </a>
+
+      <button
+        onClick={handleAck}
+        disabled={pending}
+        className={`w-full text-xs font-semibold py-2 rounded-lg border transition-colors disabled:opacity-50 ${
+          isRejected
+            ? 'bg-rose-600 hover:bg-rose-700 border-rose-600 text-white'
+            : 'bg-amber-600 hover:bg-amber-700 border-amber-600 text-white'
+        }`}
+      >
+        {pending ? 'Confirmando…' : '✓ Entendi, devolvi a figurinha ao baralho'}
+      </button>
+    </div>
   )
 }
 
-export default function CancelledTradesSection({ trades }: { trades: CancelledTrade[] }) {
-  const [expanded, setExpanded] = useState(false)
-
+export default function CancelledTradesSection({
+  trades,
+  userId,
+  onAck,
+}: {
+  trades: CancelledTrade[]
+  userId: string
+  onAck: () => void
+}) {
   if (trades.length === 0) return null
 
   return (
     <div className="space-y-2">
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        className="flex items-center gap-2 w-full text-left"
-      >
-        <span
-          className="text-[10px] text-yvy-muted transition-transform"
-          style={{ transform: expanded ? 'rotate(90deg)' : undefined }}
-        >
-          ▶
-        </span>
-        <h3 className="text-base font-bold text-yvy-dark">Trocas canceladas</h3>
-        <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+      <h3 className="text-sm font-bold text-amber-700 flex items-center gap-1.5">
+        <span>↩️</span>
+        Trocas canceladas
+        <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-amber-300">
           {trades.length}
         </span>
-      </button>
-
-      {expanded && (
-        <div className="space-y-2">
-          <p className="text-xs text-yvy-muted leading-relaxed pl-4">
-            Recupere as figurinhas separadas e devolva ao seu baralho de trocas.
-          </p>
-          <div className="space-y-2">
-            {trades.map((t) => (
-              <CancelledTradeCard key={t.id} trade={t} />
-            ))}
-          </div>
-        </div>
-      )}
+      </h3>
+      <p className="text-xs text-yvy-muted leading-relaxed">
+        Recupere as figurinhas separadas, devolva ao seu baralho e confirme abaixo.
+      </p>
+      <div className="space-y-2">
+        {trades.map((t) => (
+          <CancelledTradeCard key={t.id} trade={t} userId={userId} onAck={onAck} />
+        ))}
+      </div>
     </div>
   )
 }

@@ -52,8 +52,6 @@ export async function getPendingTrades(userId: string): Promise<{
   if (!userId) return empty
 
   try {
-    const cutoff = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-
     const [
       { data: pendingTrades, error: pendingError },
       { data: acceptedTrades },
@@ -82,12 +80,14 @@ export async function getPendingTrades(userId: string): Promise<{
         .select('id, metadata')
         .eq('user_id', userId)
         .eq('action', 'trade_accepted'),
-      supabaseAdmin
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabaseAdmin as any)
         .from('pending_trades')
         .select('id, initiator_id, receiver_id, giving_ids, receiving_ids, status, created_at')
-        .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
-        .in('status', ['cancelled', 'rejected'])
-        .gte('created_at', cutoff)
+        .or(
+          `and(status.eq.cancelled,receiver_id.eq.${userId}),and(status.eq.rejected,initiator_id.eq.${userId})`
+        )
+        .is('cancellation_acked_at', null)
         .order('created_at', { ascending: false })
         .limit(50),
     ])
@@ -201,12 +201,14 @@ export async function getPendingTrades(userId: string): Promise<{
 
     const recentlyCancelled: CancelledTrade[] = []
     for (const trade of cancelledTrades ?? []) {
+      // Query already guarantees current user is the counterpart (not the actor):
+      //   cancelled → receiver_id = userId (initiator cancelled)
+      //   rejected  → initiator_id = userId (receiver rejected)
       const isInitiator = trade.initiator_id === userId
       const otherId = isInitiator ? trade.receiver_id : trade.initiator_id
       const other = userMap[otherId]
       if (!other) continue
       const myGivingIds: string[] = isInitiator ? trade.giving_ids : trade.receiving_ids
-      // Only surface trades where the user had stickers to give — those need physical retrieval
       if (myGivingIds.length === 0) continue
       recentlyCancelled.push({
         id: trade.id,

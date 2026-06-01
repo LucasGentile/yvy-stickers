@@ -361,9 +361,12 @@ export default function MatchesScreen() {
         </>
       )}
 
-      {/* Traceability: cancelled/rejected trades (collapsed by default) */}
-      {pending.recentlyCancelled.length > 0 && (
-        <CancelledTradesSection trades={pending.recentlyCancelled} />
+      {pending.recentlyCancelled.length > 0 && userId && (
+        <CancelledTradesSection
+          trades={pending.recentlyCancelled}
+          userId={userId}
+          onAck={() => refreshMatches(userId)}
+        />
       )}
     </div>
   )
