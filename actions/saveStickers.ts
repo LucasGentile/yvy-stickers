@@ -80,18 +80,8 @@ export async function saveStickers(
         () => {},
         () => {}
       )
-  } else {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(supabaseAdmin as any)
-      .from('users')
-      .update({ album_completed_at: null })
-      .eq('id', userId)
-      .not('album_completed_at', 'is', null)
-      .then(
-        () => {},
-        () => {}
-      )
   }
+  // album_completed_at is never cleared — completion is a permanent milestone.
 
   return { success: true, count: stickerIds.length, removedWithDupes }
 }
