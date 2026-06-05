@@ -1,5 +1,16 @@
 # Changelog
 
+## [v2.8.0] — 2026-06-05
+
+### Funcionalidades
+
+- **Verificar lista de figurinhas** — cole uma lista separada por ponto-e-vírgula (como a saída de "Copiar lista" em Faltantes) na tela Verificar Figurinha e veja um resumo agrupado: quais estão disponíveis para troca, coladas sem repetidas, não tenho, reservadas ou com código inválido
+
+### Correções
+
+- Álbum completo não perde a posição no Ranking quando o usuário re-salva as figurinhas — a data de conclusão agora é permanente
+- Aviso de troca cancelada (banner vermelho) não ficava mais coberto pelo cabeçalho fixo
+
 ## [v2.7.0] — 2026-06-01
 
 ### Funcionalidades
