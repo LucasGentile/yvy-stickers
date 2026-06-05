@@ -6,6 +6,10 @@ import {
   StickerAvailabilityResult,
 } from '@/actions/checkStickerAvailability'
 import {
+  checkStickerListAvailability,
+  type BulkStickerResult,
+} from '@/actions/checkStickerListAvailability'
+import {
   isChromeSticker,
   isCocaColaSticker,
   ALL_TEAMS,
@@ -166,11 +170,114 @@ function ResultCard({
   )
 }
 
+// ─── Bulk results ─────────────────────────────────────────────────────────────
+
+const BULK_GROUPS = [
+  {
+    status: 'available' as const,
+    label: 'Tenho para trocar',
+    icon: '✅',
+    chipBg: 'bg-green-100 border-green-300',
+    defaultText: 'text-green-800',
+  },
+  {
+    status: 'partial' as const,
+    label: 'Tenho, parcialmente reservada',
+    icon: '⚠️',
+    chipBg: 'bg-amber-100 border-amber-300',
+    defaultText: 'text-amber-800',
+  },
+  {
+    status: 'fully_reserved' as const,
+    label: 'Tenho, mas totalmente reservada',
+    icon: '🔒',
+    chipBg: 'bg-red-50 border-red-200',
+    defaultText: 'text-red-600',
+  },
+  {
+    status: 'no_dupes' as const,
+    label: 'Colada, sem repetidas',
+    icon: '📖',
+    chipBg: 'bg-sky-50 border-sky-200',
+    defaultText: 'text-sky-700',
+  },
+  {
+    status: 'not_owned' as const,
+    label: 'Não tenho',
+    icon: '❌',
+    chipBg: 'bg-yvy-bg border-yvy-border',
+    defaultText: 'text-yvy-muted',
+  },
+  {
+    status: 'invalid' as const,
+    label: 'Código inválido',
+    icon: '·',
+    chipBg: 'bg-yvy-bg border-yvy-border/30',
+    defaultText: 'text-yvy-border/40 line-through',
+  },
+]
+
+function BulkResults({ results }: { results: BulkStickerResult[] }) {
+  const canGive = results.filter((r) => r.status === 'available' || r.status === 'partial').length
+  const haveOnly = results.filter(
+    (r) => r.status === 'no_dupes' || r.status === 'fully_reserved'
+  ).length
+  const dontHave = results.filter((r) => r.status === 'not_owned').length
+  const valid = results.filter((r) => r.status !== 'invalid').length
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-yvy-surface rounded-xl border border-yvy-border px-4 py-3">
+        <p className="text-xs font-semibold text-yvy-dark mb-1">
+          {valid} figurinha{valid !== 1 ? 's' : ''} verificada{valid !== 1 ? 's' : ''}
+        </p>
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+          {canGive > 0 && <span className="text-green-700 font-medium">{canGive} para trocar</span>}
+          {haveOnly > 0 && (
+            <span className="text-sky-700">
+              {haveOnly} colada{haveOnly !== 1 ? 's' : ''} sem repetidas
+            </span>
+          )}
+          {dontHave > 0 && <span className="text-red-600">{dontHave} não tenho</span>}
+        </div>
+      </div>
+
+      {BULK_GROUPS.map(({ status, label, icon, chipBg, defaultText }) => {
+        const items = results.filter((r) => r.status === status)
+        if (!items.length) return null
+        return (
+          <div key={status} className="space-y-1.5">
+            <p className="text-[11px] font-semibold text-yvy-muted uppercase tracking-wide">
+              {icon} {label} <span className="font-normal">({items.length})</span>
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {items.map((r) => {
+                const chrome = isChromeSticker(r.stickerId)
+                const coke = isCocaColaSticker(r.stickerId)
+                const textClass = chrome ? 'text-amber-500' : coke ? 'text-red-500' : defaultText
+                return (
+                  <span
+                    key={r.stickerId}
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded-md border ${chipBg}`}
+                  >
+                    <span className={textClass}>{r.stickerId}</span>
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function StickerLookupScreen() {
   const [query, setQuery] = useState('')
   const [result, setResult] = useState<StickerAvailabilityResult | null>(null)
+  const [bulkResults, setBulkResults] = useState<BulkStickerResult[] | null>(null)
   const [displayId, setDisplayId] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -201,6 +308,26 @@ export default function StickerLookupScreen() {
   async function runCheck(code: string) {
     const userId = localStorage.getItem('userId') ?? ''
     if (!userId) return
+
+    const tokens = code
+      .split(/[;,\n]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+
+    if (tokens.length > 1) {
+      setDisplayId('')
+      setResult(null)
+      setBulkResults(null)
+      setLoading(true)
+      try {
+        setBulkResults(await checkStickerListAvailability(userId, tokens))
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    setBulkResults(null)
     const normalized = code.toUpperCase()
     const finalId = normalized === '00' ? 'FWC00' : normalized
     setDisplayId(finalId)
@@ -230,8 +357,8 @@ export default function StickerLookupScreen() {
           Verificar Figurinha
         </h2>
         <p className="text-xs text-yvy-muted mt-1 pl-3 leading-relaxed">
-          Consulte se uma figurinha está disponível para troca fora do app — sem conflitar com
-          pedidos já ativos.
+          Consulte uma figurinha pelo código — ou cole uma lista (ex: do botão "Copiar lista" em
+          Faltantes) para ver de uma vez quais você tem para trocar.
         </p>
       </div>
 
@@ -274,8 +401,9 @@ export default function StickerLookupScreen() {
           onChange={(e) => {
             setQuery(e.target.value)
             setResult(null)
+            setBulkResults(null)
           }}
-          placeholder="Ex: BRA5, FWC00, MEX12..."
+          placeholder="Ex: BRA5 · ou cole uma lista: BRA1;MEX3;ARG5..."
           autoCapitalize="characters"
           className="flex-1 rounded-lg border border-yvy-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yvy-accent bg-yvy-bg uppercase placeholder:normal-case"
         />
@@ -421,7 +549,9 @@ export default function StickerLookupScreen() {
 
       {result && <ResultCard stickerId={displayId} result={result} />}
 
-      {!result && !selectedEntry && (
+      {bulkResults && <BulkResults results={bulkResults} />}
+
+      {!result && !bulkResults && !selectedEntry && (
         <p className="text-xs text-yvy-text/70 text-center leading-relaxed">
           Digite o código da figurinha — ex: <span className="font-mono">BRA5</span>,{' '}
           <span className="font-mono">FWC00</span>, <span className="font-mono">MEX12</span>
