@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useMuralTab, MURAL_TABS } from '@/contexts/MuralTabContext'
 import NotificationBanner from '@/components/NotificationBanner'
+import CancelledTradesBanner from '@/components/CancelledTradesBanner'
 import { getPendingTrades } from '@/actions/getPendingTrades'
 import { getPendingApprovalCount } from '@/actions/getPendingApprovalCount'
 import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
@@ -35,6 +36,7 @@ const FONT_SIZES = [
 ]
 
 export default function Header() {
+  const headerRef = useRef<HTMLElement>(null)
   const [groupHref, setGroupHref] = useState('/group')
   const [menuOpen, setMenuOpen] = useState(false)
   const [fontSize, setFontSize] = useState(0)
@@ -70,6 +72,16 @@ export default function Header() {
       })
       .catch(() => {})
   }
+
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const obs = new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--header-h', `${el.offsetHeight}px`)
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   useEffect(() => {
     const uid = localStorage.getItem('userId')
@@ -115,6 +127,7 @@ export default function Header() {
   return (
     <>
       <header
+        ref={headerRef}
         className="fixed top-0 left-0 right-0 z-[70] bg-yvy-dark text-yvy-gold shadow-md"
         style={{ willChange: 'transform' }}
       >
@@ -170,6 +183,7 @@ export default function Header() {
         )}
 
         <NotificationBanner />
+        <CancelledTradesBanner />
       </header>
 
       {/* Drawer */}
