@@ -213,7 +213,7 @@ const BULK_GROUPS = [
     label: 'Código inválido',
     icon: '·',
     chipBg: 'bg-yvy-bg border-yvy-border/30',
-    defaultText: 'text-yvy-border/40 line-through',
+    defaultText: 'text-red-400 line-through',
   },
 ]
 
@@ -321,6 +321,7 @@ export default function StickerLookupScreen() {
       setLoading(true)
       try {
         setBulkResults(await checkStickerListAvailability(userId, tokens))
+        setQuery('')
       } finally {
         setLoading(false)
       }
