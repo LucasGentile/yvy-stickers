@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { StickerChip } from './StickerChip'
 import { createPurchaseRequest } from '@/actions/createPurchaseRequest'
 import { useNotification } from '@/contexts/NotificationContext'
@@ -34,7 +35,7 @@ export function PurchaseRequestModal({ buyerId, seller, stickerIds, onClose, onS
     })
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-yvy-surface rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
         <h3 className="text-base font-bold text-yvy-dark">Confirmar pedido</h3>
@@ -84,6 +85,7 @@ export function PurchaseRequestModal({ buyerId, seller, stickerIds, onClose, onS
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
