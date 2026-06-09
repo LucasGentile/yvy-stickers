@@ -30,7 +30,9 @@ function makeOthersChain(data: unknown) {
     select: vi.fn().mockReturnThis(),
     neq: vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data, error: null }),
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data, error: null }),
+        }),
       }),
     }),
   }

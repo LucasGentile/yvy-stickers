@@ -27,13 +27,15 @@ function makeEqChain(data: unknown) {
   }
 }
 
-// Chain for: from('users').select(...).neq(...).eq('approved', true).eq('trades_blocked', false)
+// Chain for: from('users').select(...).neq(...).eq('approved').eq('is_active').eq('trades_blocked')
 function makeOthersChain(data: unknown) {
   return {
     select: vi.fn().mockReturnThis(),
     neq: vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
-        eq: vi.fn().mockResolvedValue({ data, error: null }),
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data, error: null }),
+        }),
       }),
     }),
   }

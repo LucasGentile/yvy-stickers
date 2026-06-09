@@ -35,7 +35,11 @@ export async function searchCommunityDuplicates(
     { data: tradesAsReceiver },
     { data: purchaseReqs },
   ] = await Promise.all([
-    supabaseAdmin.from('users').select('id, name, apartment, tower').in('id', userIds),
+    supabaseAdmin
+      .from('users')
+      .select('id, name, apartment, tower')
+      .in('id', userIds)
+      .eq('is_active', true),
     supabaseAdmin
       .from('pending_trades')
       .select('initiator_id, giving_ids')

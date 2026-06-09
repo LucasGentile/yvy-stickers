@@ -227,6 +227,7 @@ export type Database = {
           display_key: string
           id: string
           input_mode: string
+          is_active: boolean
           is_admin: boolean
           name: string
           phone: string
@@ -240,6 +241,7 @@ export type Database = {
           display_key: string
           id?: string
           input_mode: string
+          is_active?: boolean
           is_admin?: boolean
           name: string
           phone: string
@@ -253,6 +255,7 @@ export type Database = {
           display_key?: string
           id?: string
           input_mode?: string
+          is_active?: boolean
           is_admin?: boolean
           name?: string
           phone?: string

@@ -60,6 +60,7 @@ export async function getMatches(
       )
       .neq('id', currentUserId)
       .eq('approved', true)
+      .eq('is_active', true)
       .eq('trades_blocked', false),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabaseAdmin as any)
