@@ -4,6 +4,7 @@ import LoadingScreen from '@/components/LoadingScreen'
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { getMatches, MatchResult } from '@/lib/matching'
 import { getPendingTrades, PendingTrade } from '@/actions/getPendingTrades'
+import { getPurchaseRequests, type PurchaseRequest } from '@/actions/getPurchaseRequests'
 import { getUserData } from '@/actions/getUserData'
 import { setTradesBlocked } from '@/actions/setTradesBlocked'
 import MatchCard from './MatchCard'
@@ -11,6 +12,7 @@ import PendingTradesSection from './PendingTradesSection'
 import CancelledTradesSection from './CancelledTradesSection'
 import { CompletedTradesSection } from './CompletedTradesSection'
 import { ColorLegend } from './trades/ColorLegend'
+import { PurchaseRequestCard } from './PurchaseRequestCard'
 
 function CollapsibleMatchSection({
   title,
@@ -61,6 +63,10 @@ export default function MatchesScreen() {
     recentlyAccepted: [],
     recentlyCancelled: [],
   })
+  const [purchaseRequests, setPurchaseRequests] = useState<{
+    incoming: PurchaseRequest[]
+    outgoing: PurchaseRequest[]
+  }>({ incoming: [], outgoing: [] })
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -70,9 +76,14 @@ export default function MatchesScreen() {
   const refreshMatches = useCallback(async (uid: string) => {
     setRefreshing(true)
     try {
-      const [fresh, freshPending] = await Promise.all([getMatches(uid), getPendingTrades(uid)])
+      const [fresh, freshPending, freshPurchase] = await Promise.all([
+        getMatches(uid),
+        getPendingTrades(uid),
+        getPurchaseRequests(uid),
+      ])
       setMatches(fresh)
       setPending(freshPending)
+      setPurchaseRequests(freshPurchase)
       window.dispatchEvent(new Event('trade-action'))
     } catch {
       /* silently ignore refresh errors */
@@ -99,6 +110,10 @@ export default function MatchesScreen() {
       .catch(() => {
         /* pending trades failing silently — matches still show */
       })
+
+    getPurchaseRequests(uid)
+      .then(setPurchaseRequests)
+      .catch(() => {})
 
     getUserData(uid)
       .then((data) => {
@@ -136,6 +151,9 @@ export default function MatchesScreen() {
   }
 
   const pendingCount = pending.received.length + pending.sent.length
+  const incomingPurchaseCount = purchaseRequests.incoming.filter(
+    (r) => r.status === 'pending'
+  ).length
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
@@ -144,9 +162,9 @@ export default function MatchesScreen() {
           <h2 className="text-lg font-bold text-yvy-dark border-l-[3px] border-yvy-gold pl-2.5 [text-shadow:0_1px_3px_rgba(0,0,0,0.22)]">
             Ranking de Trocas
           </h2>
-          {pendingCount > 0 && (
+          {pendingCount + incomingPurchaseCount > 0 && (
             <span className="bg-yvy-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-              {pendingCount}
+              {pendingCount + incomingPurchaseCount}
             </span>
           )}
         </div>
@@ -231,6 +249,49 @@ export default function MatchesScreen() {
               userId={userId}
               onRefresh={() => refreshMatches(userId)}
             />
+          )
+        })()}
+
+      {/* Purchase requests — incoming (seller) and outgoing (buyer) */}
+      {userId &&
+        (() => {
+          const incoming = purchaseRequests.incoming.filter((r) => r.status === 'pending')
+          const outgoing = purchaseRequests.outgoing
+          if (incoming.length === 0 && outgoing.length === 0) return null
+          return (
+            <div className="space-y-3">
+              {incoming.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-yvy-dark">Pedidos de compra</h3>
+                    <span className="bg-yvy-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      {incoming.length}
+                    </span>
+                  </div>
+                  {incoming.map((r) => (
+                    <PurchaseRequestCard
+                      key={r.id}
+                      request={r}
+                      userId={userId}
+                      onDone={() => refreshMatches(userId)}
+                    />
+                  ))}
+                </>
+              )}
+              {outgoing.length > 0 && (
+                <>
+                  <h3 className="text-base font-bold text-yvy-dark">Meus pedidos enviados</h3>
+                  {outgoing.map((r) => (
+                    <PurchaseRequestCard
+                      key={r.id}
+                      request={r}
+                      userId={userId}
+                      onDone={() => refreshMatches(userId)}
+                    />
+                  ))}
+                </>
+              )}
+            </div>
           )
         })()}
 

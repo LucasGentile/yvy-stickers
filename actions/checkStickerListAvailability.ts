@@ -35,23 +35,30 @@ export async function checkStickerListAvailability(
     return ids.map((stickerId) => ({ stickerId, status: 'invalid' as const }))
   }
 
-  const [{ data: owned }, { data: dupes }, { data: trades }] = await Promise.all([
-    supabaseAdmin
-      .from('user_stickers')
-      .select('sticker_id')
-      .eq('user_id', userId)
-      .in('sticker_id', validIds),
-    supabaseAdmin
-      .from('user_duplicates')
-      .select('sticker_id, count')
-      .eq('user_id', userId)
-      .in('sticker_id', validIds),
-    supabaseAdmin
-      .from('pending_trades')
-      .select('initiator_id, receiver_id, giving_ids, receiving_ids')
-      .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
-      .eq('status', 'pending'),
-  ])
+  const [{ data: owned }, { data: dupes }, { data: trades }, { data: purchaseReqs }] =
+    await Promise.all([
+      supabaseAdmin
+        .from('user_stickers')
+        .select('sticker_id')
+        .eq('user_id', userId)
+        .in('sticker_id', validIds),
+      supabaseAdmin
+        .from('user_duplicates')
+        .select('sticker_id, count')
+        .eq('user_id', userId)
+        .in('sticker_id', validIds),
+      supabaseAdmin
+        .from('pending_trades')
+        .select('initiator_id, receiver_id, giving_ids, receiving_ids')
+        .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
+        .eq('status', 'pending'),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabaseAdmin as any)
+        .from('purchase_requests')
+        .select('sticker_ids')
+        .eq('seller_id', userId)
+        .eq('status', 'pending'),
+    ])
 
   const ownedSet = new Set((owned ?? []).map((r) => r.sticker_id))
   const dupeMap = Object.fromEntries((dupes ?? []).map((r) => [r.sticker_id, r.count as number]))
@@ -61,6 +68,13 @@ export async function checkStickerListAvailability(
   for (const trade of trades ?? []) {
     const giving = trade.initiator_id === userId ? trade.giving_ids : trade.receiving_ids
     for (const id of (giving ?? []) as string[]) {
+      if (validSet.has(id)) {
+        reservedMap[id] = (reservedMap[id] ?? 0) + 1
+      }
+    }
+  }
+  for (const pr of (purchaseReqs ?? []) as Array<{ sticker_ids: string[] }>) {
+    for (const id of pr.sticker_ids ?? []) {
       if (validSet.has(id)) {
         reservedMap[id] = (reservedMap[id] ?? 0) + 1
       }

@@ -28,25 +28,32 @@ export async function checkStickerAvailability(
 
   if (!STICKER_SET.has(stickerId)) return { status: 'invalid' }
 
-  const [{ data: owned }, { data: dupe }, { data: trades }] = await Promise.all([
-    supabaseAdmin
-      .from('user_stickers')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('sticker_id', stickerId)
-      .maybeSingle(),
-    supabaseAdmin
-      .from('user_duplicates')
-      .select('count')
-      .eq('user_id', userId)
-      .eq('sticker_id', stickerId)
-      .maybeSingle(),
-    supabaseAdmin
-      .from('pending_trades')
-      .select('id, initiator_id, receiver_id, giving_ids, receiving_ids')
-      .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
-      .eq('status', 'pending'),
-  ])
+  const [{ data: owned }, { data: dupe }, { data: trades }, { data: purchaseReqs }] =
+    await Promise.all([
+      supabaseAdmin
+        .from('user_stickers')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('sticker_id', stickerId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('user_duplicates')
+        .select('count')
+        .eq('user_id', userId)
+        .eq('sticker_id', stickerId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('pending_trades')
+        .select('id, initiator_id, receiver_id, giving_ids, receiving_ids')
+        .or(`initiator_id.eq.${userId},receiver_id.eq.${userId}`)
+        .eq('status', 'pending'),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabaseAdmin as any)
+        .from('purchase_requests')
+        .select('id, sticker_ids')
+        .eq('seller_id', userId)
+        .eq('status', 'pending'),
+    ])
 
   if (!owned) return { status: 'not_owned' }
 
@@ -73,7 +80,11 @@ export async function checkStickerAvailability(
     return { tradeId: t.id, partnerName: partnerMap[partnerId] ?? 'Usuário' }
   })
 
-  const reservedCount = matchingTrades.length
+  const purchaseReserved = (purchaseReqs ?? []).filter((pr: { sticker_ids: string[] }) =>
+    (pr.sticker_ids ?? []).includes(stickerId)
+  ).length
+
+  const reservedCount = matchingTrades.length + purchaseReserved
   const availableCount = dupeCount - reservedCount
 
   const status =

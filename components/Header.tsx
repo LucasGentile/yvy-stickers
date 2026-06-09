@@ -8,6 +8,7 @@ import NotificationBanner from '@/components/NotificationBanner'
 import CancelledTradesBanner from '@/components/CancelledTradesBanner'
 import { getPendingTrades } from '@/actions/getPendingTrades'
 import { getPendingApprovalCount } from '@/actions/getPendingApprovalCount'
+import { getIncomingPurchaseRequestCount } from '@/actions/getPurchaseRequests'
 import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
 import { getAdvancedTrades } from '@/actions/getAdvancedTrades'
 import { usePrefs } from '@/contexts/PreferencesContext'
@@ -22,6 +23,7 @@ const NAV_BOTTOM = [
   { href: '/historico', label: 'Histórico' },
   { href: '/missing', label: 'Faltantes' },
   { href: '/verificar', label: 'Verificar Figurinha' },
+  { href: '/buscar', label: 'Buscar Figurinhas' },
 ]
 
 const SOCIAL_NAV = [
@@ -42,6 +44,7 @@ export default function Header() {
   const [fontSize, setFontSize] = useState(0)
   const [pendingCount, setPendingCount] = useState(0)
   const [pendingApprovalCount, setPendingApprovalCount] = useState<number | null>(null)
+  const [purchaseRequestCount, setPurchaseRequestCount] = useState(0)
   const [advancedTradeEligible, setAdvancedTradeEligible] = useState(false)
   const [advancedTradePending, setAdvancedTradePending] = useState(0)
   const pathname = usePathname()
@@ -59,6 +62,9 @@ export default function Header() {
       .catch(() => {})
     getPendingApprovalCount(uid)
       .then(setPendingApprovalCount)
+      .catch(() => {})
+    getIncomingPurchaseRequestCount(uid)
+      .then(setPurchaseRequestCount)
       .catch(() => {})
     getAdvancedTradeEligibility(uid)
       .then((r) => setAdvancedTradeEligible(r.eligible))
@@ -142,11 +148,11 @@ export default function Header() {
               <span className="block w-5 h-0.5 bg-yvy-gold rounded-full" />
               <span className="block w-5 h-0.5 bg-yvy-gold rounded-full" />
               <span className="block w-5 h-0.5 bg-yvy-gold rounded-full" />
-              {pendingCount + (pendingApprovalCount ?? 0) > 0 && (
+              {pendingCount + (pendingApprovalCount ?? 0) + purchaseRequestCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5">
-                  {pendingCount + (pendingApprovalCount ?? 0) > 9
+                  {pendingCount + (pendingApprovalCount ?? 0) + purchaseRequestCount > 9
                     ? '9+'
-                    : pendingCount + (pendingApprovalCount ?? 0)}
+                    : pendingCount + (pendingApprovalCount ?? 0) + purchaseRequestCount}
                 </span>
               )}
             </button>
@@ -203,7 +209,7 @@ export default function Header() {
             <nav className="flex-1 py-2 overflow-y-auto">
               {NAV_TOP.map((item) => {
                 const active = pathname === item.href
-                const showDot = item.href === '/matches' && pendingCount > 0
+                const showDot = item.href === '/matches' && pendingCount + purchaseRequestCount > 0
                 return (
                   <Link
                     key={item.href}
@@ -217,7 +223,9 @@ export default function Header() {
                     {item.label}
                     {showDot && (
                       <span className="ml-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
-                        {pendingCount > 9 ? '9+' : pendingCount}
+                        {pendingCount + purchaseRequestCount > 9
+                          ? '9+'
+                          : pendingCount + purchaseRequestCount}
                       </span>
                     )}
                     {active && !showDot && (

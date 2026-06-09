@@ -10,7 +10,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 export async function getReservedStickerIds(userId: string): Promise<Record<string, number>> {
   if (!userId) return {}
 
-  const [{ data }, { data: advancedData }] = await Promise.all([
+  const [{ data }, { data: advancedData }, { data: purchaseData }] = await Promise.all([
     supabaseAdmin
       .from('pending_trades')
       .select('initiator_id, receiver_id, giving_ids, receiving_ids')
@@ -22,6 +22,12 @@ export async function getReservedStickerIds(userId: string): Promise<Record<stri
       .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
       .or(`user_a_id.eq.${userId},user_b_id.eq.${userId},user_c_id.eq.${userId}`)
       .eq('status', 'pending'),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabaseAdmin as any)
+      .from('purchase_requests')
+      .select('sticker_ids')
+      .eq('seller_id', userId)
+      .eq('status', 'pending'),
   ])
 
   const counts: Record<string, number> = {}
@@ -29,6 +35,10 @@ export async function getReservedStickerIds(userId: string): Promise<Record<stri
   for (const trade of data ?? []) {
     const giving = trade.initiator_id === userId ? trade.giving_ids : trade.receiving_ids
     for (const id of giving ?? []) counts[id] = (counts[id] ?? 0) + 1
+  }
+
+  for (const pr of purchaseData ?? []) {
+    for (const id of pr.sticker_ids ?? []) counts[id] = (counts[id] ?? 0) + 1
   }
 
   for (const trade of (advancedData ?? []) as Array<{

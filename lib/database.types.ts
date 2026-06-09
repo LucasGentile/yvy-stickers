@@ -65,6 +65,54 @@ export type Database = {
           },
         ]
       }
+      purchase_requests: {
+        Row: {
+          id: string
+          buyer_id: string
+          seller_id: string
+          sticker_ids: string[]
+          status: string
+          message: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          buyer_id: string
+          seller_id: string
+          sticker_ids: string[]
+          status?: string
+          message?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          buyer_id?: string
+          seller_id?: string
+          sticker_ids?: string[]
+          status?: string
+          message?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'purchase_requests_buyer_id_fkey'
+            columns: ['buyer_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'purchase_requests_seller_id_fkey'
+            columns: ['seller_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       pending_trades: {
         Row: {
           id: string

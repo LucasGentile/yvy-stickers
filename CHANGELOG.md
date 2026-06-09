@@ -1,5 +1,20 @@
 # Changelog
 
+## [v2.9.0] — 2026-06-09
+
+### Funcionalidades
+
+- **Buscar Figurinhas** — nova tela onde o usuário cola uma lista de figurinhas em qualquer formato (exportação de outros apps, lista separada por vírgula/ponto-e-vírgula, etc.) e o app mostra quais moradores têm essas figurinhas como repetidas disponíveis
+- **Pedido de compra** — a partir dos resultados da busca, é possível enviar um pedido de compra diretamente ao morador que tem as figurinhas; o destinatário pode aceitar ou recusar
+- Ao aceitar um pedido, as repetidas são decrementadas do vendedor e as figurinhas são adicionadas ao álbum do comprador automaticamente
+- Pedidos pendentes reservam as figurinhas envolvidas, igual às trocas — não aparecem como disponíveis para outras transações
+- Pedidos de compra recebidos e enviados aparecem na tela de Trocas
+- Contador de pedidos pendentes incluído no badge do menu e na navegação
+
+### Melhorias
+
+- Reservas em pedidos de compra consideradas em todas as telas de verificação de disponibilidade (Verificar Figurinha, duplicatas, etc.)
+
 ## [v2.8.0] — 2026-06-05
 
 ### Funcionalidades

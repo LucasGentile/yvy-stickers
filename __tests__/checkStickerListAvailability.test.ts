@@ -45,6 +45,17 @@ function makeTradesChain(
   }
 }
 
+// Builds a chain that supports two chained .eq() calls before resolving
+function makeTwoEqChain(data: unknown[]) {
+  const chain = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn(),
+  }
+  // first .eq() returns an object with a second .eq() that resolves
+  chain.eq.mockReturnValueOnce({ eq: vi.fn().mockResolvedValue({ data }) })
+  return chain
+}
+
 function mockThreeCalls(
   owned: { sticker_id: string }[],
   dupes: { sticker_id: string; count: number }[],
@@ -60,7 +71,9 @@ function mockThreeCalls(
     callCount++
     if (callCount === 1) return makeOwnedChain(owned) as never
     if (callCount === 2) return makeDupesChain(dupes) as never
-    return makeTradesChain(trades) as never
+    if (callCount === 3) return makeTradesChain(trades) as never
+    // 4th call: purchase_requests — return empty by default
+    return makeTwoEqChain([]) as never
   })
 }
 

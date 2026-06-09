@@ -293,6 +293,63 @@ export const EVENT_CONFIG: Record<string, EventConfig> = {
   },
 }
 
+export const PURCHASE_REQUEST_ACTIONS = new Set([
+  'purchase_request_sent',
+  'purchase_request_accepted',
+  'purchase_request_received',
+  'purchase_request_rejected',
+  'purchase_request_cancelled',
+])
+
+// Extend EVENT_CONFIG with purchase request events
+Object.assign(EVENT_CONFIG, {
+  purchase_request_sent: {
+    icon: '🛒',
+    borderColor: 'border-l-sky-400',
+    iconBg: 'bg-sky-50',
+    iconColor: 'text-sky-600',
+    label: () => 'Pedido de compra enviado',
+    detail: (m: Record<string, unknown>) =>
+      `Para ${m.sellerName} · ${m.stickerCount || 0} figurinha${(m.stickerCount as number) !== 1 ? 's' : ''}`,
+  },
+  purchase_request_accepted: {
+    icon: '✅',
+    borderColor: 'border-l-green-400',
+    iconBg: 'bg-green-50',
+    iconColor: 'text-green-600',
+    label: () => 'Pedido de compra aceito',
+    detail: (m: Record<string, unknown>) =>
+      `De ${m.buyerName} · ${m.stickerCount || 0} figurinha${(m.stickerCount as number) !== 1 ? 's' : ''} transferidas`,
+    realLifeHint: () => 'Entregue as figurinhas ao comprador',
+  },
+  purchase_request_received: {
+    icon: '📦',
+    borderColor: 'border-l-green-400',
+    iconBg: 'bg-green-50',
+    iconColor: 'text-green-600',
+    label: () => 'Compra concluída',
+    detail: (m: Record<string, unknown>) =>
+      `De ${m.sellerName} · ${m.stickerCount || 0} figurinha${(m.stickerCount as number) !== 1 ? 's' : ''} adicionadas ao álbum`,
+    realLifeHint: () => 'Cole as figurinhas no álbum físico',
+  },
+  purchase_request_rejected: {
+    icon: '✕',
+    borderColor: 'border-l-red-400',
+    iconBg: 'bg-red-50',
+    iconColor: 'text-red-500',
+    label: () => 'Pedido de compra recusado',
+    detail: (m: Record<string, unknown>) => `Para ${m.buyerName}`,
+  },
+  purchase_request_cancelled: {
+    icon: '○',
+    borderColor: 'border-l-yvy-border',
+    iconBg: 'bg-yvy-bg',
+    iconColor: 'text-yvy-muted',
+    label: () => 'Pedido de compra cancelado',
+    detail: (m: Record<string, unknown>) => `Para ${m.sellerName}`,
+  },
+} satisfies Record<string, import('./eventConfig').EventConfig>)
+
 export const TRADE_ACTIONS = new Set([
   'trade_accepted',
   'trade_sent',
