@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useMuralTab, MURAL_TABS } from '@/contexts/MuralTabContext'
 import NotificationBanner from '@/components/NotificationBanner'
 import CancelledTradesBanner from '@/components/CancelledTradesBanner'
@@ -48,7 +48,14 @@ export default function Header() {
   const [advancedTradeEligible, setAdvancedTradeEligible] = useState(false)
   const [advancedTradePending, setAdvancedTradePending] = useState(0)
   const pathname = usePathname()
+  const router = useRouter()
   const { stickerOrder, setStickerOrder, setFontIndex } = usePrefs()
+
+  function handleLogout() {
+    localStorage.removeItem('userId')
+    localStorage.removeItem('displayKey')
+    router.push('/')
+  }
   const { tab: muralTab, setTab: setMuralTab } = useMuralTab()
 
   function refreshBadges(uid: string) {
@@ -368,6 +375,28 @@ export default function Header() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Logout */}
+            <div className="px-5 py-2 border-t border-white/10">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-xs text-yvy-gold/60 hover:text-red-400 transition-colors w-full"
+              >
+                <svg
+                  className="w-3.5 h-3.5 fill-none stroke-current flex-shrink-0"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Sair
+              </button>
             </div>
 
             {/* WhatsApp */}

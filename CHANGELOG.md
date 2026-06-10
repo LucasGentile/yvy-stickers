@@ -1,5 +1,16 @@
 # Changelog
 
+## [v2.10.0] — 2026-06-10
+
+### Funcionalidades
+
+- **Sair da conta** — botão "Sair" adicionado ao menu lateral para trocar de usuário sem precisar limpar o app manualmente
+- **Desativação automática** — usuários sem nenhuma figurinha registrada são desativados automaticamente após 3 dias, mantendo o Ranking e o Mural limpos
+
+### Correções
+
+- Modal de pedido de compra corrigido no celular — não ficava mais cortado ou fora de posição em telas com scroll
+
 ## [v2.9.0] — 2026-06-09
 
 ### Funcionalidades
