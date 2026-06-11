@@ -16,13 +16,19 @@ export async function deactivateStaleUsers(): Promise<void> {
   if (!candidates || candidates.length === 0) return
 
   const candidateIds = candidates.map((u) => u.id)
+  const candidateIdSet = new Set(candidateIds)
 
-  const { data: withStickers } = await supabaseAdmin
-    .from('user_stickers')
-    .select('user_id')
-    .in('user_id', candidateIds)
+  // Use the RPC (returns one row per user) instead of raw user_stickers rows,
+  // which would exceed PostgREST's 1000-row default limit and cause false negatives.
+  // If the RPC fails, bail out entirely — never deactivate when sticker data is unavailable.
+  const { data: stickerCounts, error: rpcError } = await supabaseAdmin.rpc(
+    'get_sticker_counts_by_user'
+  )
+  if (rpcError || !stickerCounts) return
 
-  const withStickerSet = new Set((withStickers ?? []).map((r) => r.user_id))
+  const withStickerSet = new Set(
+    stickerCounts.filter((r) => candidateIdSet.has(r.user_id)).map((r) => r.user_id)
+  )
   const toDeactivate = candidateIds.filter((id) => !withStickerSet.has(id))
 
   if (toDeactivate.length === 0) return
