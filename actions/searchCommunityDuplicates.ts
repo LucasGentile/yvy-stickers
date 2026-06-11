@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { formatName } from '@/lib/format'
+import type { PendingAdvancedTrade } from '@/lib/matching'
 
 export type CommunitySearchResult = {
   userId: string
@@ -90,14 +91,7 @@ export async function searchCommunityDuplicates(
   }
 
   const userIdSet = new Set(userIds)
-  for (const at of (advancedTrades ?? []) as Array<{
-    user_a_id: string
-    user_b_id: string
-    user_c_id: string
-    a_gives_ids: string[]
-    b_gives_ids: string[]
-    c_gives_ids: string[]
-  }>) {
+  for (const at of (advancedTrades ?? []) as PendingAdvancedTrade[]) {
     const legs: [string, string[]][] = [
       [at.user_a_id, at.a_gives_ids ?? []],
       [at.user_b_id, at.b_gives_ids ?? []],

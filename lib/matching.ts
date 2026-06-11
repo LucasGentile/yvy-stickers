@@ -4,6 +4,15 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 import { ALL_STICKER_IDS, computeNeeded } from '@/lib/stickers'
 import { formatName } from '@/lib/format'
 
+export type PendingAdvancedTrade = {
+  user_a_id: string
+  user_b_id: string
+  user_c_id: string
+  a_gives_ids: string[]
+  b_gives_ids: string[]
+  c_gives_ids: string[]
+}
+
 export type CanceledTradeDetail = {
   giving: string[]
   receiving: string[]
@@ -117,14 +126,7 @@ export async function getMatches(
   }
 
   // Include advanced trade reservations
-  for (const at of (advancedTrades ?? []) as Array<{
-    user_a_id: string
-    user_b_id: string
-    user_c_id: string
-    a_gives_ids: string[]
-    b_gives_ids: string[]
-    c_gives_ids: string[]
-  }>) {
+  for (const at of (advancedTrades ?? []) as PendingAdvancedTrade[]) {
     const legs: [string, string[], string][] = [
       [at.user_a_id, at.a_gives_ids, at.user_b_id],
       [at.user_b_id, at.b_gives_ids, at.user_c_id],
