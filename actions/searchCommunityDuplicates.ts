@@ -34,6 +34,7 @@ export async function searchCommunityDuplicates(
     { data: tradesAsInitiator },
     { data: tradesAsReceiver },
     { data: purchaseReqs },
+    { data: advancedTrades },
   ] = await Promise.all([
     supabaseAdmin
       .from('users')
@@ -55,6 +56,11 @@ export async function searchCommunityDuplicates(
       .from('purchase_requests')
       .select('seller_id, sticker_ids')
       .in('seller_id', userIds)
+      .eq('status', 'pending'),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabaseAdmin as any)
+      .from('advanced_trades')
+      .select('user_a_id, user_b_id, user_c_id, a_gives_ids, b_gives_ids, c_gives_ids')
       .eq('status', 'pending'),
   ])
 
@@ -80,6 +86,29 @@ export async function searchCommunityDuplicates(
     if (!reserved[uid]) reserved[uid] = {}
     for (const sid of pr.sticker_ids ?? []) {
       reserved[uid][sid] = (reserved[uid][sid] ?? 0) + 1
+    }
+  }
+
+  const userIdSet = new Set(userIds)
+  for (const at of (advancedTrades ?? []) as Array<{
+    user_a_id: string
+    user_b_id: string
+    user_c_id: string
+    a_gives_ids: string[]
+    b_gives_ids: string[]
+    c_gives_ids: string[]
+  }>) {
+    const legs: [string, string[]][] = [
+      [at.user_a_id, at.a_gives_ids ?? []],
+      [at.user_b_id, at.b_gives_ids ?? []],
+      [at.user_c_id, at.c_gives_ids ?? []],
+    ]
+    for (const [giverId, givesIds] of legs) {
+      if (!userIdSet.has(giverId)) continue
+      if (!reserved[giverId]) reserved[giverId] = {}
+      for (const sid of givesIds) {
+        reserved[giverId][sid] = (reserved[giverId][sid] ?? 0) + 1
+      }
     }
   }
 
