@@ -4,10 +4,6 @@ vi.mock('@/lib/supabaseAdmin', () => ({
   supabaseAdmin: { from: vi.fn() },
 }))
 
-vi.mock('@/actions/deactivateStaleUsers', () => ({
-  deactivateStaleUsers: vi.fn().mockResolvedValue(undefined),
-}))
-
 import { loginByPhone } from '@/actions/loginByPhone'
 import { getUserData } from '@/actions/getUserData'
 import { setInputMode } from '@/actions/setInputMode'

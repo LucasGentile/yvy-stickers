@@ -1,7 +1,6 @@
 'use server'
 
 import { supabaseAdmin as supabase } from '@/lib/supabaseAdmin'
-import { deactivateStaleUsers } from './deactivateStaleUsers'
 
 export type UserData = {
   inputMode: 'have' | 'need'
@@ -11,7 +10,6 @@ export type UserData = {
 }
 
 export async function getUserData(userId: string): Promise<UserData | null> {
-  deactivateStaleUsers().catch(() => {})
   const { data: user } = await supabase
     .from('users')
     .select('input_mode, approved, trades_blocked')
