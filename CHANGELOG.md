@@ -1,5 +1,13 @@
 # Changelog
 
+## [v2.10.1] — 2026-06-11
+
+### Correções
+
+- **Ranking de Trocas vazio** — usuários com figurinhas eram incorretamente desativados por um bug de limite de linhas no banco, fazendo com que ninguém aparecesse nas sugestões de troca
+- **Buscar Figurinhas** — figurinhas comprometidas em trocas avançadas pendentes agora são excluídas corretamente da disponibilidade, evitando que apareçam como "disponíveis"
+- **Desativação automática removida** — substituída por uma limpeza única que desativa apenas contas sem nenhuma figurinha cadastrada há mais de 2 dias, sem risco de desativar participantes ativos
+
 ## [v2.10.0] — 2026-06-10
 
 ### Funcionalidades
