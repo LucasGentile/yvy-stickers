@@ -1,5 +1,12 @@
 # Changelog
 
+## [v2.10.2] — 2026-06-19
+
+### Melhorias
+
+- **Carregamento mais rápido** — o cabeçalho do app agora carrega todos os indicadores de notificação em uma única consulta ao invés de cinco separadas, reduzindo o número de requisições em ~80%
+- **Menos recarregamentos automáticos** — as telas de cancelamentos e ranking não atualizam mais a cada vez que o usuário volta ao app; agora aguardam pelo menos 30 segundos entre atualizações
+
 ## [v2.10.1] — 2026-06-11
 
 ### Correções
