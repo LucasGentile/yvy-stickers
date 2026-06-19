@@ -33,20 +33,14 @@ vi.mock('@/contexts/MuralTabContext', () => ({
 vi.mock('@/components/NotificationBanner', () => ({ default: () => null }))
 vi.mock('@/components/CancelledTradesBanner', () => ({ default: () => null }))
 
-vi.mock('@/actions/getPendingTrades', () => ({
-  getPendingTrades: vi.fn().mockResolvedValue({ received: [], recentlyAccepted: [] }),
-}))
-vi.mock('@/actions/getPendingApprovalCount', () => ({
-  getPendingApprovalCount: vi.fn().mockResolvedValue(null),
-}))
-vi.mock('@/actions/getPurchaseRequests', () => ({
-  getIncomingPurchaseRequestCount: vi.fn().mockResolvedValue(0),
-}))
-vi.mock('@/actions/getAdvancedTradeEligibility', () => ({
-  getAdvancedTradeEligibility: vi.fn().mockResolvedValue({ eligible: false }),
-}))
-vi.mock('@/actions/getAdvancedTrades', () => ({
-  getAdvancedTrades: vi.fn().mockResolvedValue([]),
+vi.mock('@/actions/getBadgeCounts', () => ({
+  getBadgeCounts: vi.fn().mockResolvedValue({
+    pendingTrades: 0,
+    pendingApproval: null,
+    purchaseRequests: 0,
+    advancedTradePending: 0,
+    advancedTradeEligible: false,
+  }),
 }))
 
 vi.stubGlobal(

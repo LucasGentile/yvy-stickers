@@ -16,8 +16,12 @@ export default function CancelledTradesBanner() {
     if (!userId) return
     getUnacknowledgedCancellations(userId).then(setItems)
 
+    let lastFetch = Date.now()
     const handleVisibility = () => {
-      if (!document.hidden) getUnacknowledgedCancellations(userId).then(setItems)
+      if (!document.hidden && Date.now() - lastFetch > 30_000) {
+        lastFetch = Date.now()
+        getUnacknowledgedCancellations(userId).then(setItems)
+      }
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)

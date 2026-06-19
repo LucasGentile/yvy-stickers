@@ -128,8 +128,12 @@ export default function RankingScreen() {
 
   useEffect(() => {
     load()
+    let lastFetch = Date.now()
     const handleVisibility = () => {
-      if (!document.hidden) load({ silent: true })
+      if (!document.hidden && Date.now() - lastFetch > 30_000) {
+        lastFetch = Date.now()
+        load({ silent: true })
+      }
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)

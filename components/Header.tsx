@@ -6,11 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useMuralTab, MURAL_TABS } from '@/contexts/MuralTabContext'
 import NotificationBanner from '@/components/NotificationBanner'
 import CancelledTradesBanner from '@/components/CancelledTradesBanner'
-import { getPendingTrades } from '@/actions/getPendingTrades'
-import { getPendingApprovalCount } from '@/actions/getPendingApprovalCount'
-import { getIncomingPurchaseRequestCount } from '@/actions/getPurchaseRequests'
-import { getAdvancedTradeEligibility } from '@/actions/getAdvancedTradeEligibility'
-import { getAdvancedTrades } from '@/actions/getAdvancedTrades'
+import { getBadgeCounts } from '@/actions/getBadgeCounts'
 import { usePrefs } from '@/contexts/PreferencesContext'
 
 const NAV_TOP = [
@@ -59,29 +55,13 @@ export default function Header() {
   const { tab: muralTab, setTab: setMuralTab } = useMuralTab()
 
   function refreshBadges(uid: string) {
-    getPendingTrades(uid)
-      .then((r) => {
-        const rollbackFromOthers = r.recentlyAccepted.filter(
-          (t) => t.rollbackRequestedBy !== null && t.rollbackRequestedBy !== uid
-        ).length
-        setPendingCount(r.received.length + rollbackFromOthers)
-      })
-      .catch(() => {})
-    getPendingApprovalCount(uid)
-      .then(setPendingApprovalCount)
-      .catch(() => {})
-    getIncomingPurchaseRequestCount(uid)
-      .then(setPurchaseRequestCount)
-      .catch(() => {})
-    getAdvancedTradeEligibility(uid)
-      .then((r) => setAdvancedTradeEligible(r.eligible))
-      .catch(() => {})
-    getAdvancedTrades(uid)
-      .then((trades) => {
-        const pending = trades.filter(
-          (t) => t.status === 'pending' && t.myApprovalStatus === 'pending'
-        )
-        setAdvancedTradePending(pending.length)
+    getBadgeCounts(uid)
+      .then((counts) => {
+        setPendingCount(counts.pendingTrades)
+        setPendingApprovalCount(counts.pendingApproval)
+        setPurchaseRequestCount(counts.purchaseRequests)
+        setAdvancedTradePending(counts.advancedTradePending)
+        setAdvancedTradeEligible(counts.advancedTradeEligible)
       })
       .catch(() => {})
   }
