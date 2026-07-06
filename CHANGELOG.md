@@ -1,5 +1,15 @@
 # Changelog
 
+## [v2.10.3] — 2026-07-06
+
+### Correções
+
+- **Pedidos de compra aceitos sumindo** — ao aceitar um pedido de compra recebido, ele desaparecia da tela de Trocas em vez de mostrar o status "Aceito"
+
+### Melhorias
+
+- **Seção de pedidos de compra mais compacta** — pedidos recebidos e enviados agora ficam em uma seção recolhível na tela de Trocas, ocupando menos espaço e expandindo automaticamente só quando há algo pendente para você responder
+
 ## [v2.10.2] — 2026-06-19
 
 ### Melhorias

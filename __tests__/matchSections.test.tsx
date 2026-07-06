@@ -33,13 +33,21 @@ vi.mock('@/actions/rollbackTrade', () => ({
 vi.mock('@/actions/verifyTrade', () => ({
   verifyTrade: vi.fn(),
 }))
+vi.mock('@/actions/getPurchaseRequests', () => ({
+  getPurchaseRequests: vi.fn(),
+}))
+vi.mock('@/actions/respondToPurchaseRequest', () => ({
+  respondToPurchaseRequest: vi.fn(),
+}))
 
 import MatchesScreen from '@/components/MatchesScreen'
 import { getMatches } from '@/lib/matching'
 import { getPendingTrades } from '@/actions/getPendingTrades'
+import { getPurchaseRequests } from '@/actions/getPurchaseRequests'
 
 const mockGetMatches = getMatches as ReturnType<typeof vi.fn>
 const mockGetPendingTrades = getPendingTrades as ReturnType<typeof vi.fn>
+const mockGetPurchaseRequests = getPurchaseRequests as ReturnType<typeof vi.fn>
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
@@ -91,6 +99,7 @@ describe('MatchesScreen sections', () => {
       recentlyAccepted: [],
       recentlyCancelled: [],
     })
+    mockGetPurchaseRequests.mockResolvedValue({ incoming: [], outgoing: [] })
   })
 
   it('shows mutual matches in the main ranking section', async () => {
@@ -183,5 +192,38 @@ describe('MatchesScreen sections', () => {
 
     fireEvent.click(sectionButton)
     expect(screen.queryByText('Bob Doador')).not.toBeInTheDocument()
+  })
+
+  it('still shows an accepted incoming purchase request, not just pending ones', async () => {
+    mockGetMatches.mockResolvedValue([])
+    mockGetPurchaseRequests.mockResolvedValue({
+      incoming: [
+        {
+          id: 'req-1',
+          buyerId: 'u-buyer',
+          buyerName: 'Ana Compradora',
+          buyerApartment: '101',
+          buyerTower: 'A',
+          sellerId: 'user-1',
+          sellerName: 'Me',
+          sellerApartment: '202',
+          sellerTower: 'B',
+          stickerIds: ['BRA1'],
+          status: 'accepted',
+          message: null,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      outgoing: [],
+    })
+
+    render(<MatchesScreen />)
+
+    const sectionButton = await screen.findByText('Pedidos de compra')
+    fireEvent.click(sectionButton)
+
+    expect(await screen.findByText('Ana Compradora', { exact: false })).toBeInTheDocument()
+    expect(screen.getByText('Aceito')).toBeInTheDocument()
+    expect(screen.queryByText('Aceitar')).not.toBeInTheDocument()
   })
 })

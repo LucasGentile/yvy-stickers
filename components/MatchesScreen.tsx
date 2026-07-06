@@ -17,13 +17,17 @@ import { PurchaseRequestCard } from './PurchaseRequestCard'
 function CollapsibleMatchSection({
   title,
   description,
+  badge,
+  defaultExpanded = false,
   children,
 }: {
   title: string
   description: string
+  badge?: number
+  defaultExpanded?: boolean
   children: ReactNode
 }) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(defaultExpanded)
 
   return (
     <div className="space-y-2">
@@ -38,6 +42,11 @@ function CollapsibleMatchSection({
           ▶
         </span>
         <h3 className="text-sm font-bold text-yvy-muted">{title}</h3>
+        {!!badge && (
+          <span className="bg-yvy-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            {badge}
+          </span>
+        )}
       </button>
 
       {expanded && (
@@ -255,19 +264,24 @@ export default function MatchesScreen() {
       {/* Purchase requests — incoming (seller) and outgoing (buyer) */}
       {userId &&
         (() => {
-          const incoming = purchaseRequests.incoming.filter((r) => r.status === 'pending')
+          const incoming = purchaseRequests.incoming
           const outgoing = purchaseRequests.outgoing
           if (incoming.length === 0 && outgoing.length === 0) return null
+          const pendingCount =
+            incoming.filter((r) => r.status === 'pending').length +
+            outgoing.filter((r) => r.status === 'pending').length
           return (
-            <div className="space-y-3">
+            <CollapsibleMatchSection
+              title="Pedidos de compra"
+              description="Pedidos recebidos e enviados, incluindo os já respondidos recentemente."
+              badge={pendingCount}
+              defaultExpanded={pendingCount > 0}
+            >
               {incoming.length > 0 && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-yvy-dark">Pedidos de compra</h3>
-                    <span className="bg-yvy-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      {incoming.length}
-                    </span>
-                  </div>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-yvy-muted uppercase tracking-wide">
+                    Recebidos
+                  </h4>
                   {incoming.map((r) => (
                     <PurchaseRequestCard
                       key={r.id}
@@ -276,11 +290,13 @@ export default function MatchesScreen() {
                       onDone={() => refreshMatches(userId)}
                     />
                   ))}
-                </>
+                </div>
               )}
               {outgoing.length > 0 && (
-                <>
-                  <h3 className="text-base font-bold text-yvy-dark">Meus pedidos enviados</h3>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-yvy-muted uppercase tracking-wide">
+                    Enviados
+                  </h4>
                   {outgoing.map((r) => (
                     <PurchaseRequestCard
                       key={r.id}
@@ -289,9 +305,9 @@ export default function MatchesScreen() {
                       onDone={() => refreshMatches(userId)}
                     />
                   ))}
-                </>
+                </div>
               )}
-            </div>
+            </CollapsibleMatchSection>
           )
         })()}
 
